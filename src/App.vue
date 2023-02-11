@@ -1,16 +1,21 @@
 <script setup lang="ts">
 import HelloWorld from './components/HelloWorld.vue'
 import TheWelcome from './components/TheWelcome.vue'
-import {Cube} from "@/cube/Cube";
-import {Sides} from "@/cube/Sides";
+import {Cube} from "@/cube/cube";
+import {Sides} from "@/cube/sides";
 
 let cube = new Cube();
 // cube.rotateFace(Sides.UP)
 // cube.rotateFace(Sides.LEFT)
+// cube.rotateFace(Sides.LEFT)
+// cube.rotateFace(Sides.LEFT)
 cube.rotateFace(Sides.LEFT)
-cube.rotateFace(Sides.LEFT)
+cube.rotateFace(Sides.BACK)
+cube.rotateFace(Sides.BACK)
 cube.rotateFace(Sides.UP)
-// cube.rotateFace(Sides.UP, false)
+cube.rotateFace(Sides.FRONT)
+
+
 cube.printFace(Sides.UP)
 cube.printFace(Sides.LEFT)
 cube.printFace(Sides.FRONT)

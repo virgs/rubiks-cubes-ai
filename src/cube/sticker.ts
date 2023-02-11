@@ -1,4 +1,4 @@
-import {Colors} from '@/cube/Colors';
+import {Colors} from '@/cube/colors';
 
 export class Sticker {
     private static stickerCounter: number = 0;

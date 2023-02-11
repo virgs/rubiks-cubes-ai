@@ -1,9 +1,11 @@
-import {Face} from '@/cube/Face';
+import {Face} from '@/cube/face';
 import {Sticker} from '@/cube/sticker';
-import {UpFaceRotator} from '@/cube/rotators/UpFaceRotator';
-import type {FaceRotator} from '@/cube/rotators/FaceRotator';
-import {LeftFaceRotator} from '@/cube/rotators/LeftFaceRotator';
-import {getAllSides, getInitialColorOfSide, Sides} from '@/cube/Sides';
+import {UpFaceRotator} from '@/cube/rotators/up-face-rotator';
+import type {FaceRotator} from '@/cube/rotators/face-rotator';
+import {LeftFacerotator} from '@/cube/rotators/left-facerotator';
+import {BackFaceRotator} from '@/cube/rotators/back-face-rotator';
+import {FrontFaceRotator} from '@/cube/rotators/front-face-rotator';
+import {getAllSides, getInitialColorOfSide, Sides} from '@/cube/sides';
 
 export class Cube {
     private readonly rotatorMap: Map<Sides, FaceRotator>;
@@ -19,12 +21,19 @@ export class Cube {
             })
         this.rotatorMap = new Map<Sides, FaceRotator>();
         this.rotatorMap.set(Sides.UP, new UpFaceRotator(this.faceMap));
-        this.rotatorMap.set(Sides.LEFT, new LeftFaceRotator(this.faceMap));
+        this.rotatorMap.set(Sides.LEFT, new LeftFacerotator(this.faceMap));
+        this.rotatorMap.set(Sides.FRONT, new FrontFaceRotator(this.faceMap));
+        this.rotatorMap.set(Sides.BACK, new BackFaceRotator(this.faceMap));
     }
 
     public rotateFace(pivot: Sides, clockwiseDirection: boolean = true): void {
         console.log('Rotating: ' + Sides[pivot])
-        this.rotatorMap.get(pivot)!.rotate(clockwiseDirection);
+        const faceRotator = this.rotatorMap.get(pivot)!;
+        faceRotator.rotateClockwise();
+        if (!clockwiseDirection) {
+            faceRotator.rotateClockwise();
+            faceRotator.rotateClockwise();
+        }
     }
 
     public printFace(side: Sides): void {
