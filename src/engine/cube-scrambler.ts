@@ -4,7 +4,7 @@ import { getAllSides, Sides } from "./sides";
 export class CubeScrambler {
     private readonly moves: number;
 
-    public constructor(moves: number = 20) {
+    public constructor(moves: number = 30) {
         this.moves = moves;
     }
 

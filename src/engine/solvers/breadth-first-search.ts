@@ -1,7 +1,8 @@
-import type { Rotation, Solution } from "./Solution";
-import * as LinkedList from "double-linked-list";
+import type { Rotation, Solution } from "./solution";
+import LinkedList from "double-linked-list";
 import type { PocketCube } from "../pocket-cube";
 import { Sides } from "../sides";
+import { MetricEmitter, Metrics } from "./metric-emitter";
 
 
 type Candidate = {
@@ -10,11 +11,13 @@ type Candidate = {
 }
 
 export class BreadthFirstSearch {
+    private readonly metricEmitter: MetricEmitter;
     private readonly candidates: LinkedList;
     private readonly hashCandidates: Map<string, boolean>;
     private aborted: boolean;
 
     public constructor() {
+        this.metricEmitter = new MetricEmitter();
         this.hashCandidates = new Map();
         this.aborted = false;
         this.candidates = new LinkedList()
@@ -26,19 +29,19 @@ export class BreadthFirstSearch {
 
     public solve(cube: PocketCube): Solution {
         const startTime = Date.now();
-        this.candidates.push({
+        let iterations = 0;
+        let current: Candidate = {
             cube: cube,
             rotations: []
-        })
-        let iterations = 0;
-        let current: Candidate;
+        };
+        this.candidates.push(current)
         while (this.candidates.length > 0 && !this.aborted) {
             ++iterations;
-            current = this.candidates.shift();
-            if (this.hashCandidates.get(current.cube.getHash())) {
+            current = this.metricEmitter.add(Metrics.POP_CANDIDATE , () => this.candidates.shift());
+            if (this.metricEmitter.add(Metrics.VISISTED_LIST_CHECK, () => this.hashCandidates.get(current.cube.getHash()))) {
                 continue;
             }
-            if (current.cube.isSolved()) {
+            if (this.metricEmitter.add(Metrics.CHECK_SOLUTION, () => current.cube.isSolved())) {
                 break;
             }
             this.hashCandidates.set(current.cube.getHash(), true);
@@ -49,6 +52,7 @@ export class BreadthFirstSearch {
             aborted: this.aborted,
             totalTime: Date.now() - startTime,
             data: {
+                metrics: this.metricEmitter.data(),
                 iterations: iterations
             }
         }
@@ -57,13 +61,13 @@ export class BreadthFirstSearch {
     private applyRotations(current: Candidate): void {
         [Sides.FRONT, Sides.UP, Sides.RIGHT]
             .forEach(side => {
-                this.candidates.push({
+                this.metricEmitter.add(Metrics.ADD_CANDIDATE, () => this.candidates.push({
                     cube: current.cube.rotateFace(side),
                     rotations: current.rotations.concat({
                         side: side,
                         clockwiseDirection: true
                     })
-                })
+                }))
             })
 
     }
