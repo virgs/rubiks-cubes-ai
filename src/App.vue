@@ -1,14 +1,26 @@
 <script setup lang="ts">
-import {PocketCube} from "@/engine/pocket-cube";
-import {Sides} from "@/engine/sides";
+import { PocketCube } from "@/engine/pocket-cube";
+import { Sides } from "@/engine/sides";
+import { CubeScrambler } from "./engine/cube-scrambler";
+import { BreadthFirstSearch } from "./engine/solvers/breadth-first-search";
 
 let cube = new PocketCube();
-cube = cube.rotateFace(Sides.DOWN)
-cube = cube.rotateFace(Sides.DOWN)
-cube = cube.rotateFace(Sides.DOWN)
-cube = cube.rotateFace(Sides.DOWN)
+cube = new CubeScrambler(10).scramble(cube);
+console.log(cube.isSolved())
+cube.print();
+// cube.rotateFace(Sides.RIGHT);
 
-cube.print()
+console.log('solving')
+const solution = new BreadthFirstSearch().solve(cube)
+console.log(solution)
+solution.rotations.map(r => console.log(Sides[r.side]))
+
+cube = solution.rotations
+  .reduce((cube, rotation) => cube.rotateFace(rotation.side), cube)
+
+  cube.print();
+  console.log(cube.isSolved())
+
 </script>
 
 <template>
@@ -21,7 +33,7 @@ cube.print()
   </header>
 
   <main>
-  </main>
+</main>
 </template>
 
 <style scoped>

@@ -2,8 +2,8 @@ import { Sides } from '@/engine/sides';
 import type { Colors } from './colors';
 
 type FaceRotatorMap = {
-    src: number,
-    dst: number
+    destination: number,
+    source: number
 };
 
 export class PocketCubeFaceRotator {
@@ -15,11 +15,15 @@ export class PocketCubeFaceRotator {
         }
     }
 
-    public rotateClockwise(original: Colors[], side: Sides): Colors[] {
+    public rotateClockwise(original: Colors[], side: Sides, clockwise: boolean): Colors[] {
         const result = [...original];
         PocketCubeFaceRotator.faceRotatorMap.get(side)!
             .forEach(item => {
-                result[item.dst] = original[item.src]
+                if (clockwise) {
+                    result[item.destination] = original[item.source];
+                } else {
+                    result[item.source] = original[item.destination];
+                }
             })
         return result;
     }
@@ -38,12 +42,12 @@ export class PocketCubeFaceRotator {
 
         PocketCubeFaceRotator.faceRotatorMap = new Map();
 
-        const upFaceRotator: FaceRotatorMap[] = this.createUpFaceRotator();
-        const leftFaceRotator: FaceRotatorMap[] = this.createLeftFaceRotator();
-        const frontFaceRotator: FaceRotatorMap[] = this.createFrontFaceRotator();
-        const rightFaceRotator: FaceRotatorMap[] = this.createRightFaceRotator();
-        const backFaceRotator: FaceRotatorMap[] = this.createBackFaceRotator();
-        const downFaceRotator: FaceRotatorMap[] = this.createDownFaceRotator();
+        const upFaceRotator: FaceRotatorMap[] = this.createUpFaceClockwiseRotator();
+        const leftFaceRotator: FaceRotatorMap[] = this.createLeftFaceClockwiseRotator();
+        const frontFaceRotator: FaceRotatorMap[] = this.createFrontFaceClockwiseRotator();
+        const rightFaceRotator: FaceRotatorMap[] = this.createRightFaceClockwiseRotator();
+        const backFaceRotator: FaceRotatorMap[] = this.createBackFaceClockwiseRotator();
+        const downFaceRotator: FaceRotatorMap[] = this.createDownFaceClockwiseRotator();
 
         PocketCubeFaceRotator.faceRotatorMap.set(Sides.UP, upFaceRotator);
         PocketCubeFaceRotator.faceRotatorMap.set(Sides.LEFT, leftFaceRotator);
@@ -53,7 +57,7 @@ export class PocketCubeFaceRotator {
         PocketCubeFaceRotator.faceRotatorMap.set(Sides.DOWN, downFaceRotator);
     }
 
-    private createDownFaceRotator(): FaceRotatorMap[] {
+    private createDownFaceClockwiseRotator(): FaceRotatorMap[] {
         //       UP
         //        0  1
         //        3  2
@@ -65,30 +69,30 @@ export class PocketCubeFaceRotator {
         //       22 21
 
         return [
-            { src: 6, dst: 18 },
-            { src: 7, dst: 19 },
+            { destination: 6, source: 18 },
+            { destination: 7, source: 19 },
 
-            { src: 10, dst: 6 },
-            { src: 11, dst: 7 },
+            { destination: 10, source: 6 },
+            { destination: 11, source: 7 },
 
 
-            { src: 14, dst: 10 },
-            { src: 15, dst: 11 },
+            { destination: 14, source: 10 },
+            { destination: 15, source: 11 },
 
-            { src: 18, dst: 14 },
-            { src: 19, dst: 15 },
+            { destination: 18, source: 14 },
+            { destination: 19, source: 15 },
 
-            { src: 20, dst: 23 },
-            { src: 21, dst: 20 },
-            { src: 22, dst: 21 },
-            { src: 23, dst: 22 },
+            { destination: 20, source: 23 },
+            { destination: 21, source: 20 },
+            { destination: 22, source: 21 },
+            { destination: 23, source: 22 },
         ];
     }
-    private createRightFaceRotator(): FaceRotatorMap[] {
+    private createRightFaceClockwiseRotator(): FaceRotatorMap[] {
         // Initial configuration
         //       UP
-        //        0  9
-        //        3  10
+        //        0 9
+        //        3 10
         // LEFT  FRONT  RIGHT  BACK
         // 4  5   8 21  15 12   2 17
         // 7  6  11 22  14 13   1 18
@@ -96,27 +100,26 @@ export class PocketCubeFaceRotator {
         //       20 19
         //       23 16
         return [
-            { src: 1, dst: 9 },
-            { src: 2, dst: 10 },
+            { destination: 1, source: 9 },
+            { destination: 2, source: 10 },
 
-            { src: 9, dst: 21 },
-            { src: 10, dst: 22 },
+            { destination: 9, source: 21 },
+            { destination: 10, source: 22 },
 
-            { src: 12, dst: 15 },
-            { src: 13, dst: 12 },
-            { src: 14, dst: 13 },
-            { src: 15, dst: 14 },
+            { destination: 12, source: 15 },
+            { destination: 13, source: 12 },
+            { destination: 14, source: 13 },
+            { destination: 15, source: 14 },
 
+            { destination: 16, source: 2 },
+            { destination: 19, source: 1 },
 
-            { src: 16, dst: 2 },
-            { src: 19, dst: 1 },
-
-            { src: 21, dst: 19 },
-            { src: 22, dst: 16 },
+            { destination: 21, source: 19 },
+            { destination: 22, source: 16 },
         ];
     }
 
-    private createUpFaceRotator(): FaceRotatorMap[] {
+    private createUpFaceClockwiseRotator(): FaceRotatorMap[] {
         //       UP
         //        3  0
         //        2  1
@@ -128,27 +131,27 @@ export class PocketCubeFaceRotator {
         //       23 22
 
         return [
-            { src: 0, dst: 3 },
-            { src: 1, dst: 0 },
-            { src: 2, dst: 1 },
-            { src: 3, dst: 2 },
+            { destination: 0, source: 3 },
+            { destination: 1, source: 0 },
+            { destination: 2, source: 1 },
+            { destination: 3, source: 2 },
 
-            { src: 4, dst: 8 },
-            { src: 5, dst: 9 },
+            { destination: 4, source: 8 },
+            { destination: 5, source: 9 },
 
-            { src: 8, dst: 12 },
-            { src: 9, dst: 13 },
+            { destination: 8, source: 12 },
+            { destination: 9, source: 13 },
 
-            { src: 12, dst: 16 },
-            { src: 13, dst: 17 },
+            { destination: 12, source: 16 },
+            { destination: 13, source: 17 },
 
-            { src: 16, dst: 4 },
-            { src: 17, dst: 5 },
+            { destination: 16, source: 4 },
+            { destination: 17, source: 5 },
         ];
 
     }
 
-    private createBackFaceRotator(): FaceRotatorMap[] {
+    private createBackFaceClockwiseRotator(): FaceRotatorMap[] {
         //       UP
         //       13 14
         //        3  2
@@ -157,30 +160,30 @@ export class PocketCubeFaceRotator {
         // 0  6  11 10  15 23  18 17
         //       DOWN
         //       20 21
-        //        4 7
+        //        4  7
 
         return [
-            { src: 0, dst: 13 },
-            { src: 1, dst: 14 },
+            { destination: 0, source: 13 },
+            { destination: 1, source: 14 },
 
-            { src: 4, dst: 1 },
-            { src: 7, dst: 0 },
+            { destination: 4, source: 1 },
+            { destination: 7, source: 0 },
 
-            { src: 13, dst: 22 },
-            { src: 14, dst: 23 },
+            { destination: 13, source: 22 },
+            { destination: 14, source: 23 },
 
-            { src: 16, dst: 19 },
-            { src: 17, dst: 16 },
-            { src: 18, dst: 17 },
-            { src: 19, dst: 18 },
+            { destination: 16, source: 19 },
+            { destination: 17, source: 16 },
+            { destination: 18, source: 17 },
+            { destination: 19, source: 18 },
 
-            { src: 22, dst: 4 },
-            { src: 23, dst: 7 },
+            { destination: 22, source: 7 },
+            { destination: 23, source: 4 },
         ];
 
     }
 
-    private createLeftFaceRotator(): FaceRotatorMap[] {
+    private createLeftFaceClockwiseRotator(): FaceRotatorMap[] {
         //       UP
         //       18  1
         //       17  2
@@ -191,26 +194,26 @@ export class PocketCubeFaceRotator {
         //        8 21
         //       11 22
         return [
-            { src: 0, dst: 18 },
-            { src: 3, dst: 17 },
+            { destination: 0, source: 18 },
+            { destination: 3, source: 17 },
 
-            { src: 4, dst: 7 },
-            { src: 5, dst: 4 },
-            { src: 6, dst: 4 },
-            { src: 7, dst: 6 },
+            { destination: 4, source: 7 },
+            { destination: 5, source: 4 },
+            { destination: 6, source: 5 },
+            { destination: 7, source: 6 },
 
-            { src: 8, dst: 0 },
-            { src: 11, dst: 3 },
+            { destination: 8, source: 0 },
+            { destination: 11, source: 3 },
 
-            { src: 17, dst: 23 },
-            { src: 18, dst: 20 },
+            { destination: 17, source: 23 },
+            { destination: 18, source: 20 },
 
-            { src: 20, dst: 8 },
-            { src: 23, dst: 11 },
+            { destination: 20, source: 8 },
+            { destination: 23, source: 11 },
         ];
     }
 
-    private createFrontFaceRotator(): FaceRotatorMap[] {
+    private createFrontFaceClockwiseRotator(): FaceRotatorMap[] {
         //       UP
         //        0  1
         //        6  5
@@ -221,22 +224,22 @@ export class PocketCubeFaceRotator {
         //       15 12
         //       23 22
         return [
-            { src: 2, dst: 5 },
-            { src: 3, dst: 6 },
+            { destination: 2, source: 5 },
+            { destination: 3, source: 6 },
 
-            { src: 5, dst: 20 },
-            { src: 6, dst: 21 },
+            { destination: 5, source: 20 },
+            { destination: 6, source: 21 },
 
-            { src: 8, dst: 11 },
-            { src: 9, dst: 8 },
-            { src: 10, dst: 9 },
-            { src: 11, dst: 10 },
+            { destination: 8, source: 11 },
+            { destination: 9, source: 8 },
+            { destination: 10, source: 9 },
+            { destination: 11, source: 10 },
 
-            { src: 12, dst: 3 },
-            { src: 15, dst: 2 },
+            { destination: 12, source: 3 },
+            { destination: 15, source: 2 },
 
-            { src: 20, dst: 15 },
-            { src: 21, dst: 12 },
+            { destination: 20, source: 15 },
+            { destination: 21, source: 12 },
         ];
     }
 
