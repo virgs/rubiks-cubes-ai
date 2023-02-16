@@ -4,16 +4,15 @@ import { CubeScrambler } from "./engine/cube-scrambler";
 import { BreadthFirstSearch } from "./engine/solvers/breadth-first-search";
 
 let cube = new PocketCube();
-console.log('scrambling')
+console.log('Scrambling')
 cube = new CubeScrambler(30).scramble(cube);
-console.log('isSolved: ' + cube.isSolved())
 
-console.log('solving')
+console.log('Solving')
 const solution = new BreadthFirstSearch().solve(cube)
-console.log(JSON.stringify(solution))
+console.log(solution)
 
-// cube = solution.rotations
-//   .reduce((cube, rotation) => cube.rotateFace(rotation.side), cube)
+cube = solution.rotations
+  .reduce((cube, rotation) => cube.rotateFace(rotation), cube)
 
 console.log('isSolved: ' + cube.isSolved())
 

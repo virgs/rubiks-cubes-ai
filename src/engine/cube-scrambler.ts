@@ -9,13 +9,19 @@ export class CubeScrambler {
     }
 
     public scramble(cube: PocketCube): PocketCube {
+        let rotations = '';
         const allSides = getAllSides();
-        return Array.from(new Array(this.moves))
-            .reduce((acc: PocketCube) => {
+        const result = Array.from(new Array(this.moves))
+            .reduce((acc: PocketCube, _, index: number) => {
                 const side = Math.floor(Math.random() * allSides.length);
                 const direction = Math.floor(Math.random() * 2) === 0;
-                console.log(`Rotating ${Sides[side]} \t\t${direction ? '' : 'counter'}clockwise`)
-                return acc.rotateFace(side, direction);
+                rotations += `${Sides[side].substring(0, 1)}${direction ? '' : '\''}`;
+                if (index % 5 === 4) {
+                    rotations += '\n'
+                }
+                return acc.rotateFace({side: side, clockwiseDirection: direction});
             }, cube as PocketCube)
+        console.log(rotations);
+        return result;
     }
 }

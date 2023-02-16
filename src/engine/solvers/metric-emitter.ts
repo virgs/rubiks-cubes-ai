@@ -4,15 +4,17 @@ export enum Metrics {
     CHECK_SOLUTION,
     BREATHING_TIME,
     HASH_CALCULATION,
-    VISISTED_LIST_CHECK
+    VISISTED_LIST_CHECK,
+    ADD_TO_VISISTED_LIST_CHECK,
+    PERFORM_ROTATION
 }
 
 export class MetricEmitter {
     private readonly metricMap: Map<Metrics, number>;
-    private readonly startTime: number;
+    private startTime?: number;
+    private totalTime?: number;
 
     constructor() {
-        this.startTime = new Date().getTime()
         this.metricMap = new Map();
     }
 
@@ -25,15 +27,38 @@ export class MetricEmitter {
         return result;
     }
 
-    public data(): any {
-        const totalTime = Date.now() - this.startTime;
-        const result: any = {
-            totalTime: totalTime
-        };
-        for (let [key, value] of this.metricMap.entries()) {
-            const metricTime = Math.trunc(1000 * value / totalTime) / 10;
-            result[Metrics[key]] = `${value}ms (${metricTime}%)`
-        }
-        return result;
+    public start(): void {
+        this.startTime = new Date().getTime()
     }
+
+    public finish(): void {
+        if (this.startTime) {
+            this.totalTime = Date.now() - this.startTime;
+        }
+    }
+
+    public getTotalTime(): number | undefined {
+        return this.totalTime;
+    }
+
+    public getData(): any {
+        if (this.totalTime) {
+            let sumTimes: number = 0;
+            const result: any = {
+                totalTime: this.totalTime
+            };
+            for (let [metricName, time] of this.metricMap.entries()) {
+                sumTimes += time;
+                result[Metrics[metricName]] = this.createSummary(time);
+            }
+            result.NOT_MEASURED = this.createSummary(this.totalTime - sumTimes);
+            return result;
+        }
+    }
+
+    private createSummary(value: number): string {
+        return `${value}ms (${Math.trunc(1000 * value / this.totalTime!) / 10}%)`
+    }
+
 }
+

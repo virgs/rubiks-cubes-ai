@@ -1,13 +1,8 @@
-import type { Sides } from "../sides"
-
-export type Rotation = {
-    side: Sides;
-    clockwiseDirection: boolean;
-}
+import type { FaceRotation } from "../face-rotation";
 
 export type Solution = {
     aborted: boolean;
-    rotations: Rotation[];
+    rotations: FaceRotation[];
     totalTime: number;
     data: any;
 };

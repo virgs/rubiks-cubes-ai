@@ -1,6 +1,7 @@
 import { Colors } from './colors';
 import { PocketCubeFaceRotator } from './pocket-cube-face-rotator';
 import { getAllSides, Sides } from '@/engine/sides';
+import type { FaceRotation } from './face-rotation';
 
 
 const getInitialColorOfSide = (orientation: Sides): Colors => {
@@ -52,8 +53,8 @@ export class PocketCube {
         return new PocketCube(this.colors);
     }
 
-    public rotateFace(side: Sides, clockwiseDirection: boolean = true): PocketCube {
-        const result = this.faceRotator.rotateClockwise(this.colors, side, clockwiseDirection);
+    public rotateFace(faceRotation: FaceRotation): PocketCube {
+        const result = this.faceRotator.rotate(this.colors, faceRotation);
         return new PocketCube(result);
     }
 

@@ -1,5 +1,6 @@
 import { Sides } from '@/engine/sides';
 import type { Colors } from './colors';
+import type { FaceRotation } from './face-rotation';
 
 type FaceRotatorMap = {
     destination: number,
@@ -15,14 +16,14 @@ export class PocketCubeFaceRotator {
         }
     }
 
-    public rotateClockwise(original: Colors[], side: Sides, clockwise: boolean): Colors[] {
-        const result = [...original];
-        PocketCubeFaceRotator.faceRotatorMap.get(side)!
+    public rotate(currentConfiguration: Colors[], faceRotation: FaceRotation): Colors[] {
+        const result = [...currentConfiguration];
+        PocketCubeFaceRotator.faceRotatorMap.get(faceRotation.side)!
             .forEach(item => {
-                if (clockwise) {
-                    result[item.destination] = original[item.source];
+                if (faceRotation.clockwiseDirection) {
+                    result[item.destination] = currentConfiguration[item.source];
                 } else {
-                    result[item.source] = original[item.destination];
+                    result[item.source] = currentConfiguration[item.destination];
                 }
             })
         return result;
