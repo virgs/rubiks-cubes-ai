@@ -1,4 +1,4 @@
-import {Colors} from "@/cube/colors";
+import {Colors} from "@/engine/colors";
 
 export enum Sides {
     UP,

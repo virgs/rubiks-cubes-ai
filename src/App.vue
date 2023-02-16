@@ -1,27 +1,14 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
-import {Cube} from "@/cube/cube";
-import {Sides} from "@/cube/sides";
+import {PocketCube} from "@/engine/pocket-cube";
+import {Sides} from "@/engine/sides";
 
-let cube = new Cube();
-// cube.rotateFace(Sides.UP)
-// cube.rotateFace(Sides.LEFT)
-// cube.rotateFace(Sides.LEFT)
-// cube.rotateFace(Sides.LEFT)
-cube.rotateFace(Sides.LEFT)
-cube.rotateFace(Sides.BACK)
-cube.rotateFace(Sides.BACK)
-cube.rotateFace(Sides.UP)
-cube.rotateFace(Sides.FRONT)
+let cube = new PocketCube();
+cube = cube.rotateFace(Sides.DOWN)
+cube = cube.rotateFace(Sides.DOWN)
+cube = cube.rotateFace(Sides.DOWN)
+cube = cube.rotateFace(Sides.DOWN)
 
-
-cube.printFace(Sides.UP)
-cube.printFace(Sides.LEFT)
-cube.printFace(Sides.FRONT)
-cube.printFace(Sides.RIGHT)
-cube.printFace(Sides.BACK)
-cube.printFace(Sides.DOWN)
+cube.print()
 </script>
 
 <template>
@@ -29,12 +16,11 @@ cube.printFace(Sides.DOWN)
     <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
 
     <div class="wrapper">
-      <HelloWorld msg="You did it!" />
+
     </div>
   </header>
 
   <main>
-    <TheWelcome />
   </main>
 </template>
 
