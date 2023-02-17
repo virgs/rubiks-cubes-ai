@@ -8,22 +8,27 @@ import { CubeRenderer } from "./renderers/cube-renderer";
 
 export default defineComponent({
   name: 'App',
-  mounted() {
+  async mounted() {
     // Get a reference to the container element that will hold our scene
     const container = document.getElementById('scene-container')!;
     const world = new World(container)
     let cube = new PocketCube();
     const cubeRenderer = new CubeRenderer({scene: world.getScene(), cube: cube})
 
-    // world.addAnimationLoop((delta: number) => cubeRenderer.update(delta));
     world.start();
 
+    const scrambling = new CubeScrambler(30).scramble(cube);
+    for (let rotation of scrambling) {
+      await cubeRenderer.rotate({...rotation, duration: 1000})
+    }
   },
   methods: {
     procedure() {
       let cube = new PocketCube();
       console.log('Scrambling')
-      cube = new CubeScrambler(30).scramble(cube);
+      const scrambling = new CubeScrambler(30).scramble(cube);
+      cube = scrambling
+        .reduce((cube, rotation) => cube.rotateFace(rotation), cube)
 
       console.log('Solving')
       const solution = new BreadthFirstSearch().solve(cube)
