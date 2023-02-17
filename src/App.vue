@@ -13,10 +13,9 @@ export default defineComponent({
     const container = document.getElementById('scene-container')!;
     const world = new World(container)
     let cube = new PocketCube();
-    const cubeRenderer = new CubeRenderer(cube)
+    const cubeRenderer = new CubeRenderer({scene: world.getScene(), cube: cube})
 
-    world.addToScene(cubeRenderer.getMesh())
-    world.addAnimationLoop((delta: number) => cubeRenderer.update(delta));
+    // world.addAnimationLoop((delta: number) => cubeRenderer.update(delta));
     world.start();
 
   },

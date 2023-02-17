@@ -1,4 +1,5 @@
-import { Color, DirectionalLight, Mesh, PerspectiveCamera, Scene, WebGLRenderer, type Camera } from "three";
+import { AmbientLight, AxesHelper, Clock, Color, DirectionalLight, Object3D, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from "three";
+import * as Tween from '@tweenjs/tween.js'
 
 export type AnimationFunction = (delta: number) => void
 
@@ -7,27 +8,37 @@ export class World {
     private readonly camera: PerspectiveCamera;
     private readonly renderer: WebGLRenderer;
     private readonly animations: AnimationFunction[];
+    private readonly clock: Clock;
 
 
     public constructor(container: HTMLElement) {
+        this.clock = new Clock();
+
         this.animations = [];
         // create a Scene
         this.scene = new Scene();
 
         // Set the background color
-        this.scene.background = new Color('darkblue');
+        this.scene.background = new Color('#111111');
 
         const light = new DirectionalLight('white', 8);
         light.position.set(10, 10, 10);
+        light.castShadow = true;
+
         this.scene.add(light);
+        this.scene.add(new AmbientLight(0x222222));
 
         this.camera = this.createCamera(container);
         // every object is initially created at ( 0, 0, 0 )
         // move the camera back so we can view the scene
-        this.camera.position.set(0, 0, 10);
+        this.camera.position.set(-3, 5, 15);
+        this.camera.lookAt(new Vector3(0, 0, 0))
 
         // create the renderer
         this.renderer = new WebGLRenderer({ antialias: true });
+
+
+        this.scene.add(new AxesHelper(50));
 
         // turn on the physically correct lighting model
         this.renderer.physicallyCorrectLights = true;
@@ -60,15 +71,11 @@ export class World {
     }
 
     public start(): void {
-        let lastCallTIme: number | undefined;
-        this.renderer.setAnimationLoop((callTime: number) => {
-            if (lastCallTIme) {
-                const delta = callTime - lastCallTIme;
-                this.animations
-                    .forEach(animation => animation(delta));
-            }
-            lastCallTIme = callTime;
-
+        this.renderer.setAnimationLoop(() => {
+            Tween.update();
+            const delta = this.clock.getDelta();
+            this.animations
+                .forEach(animation => animation(delta));
             this.render();
         });
     }
@@ -77,8 +84,8 @@ export class World {
         this.renderer.setAnimationLoop(null);
     }
 
-    public addToScene(mesh: Mesh): Scene {
-        return this.scene.add(mesh);
+    public getScene(): Scene {
+        return this.scene;
     }
 
     public addAnimationLoop(animationLoop: AnimationFunction): void {

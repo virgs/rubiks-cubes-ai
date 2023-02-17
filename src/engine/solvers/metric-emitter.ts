@@ -44,13 +44,15 @@ export class MetricEmitter {
     public getData(): any {
         if (this.totalTime) {
             let sumTimes: number = 0;
-            const result: any = {
-                totalTime: this.totalTime
-            };
-            for (let [metricName, time] of this.metricMap.entries()) {
-                sumTimes += time;
-                result[Metrics[metricName]] = this.createSummary(time);
-            }
+            const result: any = {};
+
+            Array.from(this.metricMap.entries())
+                .forEach(item => {
+                    const [metricName, time] = item;
+                    sumTimes += time;
+                    result[Metrics[metricName]] = this.createSummary(time);
+                });
+
             result.NOT_MEASURED = this.createSummary(this.totalTime - sumTimes);
             return result;
         }
