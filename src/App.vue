@@ -1,61 +1,54 @@
-<script setup lang="ts">
+<script lang="ts">
 import { PocketCube } from "@/engine/pocket-cube";
 import { CubeScrambler } from "./engine/cube-scrambler";
 import { BreadthFirstSearch } from "./engine/solvers/breadth-first-search";
+import { defineComponent } from 'vue';
+import { World } from "./renderers/world";
+import { CubeRenderer } from "./renderers/cube-renderer";
 
-let cube = new PocketCube();
-console.log('Scrambling')
-cube = new CubeScrambler(30).scramble(cube);
+export default defineComponent({
+  name: 'App',
+  mounted() {
+    // Get a reference to the container element that will hold our scene
+    const container = document.getElementById('scene-container')!;
+    const world = new World(container)
+    let cube = new PocketCube();
+    const cubeRenderer = new CubeRenderer(cube)
 
-console.log('Solving')
-const solution = new BreadthFirstSearch().solve(cube)
-console.log(solution)
+    world.addToScene(cubeRenderer.getMesh())
+    world.addAnimationLoop((delta: number) => cubeRenderer.update(delta));
+    world.start();
 
-cube = solution.rotations
-  .reduce((cube, rotation) => cube.rotateFace(rotation), cube)
+  },
+  methods: {
+    procedure() {
+      let cube = new PocketCube();
+      console.log('Scrambling')
+      cube = new CubeScrambler(30).scramble(cube);
 
-console.log('isSolved: ' + cube.isSolved())
+      console.log('Solving')
+      const solution = new BreadthFirstSearch().solve(cube)
+      console.log(solution)
+
+      cube = solution.rotations
+        .reduce((cube, rotation) => cube.rotateFace(rotation), cube)
+
+      console.log('isSolved: ' + cube.isSolved())
+    }
+
+  }
+})
 
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-
-    </div>
-  </header>
-
-  <main>
-</main>
+  <div id="scene-container" class="wrapper">
+</div>
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
+.wrapper {
+  /* height: 100vh; */
+  min-height: 100%;
 }
 </style>

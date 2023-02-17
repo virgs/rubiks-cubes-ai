@@ -28,7 +28,7 @@ export class MetricEmitter {
     }
 
     public start(): void {
-        this.startTime = new Date().getTime()
+        this.startTime = Date.now();
     }
 
     public finish(): void {
@@ -57,7 +57,7 @@ export class MetricEmitter {
     }
 
     private createSummary(value: number): string {
-        return `${value}ms (${Math.trunc(1000 * value / this.totalTime!) / 10}%)`
+        return `${value}ms (~${Math.trunc(1000 * value / this.totalTime!) / 10}%)`
     }
 
 }
