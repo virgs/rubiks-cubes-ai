@@ -1,7 +1,7 @@
 import type { PocketCube } from "@/engine/pocket-cube";
 import {
     BoxGeometry, EdgesGeometry, Group, LineBasicMaterial,
-    LineSegments, MathUtils, Mesh, MeshStandardMaterial, Scene, Vector3
+    LineSegments, MathUtils, Mesh, MeshStandardMaterial, Object3D, Scene, Vector3
 } from "three";
 //https://github.com/tweenjs/tween.js/blob/main/docs/user_guide.md
 import * as Tween from '@tweenjs/tween.js'
@@ -27,7 +27,7 @@ export class CubeRenderer {
     public constructor(config: { cube: PocketCube, scene: Scene }) {
         this.rubiksCubeGroup = new Group();
         this.scene = config.scene;
-        this.dimension = config.cube.getDimension()
+        this.dimension = config.cube.getDimension();
 
         let id = 0;
         Array.from(new Array(this.dimension))
@@ -36,7 +36,6 @@ export class CubeRenderer {
                     .forEach((_, zIndex) => {
                         if (xIndex === 0 || xIndex === this.dimension - 1 || yIndex === 0 || yIndex === this.dimension - 1 || zIndex === 0 || zIndex === this.dimension - 1) {
                             const side = CubeRenderer.cubeletFilling * CubeRenderer.cubeletSide;
-                            // const x = CubeRenderer.cubeletSide *(1+xIndex- this.dimension*0.5);
                             const x = xIndex - (this.dimension / 2) * CubeRenderer.cubeletSide + CubeRenderer.cubeletSide / 2;
                             const y = yIndex - (this.dimension / 2) * CubeRenderer.cubeletSide + CubeRenderer.cubeletSide / 2;
                             const z = zIndex - (this.dimension / 2) * CubeRenderer.cubeletSide + CubeRenderer.cubeletSide / 2;
@@ -48,17 +47,18 @@ export class CubeRenderer {
 
                             const position = new Vector3(x, y, z);
                             const cubelet = new CubeletRenderer({ sideLength: side, position, id: id++ })
+                            cubelet.getMesh().parent = this.rubiksCubeGroup;
                             this.rubiksCubeGroup.add(cubelet.getMesh())
                         }
                     })));
         this.scene.add(this.rubiksCubeGroup);
     }
 
-    public getCube(): Group {
+    public getCube(): Object3D {
         return this.rubiksCubeGroup;
     }
 
-    public async rotate(faceRotation: FaceRotation & {duration: number}): Promise<void> {
+    public async rotate(faceRotation: FaceRotation & { duration: number }): Promise<void> {
         let sortFunction = (a, b) => b - a;
         let targetAngle = (Math.PI / 2) * (faceRotation.clockwiseDirection ? -1 : 1)
 
@@ -77,26 +77,26 @@ export class CubeRenderer {
         const axis = new Vector3(0, 0, 0);
         axis[axisName] = 1;
 
-        const rotationGroup = new Group();
-        const cubeletsByPosition = Array.from(this.rubiksCubeGroup.children)
-            .map(child => child as Mesh)
-            .reduce((acc, item) => {
-                if (acc[item.position[axisName]]) {
-                    acc[item.position[axisName]].push(item)
-                } else {
-                    acc[item.position[axisName]] = [item]
-                }
-                acc.positions.push(item.position[axisName]);
-                return acc
-            }, { positions: [] } as any);
-        cubeletsByPosition.positions = [...new Set(cubeletsByPosition.positions)]
-            .sort((first: Mesh, second: Mesh) => sortFunction(first, second));
-        const layerPosition = cubeletsByPosition.positions[faceRotation.layer];
-        const cubesToRotate = cubeletsByPosition[layerPosition];
+        let cubesToIgnore = 0;
+        let cubesToRotate = this.dimension * this.dimension
+        if (faceRotation.layer > 0) {
+            cubesToIgnore += this.dimension * this.dimension
+        }
+        if (faceRotation.layer > 1) {
+            cubesToRotate = (faceRotation.layer - 1) * (2 * this.dimension + 2 * (this.dimension - 1))
+            cubesToIgnore += (faceRotation.layer - 1) * (2 * this.dimension + 2 * (this.dimension - 1))
+        }
 
-        cubesToRotate
-            .forEach(cubelet => rotationGroup.add(cubelet));
+        const rotationGroup = new Group();
+        this.rubiksCubeGroup.children
+            .sort((first: Mesh, second: Mesh) => sortFunction(first.position[axisName], second.position[axisName]))
+            .filter((_, index) => index >= cubesToIgnore && index < cubesToIgnore + cubesToRotate)
+            .forEach(cubelet => {
+                cubelet.parent = rotationGroup;
+                rotationGroup.add(cubelet)
+            });
         this.scene.add(rotationGroup);
+        console.log(cubesToRotate, rotationGroup.children.length)
 
         rotationGroup.setRotationFromEuler(this.rubiksCubeGroup.rotation.clone());
 
@@ -115,8 +115,29 @@ export class CubeRenderer {
                     rotationGroup.updateMatrixWorld();
                 })
                 .onComplete(() => {
-                    this.rubiksCubeGroup.add(...rotationGroup.children)
-                    this.scene.remove(rotationGroup);
+                    rotationGroup.updateMatrixWorld();
+
+                    // this.scene.updateMatrix()
+                    // rotationGroup.updateMatrixWorld(true)
+                    rotationGroup.children
+                        .forEach(cubelet => {
+                            var vector = new Vector3();
+                            vector.setFromMatrixPosition(cubelet.matrixWorld);
+                            cubelet.position.copy(vector.clone())
+                            cubelet.parent = this.rubiksCubeGroup;
+                            // cubelet.matrixWorld.();
+                            // rotationGroup.remove(cubelet)
+                            // this.rubiksCubeGroup.add(cubelet);
+                            // cubelet.updateMatrixWorld()
+                            // cubelet.getWorldPosition(cubelet.position)
+                            // console.log(this.scene.getWorldPosition(cubelet.position), cubelet.position)
+                            // cubelet.updateMatrix();
+                        })
+
+                    // this.rubiksCubeGroup.updateWorldMatrix(true, true);
+                    this.rubiksCubeGroup.add(...rotationGroup.children);
+                    // this.rubiksCubeGroup.updateMatrix();
+                    // this.scene.remove(rotationGroup);
                     this.animation = undefined;
                     resolve();
                 })

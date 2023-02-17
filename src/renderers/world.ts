@@ -22,7 +22,7 @@ export class World {
         this.scene.background = new Color('#111111');
 
         const light = new DirectionalLight('white', 8);
-        light.position.set(10, 10, 10);
+        light.position.set(-10, 10, 10);
         light.castShadow = true;
 
         this.scene.add(light);
@@ -31,12 +31,11 @@ export class World {
         this.camera = this.createCamera(container);
         // every object is initially created at ( 0, 0, 0 )
         // move the camera back so we can view the scene
-        this.camera.position.set(-3, 5, 15);
+        this.camera.position.set(-10, 5, 15);
         this.camera.lookAt(new Vector3(0, 0, 0))
 
         // create the renderer
         this.renderer = new WebGLRenderer({ antialias: true });
-
 
         this.scene.add(new AxesHelper(50));
 

@@ -25,6 +25,8 @@ const getInitialColorOfSide = (orientation: Sides): Colors => {
 export class PocketCube {
     private readonly faceRotator: PocketCubeFaceRotator;
     private readonly colors: Colors[];
+    private readonly hash: string;
+
 
     public constructor(clone?: Colors[]) {
         if (clone) {
@@ -39,6 +41,7 @@ export class PocketCube {
                 })
         }
         this.faceRotator = new PocketCubeFaceRotator();
+        this.hash = this.colors.join('.');
     }
 
     public getConfiguration(): Colors[] {
@@ -69,7 +72,7 @@ export class PocketCube {
     }
 
     public getHash(): string {
-        return this.colors.join('.');
+        return this.hash;
     }
 
     public print(): void {

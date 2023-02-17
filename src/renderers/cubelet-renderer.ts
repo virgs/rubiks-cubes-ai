@@ -5,7 +5,7 @@ export class CubeletRenderer {
     public constructor(config: { sideLength: number, position: Vector3, id: number }) {
         const geometry = new BoxGeometry(config.sideLength, config.sideLength, config.sideLength);
         const material = new MeshStandardMaterial({
-            color: 'navy',
+            color: config.id === 7 ? 'navy' : 'orange',
             roughness: 1,
             flatShading: true,
             transparent: true,
@@ -19,6 +19,7 @@ export class CubeletRenderer {
 
         this.cubeletMesh.add(lineMesh);
         this.cubeletMesh.position.set(config.position.x, config.position.y, config.position.z);
+        this.cubeletMesh.userData.id = config.id;
     }
 
     public getMesh(): Object3D {
