@@ -39,7 +39,7 @@ export class BreadthFirstSearch {
         while (this.candidates.length > 0 && !this.aborted) {
             ++iterations;
             current = this.metricEmitter.add(Metrics.POP_CANDIDATE, () => this.candidates.shift());
-            if (this.metricEmitter.add(Metrics.VISISTED_LIST_CHECK, () => this.visitedChecklist.get(current.cube.getHash()))) {
+            if (this.metricEmitter.add(Metrics.VISISTED_LIST_CHECK, () => this.visitedChecklist.has(current.cube.getHash()))) {
                 continue;
             }
             if (this.metricEmitter.add(Metrics.CHECK_SOLUTION, () => current.cube.isSolved())) {

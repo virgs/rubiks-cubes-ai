@@ -19,8 +19,6 @@ export default defineComponent({
     let cube = new PocketCube();
     const cubeRenderer = new CubeRenderer({ scene: world.getScene(), cube: cube })
     console.log('Scrambling')
-    // cube = cube.rotateFace({side: Sides.UP})
-    // cubeRenderer.rotateFace({side: Sides.UP})
     const scramblingRotations = new CubeScrambler(30).scramble(cube);
     this.printRotations(scramblingRotations)
     for (let rotation of scramblingRotations) {
@@ -30,20 +28,19 @@ export default defineComponent({
     console.log('Solving')
     const solution = new BreadthFirstSearch().solve(cube)
 
-    console.log('Solved', solution)
+    console.log('Solved', solution);
     this.printRotations(solution.rotations);
     for (let rotation of solution.rotations) {
       await cubeRenderer.rotateFace({ ...rotation, duration: 500 });
       cube = cube.rotateFace(rotation);
     }
-    console.log('isSolved: ' + cube.isSolved())
   },
   methods: {
     printRotations(rotations: FaceRotation[]) {
       let text = '';
       rotations
         .forEach((rotation: FaceRotation, index: number) => {
-          text += `${Sides[rotation.side].substring(0, 1)}${rotation.counterClockwiseDirection ? '\'' : ''}. `;
+          text += `${Sides[rotation.side].substring(0, 1)}${rotation.layer! > 0 ? rotation.layer! + 1 : ' '}${rotation.counterClockwiseDirection ? '\'' : ' '}  `;
           if (index % 5 === 4) {
             text += '\n'
           }
