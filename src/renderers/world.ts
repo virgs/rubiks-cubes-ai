@@ -1,5 +1,7 @@
 import { AmbientLight, AxesHelper, Clock, Color, DirectionalLight, Object3D, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from "three";
 import * as Tween from '@tweenjs/tween.js'
+import { Configuration } from "@/configuration";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 export type AnimationFunction = (delta: number) => void
 
@@ -9,7 +11,6 @@ export class World {
     private readonly renderer: WebGLRenderer;
     private readonly animations: AnimationFunction[];
     private readonly clock: Clock;
-
 
     public constructor(container: HTMLElement) {
         this.clock = new Clock();
@@ -26,7 +27,7 @@ export class World {
         light.castShadow = true;
 
         this.scene.add(light);
-        this.scene.add(new AmbientLight(0x222222));
+        this.scene.add(new AmbientLight(0x888888));
 
         this.camera = this.createCamera(container);
         // every object is initially created at ( 0, 0, 0 )
@@ -37,7 +38,13 @@ export class World {
         // create the renderer
         this.renderer = new WebGLRenderer({ antialias: true });
 
-        this.scene.add(new AxesHelper(50));
+        if (Configuration.world.debug) {
+            this.scene.add(new AxesHelper(50));
+        }
+
+        const controls = new OrbitControls( this.camera, this.renderer.domElement );
+        controls.target.set( 0, 2, 0 );
+        controls.update();
 
         // turn on the physically correct lighting model
         this.renderer.physicallyCorrectLights = true;

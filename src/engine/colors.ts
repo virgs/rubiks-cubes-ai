@@ -1,8 +1,12 @@
 export enum Colors {
-    YELLOW = 'yellow',
-    ORANGE = 'orange',
-    BLUE = 'blue',
-    RED = 'red',
-    GREEN = 'green',
-    WHITE = 'white'
+    YELLOW,
+    ORANGE,
+    BLUE,
+    RED,
+    GREEN,
+    WHITE
 }
+
+export const getAllColors = ()=> Object.keys(Colors)
+    .filter(key => !isNaN(Number(key)))
+    .map(key => Number(key) as Colors);

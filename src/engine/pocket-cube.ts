@@ -4,7 +4,7 @@ import { getAllSides, Sides } from '@/engine/sides';
 import type { FaceRotation } from './face-rotation';
 
 
-const getInitialColorOfSide = (orientation: Sides): Colors => {
+export const getInitialColorOfSide = (orientation: Sides): Colors => {
     switch (orientation) {
         case Sides.FRONT:
             return Colors.BLUE;
