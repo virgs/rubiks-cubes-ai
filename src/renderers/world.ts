@@ -11,6 +11,7 @@ export class World {
     private readonly renderer: WebGLRenderer;
     private readonly animations: AnimationFunction[];
     private readonly clock: Clock;
+    private readonly controls: OrbitControls;
 
     public constructor(container: HTMLElement) {
         this.clock = new Clock();
@@ -42,9 +43,12 @@ export class World {
             this.scene.add(new AxesHelper(50));
         }
 
-        const controls = new OrbitControls( this.camera, this.renderer.domElement );
-        controls.target.set( 0, 2, 0 );
-        controls.update();
+        this.controls = new OrbitControls( this.camera, this.renderer.domElement );
+        this.controls.target.set( 0, 2, 0 );
+        this.controls.enableDamping = true;
+        this.controls.minDistance = 10;
+        this.controls.maxDistance = 20;
+        
 
         // turn on the physically correct lighting model
         this.renderer.physicallyCorrectLights = true;
@@ -79,6 +83,7 @@ export class World {
     public start(): void {
         this.renderer.setAnimationLoop(() => {
             Tween.update();
+            this.controls.update();
             const delta = this.clock.getDelta();
             this.animations
                 .forEach(animation => animation(delta));
