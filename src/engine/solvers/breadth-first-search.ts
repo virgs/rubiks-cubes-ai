@@ -63,15 +63,13 @@ export class BreadthFirstSearch {
     private applyRotations(current: Candidate): void {
         [Sides.FRONT, Sides.UP, Sides.RIGHT]
             .forEach(side => {
-                const newCandidate = this.metricEmitter.add(Metrics.PERFORM_ROTATION, () => current.cube.rotateFace({side: side, clockwiseDirection: true}));
+                const rotation = { side: side, counterClockwiseDirection: false, layer: 0 };
+                const newCandidate = this.metricEmitter.add(Metrics.PERFORM_ROTATION, () => current.cube.rotateFace(rotation));
                 if (!this.metricEmitter.add(Metrics.VISISTED_LIST_CHECK, () => this.visitedChecklist.has(newCandidate.getHash()))) {
                     this.metricEmitter.add(Metrics.ADD_CANDIDATE, () => {
                         this.candidates.push({
                             cube: newCandidate,
-                            rotations: current.rotations.concat({
-                                side: side,
-                                clockwiseDirection: true
-                            })
+                            rotations: current.rotations.concat(rotation)
                         });
 
                     })

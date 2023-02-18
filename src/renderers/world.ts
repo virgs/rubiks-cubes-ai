@@ -21,14 +21,14 @@ export class World {
         this.scene = new Scene();
 
         // Set the background color
-        this.scene.background = new Color('#111111');
+        this.scene.background = new Color(0x111111);
 
-        const light = new DirectionalLight('white', 8);
-        light.position.set(-10, 10, 10);
-        light.castShadow = true;
+        // const light = new DirectionalLight('white', 1);
+        // light.position.set(-10, 10, 10);
+        // light.castShadow = true;
 
-        this.scene.add(light);
-        this.scene.add(new AmbientLight(0x888888));
+        // this.scene.add(light);
+        this.scene.add(new AmbientLight(0xAAAAAA, 8));
 
         this.camera = this.createCamera(container);
         // every object is initially created at ( 0, 0, 0 )

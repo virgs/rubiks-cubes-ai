@@ -1,5 +1,5 @@
 export const Configuration = {
     world: {
-        debug: true
+        debug: false
     }
 }

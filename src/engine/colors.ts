@@ -16,11 +16,11 @@ export const getAllColors = ()=> Object.keys(Colors)
 
 export const mapColorsToHex = (color: Colors): number => {
     switch (color) {
-        case Colors.YELLOW: return 0xFF5800;
-        case Colors.ORANGE: return 0x009E60;
-        case Colors.BLUE: return 0xC41E3A;
-        case Colors.RED: return 0x0051BA;
-        case Colors.GREEN: return 0xFFD500;
-        case Colors.WHITE: return 0xFFFFFF;        
+        case Colors.YELLOW: return 0xc1bb00;
+        case Colors.ORANGE: return 0xaf4b00;
+        case Colors.BLUE: return 0x17207f;
+        case Colors.RED: return 0x831212;
+        case Colors.GREEN: return 0x00790f;
+        case Colors.WHITE: return 0xc4c4c4;       
     }
 }

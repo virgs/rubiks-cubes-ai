@@ -20,10 +20,10 @@ export class PocketCubeFaceRotator {
         const result = [...currentConfiguration];
         PocketCubeFaceRotator.faceRotatorMap.get(faceRotation.side)!
             .forEach(item => {
-                if (faceRotation.clockwiseDirection) {
-                    result[item.destination] = currentConfiguration[item.source];
-                } else {
+                if (faceRotation.counterClockwiseDirection) {
                     result[item.source] = currentConfiguration[item.destination];
+                } else {
+                    result[item.destination] = currentConfiguration[item.source];
                 }
             })
         return result;

@@ -73,9 +73,9 @@ export class CubeRenderer {
         return this.rubiksCubeGroup;
     }
 
-    public async rotate(faceRotation: FaceRotation & { duration: number }): Promise<void> {
+    public async rotateFace(faceRotation: FaceRotation & { duration?: number }): Promise<void> {
         let sortFunction = (a: number, b: number) => b - a;
-        let targetAngle = (Math.PI / 2) * (faceRotation.clockwiseDirection ? -1 : 1)
+        let targetAngle = (Math.PI / 2) * (faceRotation.counterClockwiseDirection ? 1 : -1)
 
         let axisName: 'x' | 'y' | 'z' = 'y'
         if (faceRotation.side === Sides.BACK || faceRotation.side === Sides.DOWN || faceRotation.side === Sides.LEFT) {
@@ -91,26 +91,24 @@ export class CubeRenderer {
         const normalizedAxisVector = new Vector3(0, 0, 0);
         normalizedAxisVector[axisName] = 1;
 
-        let cubesToIgnore = 0;
-        let cubesToRotate = this.dimension * this.dimension;
+        let numOfCubeletsToIgnore = 0;
+        let numOfCubeletsToRotate = this.dimension * this.dimension;
         if (faceRotation.layer !== undefined) {
             if (faceRotation.layer > 0) {
-                cubesToRotate = 4 * (this.dimension - 1);
-                cubesToIgnore += (faceRotation.layer - 1) * cubesToRotate + this.dimension * this.dimension;
+                numOfCubeletsToRotate = 4 * (this.dimension - 1);
+                numOfCubeletsToIgnore += (faceRotation.layer - 1) * numOfCubeletsToRotate + this.dimension * this.dimension;
             }
         }
 
         const rotationGroup = new Group();
         this.rubiksCubeGroup.children
             .sort((first: Object3D, second: Object3D) => sortFunction(first.position[axisName], second.position[axisName]))
-            .filter((_, index) => index >= cubesToIgnore && index < cubesToIgnore + cubesToRotate)
+            .filter((_, index) => index >= numOfCubeletsToIgnore && index < numOfCubeletsToIgnore + numOfCubeletsToRotate)
             .forEach(cubelet => {
                 cubelet.parent = rotationGroup;
                 rotationGroup.add(cubelet)
             });
         this.scene.add(rotationGroup);
-        console.log(`${Sides[faceRotation.side].substring(0, 1)}${faceRotation.clockwiseDirection ? '' : '\''}${faceRotation.layer}`);
-        // console.log(this.dimension, cubesToIgnore, cubesToRotate, rotationGroup.children.length)
 
         rotationGroup.setRotationFromEuler(this.rubiksCubeGroup.rotation.clone());
 
