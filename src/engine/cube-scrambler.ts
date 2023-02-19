@@ -20,5 +20,5 @@ export class CubeScrambler {
                 return { side: side, counterClockwiseDirection: direction, layer: layer } as FaceRotation;
             }) as FaceRotation[];
     }
-    //TODO tune this rotations (avoid things like RRRR, RR', RRR=R' of same layer)
+    //TODO tune these rotations (avoid things like RRRR, RR', RRR=R' of same layer)
 }

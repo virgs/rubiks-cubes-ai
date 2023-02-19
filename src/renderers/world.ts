@@ -1,4 +1,4 @@
-import { AmbientLight, AxesHelper, Clock, Color, DirectionalLight, Object3D, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from "three";
+import { AmbientLight, AxesHelper, Clock, Color, DirectionalLight, HemisphereLight, Object3D, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from "three";
 import * as Tween from '@tweenjs/tween.js'
 import { Configuration } from "@/configuration";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
@@ -23,18 +23,18 @@ export class World {
         // Set the background color
         this.scene.background = new Color(0x111111);
 
-        // const light = new DirectionalLight('white', 1);
-        // light.position.set(-10, 10, 10);
-        // light.castShadow = true;
+        const light = new DirectionalLight(0xAAAAAA, 2);
+        light.position.set(-10, 10, 10);
+        light.castShadow = true;
+        this.scene.add(light);
 
-        // this.scene.add(light);
-        this.scene.add(new AmbientLight(0xAAAAAA, 8));
+        this.scene.add(new HemisphereLight(
+            0xAAAAAA, // bright sky color
+            0x2f4f4f, // dim ground color
+            3.5, // intensity
+        ));
 
         this.camera = this.createCamera(container);
-        // every object is initially created at ( 0, 0, 0 )
-        // move the camera back so we can view the scene
-        this.camera.position.set(-10, 5, 15);
-        this.camera.lookAt(new Vector3(0, 0, 0))
 
         // create the renderer
         this.renderer = new WebGLRenderer({ antialias: true });
@@ -43,12 +43,12 @@ export class World {
             this.scene.add(new AxesHelper(50));
         }
 
-        this.controls = new OrbitControls( this.camera, this.renderer.domElement );
-        this.controls.target.set( 0, 2, 0 );
+        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+        this.controls.target.set(0, 0, 0);
         this.controls.enableDamping = true;
-        this.controls.minDistance = 10;
-        this.controls.maxDistance = 20;
-        
+        this.controls.minDistance = 15;
+        this.controls.maxDistance = 30;
+
 
         // turn on the physically correct lighting model
         this.renderer.physicallyCorrectLights = true;
@@ -77,7 +77,10 @@ export class World {
         const aspect = container.clientWidth / container.clientHeight;
         const near = 0.1; // the near clipping plane
         const far = 50; // the far clipping plane
-        return new PerspectiveCamera(fov, aspect, near, far);
+        const camera = new PerspectiveCamera(fov, aspect, near, far);
+        camera.position.set(-10, 5, 15);
+        camera.lookAt(new Vector3(0, 0, 0))
+        return camera;
     }
 
     public start(): void {
