@@ -19,7 +19,7 @@ export class CubeRenderer {
     private static readonly cubeletSide: number = 1;
     private static readonly cubeletFilling: number = .99;
     private static readonly animatioDuration: number = 2500;
-    private readonly rubiksCubeGroup: Group;
+    private rubiksCubeGroup: Group;
     private readonly scene: Scene;
 
     private readonly dimension: number;
@@ -73,7 +73,7 @@ export class CubeRenderer {
                             this.rubiksCubeGroup.add(cubelet.getMesh())
                         }
                     })));
-        // this.rubiksCubeGroup.position.set(config.position.x, config.position.y, config.position.z);
+        this.rubiksCubeGroup.position.set(config.position.x, config.position.y, config.position.z);
         this.scene.add(this.rubiksCubeGroup);
     }
 
@@ -82,18 +82,17 @@ export class CubeRenderer {
     }
 
     public async rotateFace(faceRotation: FaceRotationAnimation): Promise<void> {
-        let sortFunction = (a: number, b: number) => b - a;
-        let targetAngle = (Math.PI / 2) * (faceRotation.counterClockwiseDirection ? 1 : -1)
-
         let axisName: 'x' | 'y' | 'z' = 'y'
-        if (faceRotation.side === Sides.BACK || faceRotation.side === Sides.DOWN || faceRotation.side === Sides.LEFT) {
-            sortFunction = (a, b) => a - b;
-            targetAngle *= -1;
-        }
         if (faceRotation.side === Sides.BACK || faceRotation.side === Sides.FRONT) {
             axisName = 'z'
         } else if (faceRotation.side === Sides.RIGHT || faceRotation.side === Sides.LEFT) {
             axisName = 'x'
+        }
+        let sortFunction = (a: number, b: number) => b - a;
+        let targetAngle = (Math.PI / 2) * (faceRotation.counterClockwiseDirection ? 1 : -1)
+        if (faceRotation.side === Sides.BACK || faceRotation.side === Sides.DOWN || faceRotation.side === Sides.LEFT) {
+            sortFunction = (a, b) => a - b;
+            targetAngle *= -1;
         }
 
         const normalizedAxisVector = new Vector3(0, 0, 0);
@@ -114,9 +113,10 @@ export class CubeRenderer {
             .filter((_, index) => index >= numOfCubeletsToIgnore && index < numOfCubeletsToIgnore + numOfCubeletsToRotate)
             .forEach(cubelet => {
                 cubelet.parent = rotationGroup;
-                rotationGroup.add(cubelet)
+                rotationGroup.add(cubelet);
             });
-        // this.rubiksCubeGroup.getWorldPosition(rotationGroup.position);
+        this.rubiksCubeGroup.getWorldPosition(rotationGroup.position);
+        // rotationGroup.getWorldPosition(this.rubiksCubeGroup.position);
         this.scene.add(rotationGroup);
 
         rotationGroup.setRotationFromEuler(this.rubiksCubeGroup.rotation.clone());
@@ -128,26 +128,20 @@ export class CubeRenderer {
         return new Promise((resolve) => {
             new Tween.Tween(start)
                 .to(end, faceRotation.duration !== undefined ? faceRotation.duration : CubeRenderer.animatioDuration)
-                .easing(Tween.Easing.Quadratic.InOut)
+                .easing(Tween.Easing.Quadratic.Out)
                 .onUpdate((item: RotationTween) => {
-                    rotationGroup.position.applyAxisAngle(normalizedAxisVector, item.rotation - prev.rotation);
-                    rotationGroup.rotateOnWorldAxis(normalizedAxisVector, item.rotation - prev.rotation);
-                    // rotationGroup.rotation[axisName] = (item.rotation);
-                    prev.rotation = item.rotation;
-                    rotationGroup.updateMatrixWorld();
+                    rotationGroup.rotation[axisName] = (item.rotation);
                 })
                 .onComplete(() => {
                     rotationGroup.children
-                        .forEach((cubelet: Object3D) => {
-                            var vector = new Vector3();
-                            vector.setFromMatrixPosition(cubelet.matrixWorld);
-                            cubelet.setRotationFromMatrix(cubelet.matrixWorld);
-                            cubelet.position.copy(vector.clone());
+                        .forEach((cubelet: Object3D, index: number) => {
+                            const matrixWorld = cubelet.matrixWorld.clone()
+                            const vector = new Vector3();
+                            vector.setFromMatrixPosition(matrixWorld);
                             cubelet.parent = this.rubiksCubeGroup;
+                            cubelet.position.copy(vector.clone().sub(this.rubiksCubeGroup.position));
+                            cubelet.rotation.setFromRotationMatrix(matrixWorld);    
                         });
-                    // console.log(this.rubiksCubeGroup.getWorldPosition(rotationGroup.position))
-                    // rotationGroup.getWorldPosition(this.rubiksCubeGroup.position);
-                    this.rubiksCubeGroup.add(...rotationGroup.children);
                     this.scene.remove(rotationGroup);
                     resolve();
                 })

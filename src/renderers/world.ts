@@ -24,7 +24,7 @@ export class World {
         this.scene.background = new Color(0x111111);
 
         const light = new DirectionalLight(0xAAAAAA, 2);
-        light.position.set(-10, 10, 10);
+        light.position.set(10, 10, 10);
         light.castShadow = true;
         this.scene.add(light);
 
@@ -78,7 +78,7 @@ export class World {
         const near = 0.1; // the near clipping plane
         const far = 50; // the far clipping plane
         const camera = new PerspectiveCamera(fov, aspect, near, far);
-        camera.position.set(-10, 5, 15);
+        camera.position.set(15, 10, 20);
         camera.lookAt(new Vector3(0, 0, 0))
         return camera;
     }

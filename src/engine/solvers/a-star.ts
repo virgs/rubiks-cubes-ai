@@ -1,5 +1,5 @@
 import type { Solution } from "./solution";
-import LinkedList from "double-linked-list";
+import Heap from 'heap';
 import type { PocketCube } from "../pocket-cube";
 import { Sides } from "../sides";
 import { MetricEmitter, Metrics } from "./metric-emitter";
@@ -8,24 +8,34 @@ import type { CubeSolver } from "./cube-solver";
 import { Configuration } from "@/configuration";
 
 type Candidate = {
+    cost: number,
     cube: PocketCube;
     rotations: FaceRotation[]
 }
 
-export class BreadthFirstSearch implements CubeSolver {
+export class AStar implements CubeSolver {
     private readonly metricEmitter: MetricEmitter;
-    private readonly candidates: LinkedList;
+        //    moves.sort((a, b) => {
+    //       // Prioritize moves that push boxes onto goals
+    //       const boxesOnGoals = (b[2] - a[2]) * 1000;
+    //       // Then sort by the total Manhattan distance of boxes to goals
+    //       const boxToGoalDistanceTotal = a[3] - b[3];
+    //       return boxesOnGoals + boxToGoalDistanceTotal;
+    //     });
+    //a.foo - b.foo; ==> heap.pop(); gets the smallest
+    private candidates: Heap<Candidate>;;
     private readonly visitedChecklist: Map<string, boolean>;
-    private iterations: number;
     private readonly internalIterations: number = Configuration.solvers.bfs.iterations;;
     private readonly actions: FaceRotation[];
+    private iterations: number;
 
     public constructor(cube: PocketCube) {
         this.metricEmitter = new MetricEmitter();
         this.visitedChecklist = new Map();
-        this.candidates = new LinkedList();
+        this.candidates = new Heap((a: Candidate, b: Candidate) => a.cost - b.cost);
         this.iterations = 0;
         const current: Candidate = {
+            cost: 0,
             cube: cube,
             rotations: []
         };
@@ -41,15 +51,16 @@ export class BreadthFirstSearch implements CubeSolver {
     public iterate(): Solution | undefined {
         let current: Candidate | undefined;
         let counter = this.internalIterations;
-        while (this.candidates.length > 0 && counter > 0) {
+        while (this.candidates.size() > 0 && counter > 0) {
             --counter;
             ++this.iterations;
-            current = this.metricEmitter.add(Metrics.POP_CANDIDATE, () => this.candidates.shift());
+            current = this.metricEmitter.add(Metrics.POP_CANDIDATE, () => this.candidates.pop());
             if (this.metricEmitter.add(Metrics.VISISTED_LIST_CHECK, () => this.visitedChecklist.has(current!.cube.getHash()))) {
                 continue;
             }
             if (this.metricEmitter.add(Metrics.CHECK_SOLUTION, () => current!.cube.isSolved())) {
                 this.metricEmitter.finish();
+                this.candidates.clear();
                 //TODO tune these rotations (avoid things like RRRR, RR', RRR=R' of same layer)
                 return {
                     rotations: current!.rotations,

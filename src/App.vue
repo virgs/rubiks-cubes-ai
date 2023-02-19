@@ -10,6 +10,7 @@ import { Sides } from "./engine/sides";
 import type { Solution } from "./engine/solvers/solution";
 import type { CubeSolver } from "./engine/solvers/cube-solver";
 import { Vector3 } from "three";
+import { FaceRotationTranslator } from "./renderers/face-rotation-translator";
 
 export default defineComponent({
   name: 'App',
@@ -20,15 +21,17 @@ export default defineComponent({
     world.start();
 
     let cube = new PocketCube();
-    const cubeRenderer = new CubeRenderer({ scene: world.getScene(), cube: cube, position: new Vector3(2.5, 3, 0) })
+    const cubeRenderer = new CubeRenderer({ scene: world.getScene(), cube: cube, position: new Vector3(3.5, 2, 0) })
     console.log('Scrambling')
+    // await cubeRenderer.rotateFace({side: Sides.UP, duration: 1000 })
+    // await cubeRenderer.rotateFace({side: Sides.RIGHT, duration: 1000 })
     const scramblingRotations = new CubeScrambler(30).scramble(cube);
-    this.printRotations(scramblingRotations)
+    console.log(new FaceRotationTranslator().translate(scramblingRotations));
     for (let rotation of scramblingRotations) {
       await cubeRenderer.rotateFace({ ...rotation, duration: 100 });
       cube = cube.rotateFace(rotation);
     }
-    // this.solve(cube, cubeRenderer, world);
+    this.solve(cube, cubeRenderer, world);
   },
   methods: {
     async solve(cube: PocketCube, cubeRenderer: CubeRenderer, world: World) {
@@ -39,7 +42,7 @@ export default defineComponent({
         if (solver) {
           solution = solver.iterate();
           if (solution) {
-            this.printRotations(solution.rotations);
+            console.log(new FaceRotationTranslator().translate(solution.rotations));
             console.log(solution)
             this.renderSolution(cubeRenderer, solution)
             solver = undefined;
@@ -51,17 +54,6 @@ export default defineComponent({
       for (let rotation of solution.rotations) {
         await cubeRenderer.rotateFace({ ...rotation, duration: 500 });
       }
-    },
-    printRotations(rotations: FaceRotation[]) {
-      let text = '';
-      rotations
-        .forEach((rotation: FaceRotation, index: number) => {
-          text += `| ${Sides[rotation.side].substring(0, 1)}${rotation.layer! > 0 ? rotation.layer! + 1 : ' '}${rotation.counterClockwiseDirection ? '\'' : ' '}  `;
-          if (index % 5 === 4) {
-            text += '\n'
-          }
-        });
-      console.log(text);
     }
   }
 })
