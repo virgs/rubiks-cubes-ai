@@ -37,7 +37,12 @@ export type Sticker = {
 //       20 21
 //       23 22
 
+// export type Cubelet = {
+//     [Sides]: number
+// }
+
 export class PocketCube {
+    // private readonly cubelets: Cubelet[]
     private readonly faceRotator: PocketCubeFaceRotator;
     private readonly stickers: Sticker[];
     private readonly hash: string;

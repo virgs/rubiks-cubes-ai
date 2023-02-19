@@ -46,9 +46,10 @@ export class BreadthFirstSearch implements CubeSolver {
         this.measurer.start();
         this.actions = [];
         [Sides.FRONT, Sides.UP, Sides.RIGHT]
-            .map(side => {
-                this.actions.push({ side: side, counterClockwiseDirection: false, layer: 0 });
-            });
+            .map(side => [true, false]
+                .map(direction => {
+                    this.actions.push({ side: side, counterClockwiseDirection: direction, layer: 0 });
+                }));
     }
 
     public iterate(): Solution | undefined {
@@ -63,7 +64,6 @@ export class BreadthFirstSearch implements CubeSolver {
             }
             if (this.measurer.add(Metrics[Metrics.CHECK_SOLUTION], () => current!.cube.isSolved())) {
                 this.measurer.finish();
-                //TODO tune these rotations (avoid things like RRRR, RR', RRR=R' of same layer)
                 return {
                     rotations: current!.rotations,
                     totalTime: this.measurer.getTotalTime()!,

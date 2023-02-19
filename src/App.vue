@@ -7,10 +7,8 @@ import { World } from "./renderers/world";
 import { CubeRenderer } from "./renderers/cube-renderer";
 import type { Solution } from "./engine/solvers/solution";
 import type { CubeSolver } from "./engine/solvers/cube-solver";
-import { Side, Vector3 } from "three";
+import { Vector3 } from "three";
 import { CubePrinter } from "./engine/cube-printer";
-import { Sides } from "./engine/sides";
-import type { FaceRotation } from "./engine/face-rotation";
 
 export default defineComponent({
   name: 'App',
