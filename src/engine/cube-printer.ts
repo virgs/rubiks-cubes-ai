@@ -1,18 +1,17 @@
 import type { FaceRotation } from "@/engine/face-rotation";
 import { Sides } from "@/engine/sides";
 import { Colors } from "./colors";
-import type { PocketCube, Sticker } from "./pocket-cube";
+import type { Cubelet, PocketCube, Sticker } from "./pocket-cube";
 
 export class CubePrinter {
-
-    public translateCube(cube: PocketCube): string {
+    public printCube(cube: PocketCube): void {
         const stickers = cube.getConfiguration();
         const text = (sticker: Sticker, positionId: number): string => {
             return CubePrinter.mapToSmallLetters(`${String(sticker.originalPosition).padStart(2, ' ')}`)
                 + Colors[sticker.color].substring(0, 1)
-                + CubePrinter.mapToSmallLetters(`${String(positionId).padStart(2,' ')}`);
+                + CubePrinter.mapToSmallLetters(`${String(positionId).padStart(2, ' ')}`);
         }
-        return '' +
+        console.log('' +
             `               UP
                ${text(stickers[0], 0)}  ${text(stickers[1], 1)}
                ${text(stickers[3], 3)}  ${text(stickers[2], 2)}
@@ -24,10 +23,10 @@ ${text(stickers[7], 7)}  ${text(stickers[6], 6)}   ${text(stickers[11], 11)}  ${
                DOWN
                ${text(stickers[20], 20)}  ${text(stickers[21], 21)}
                ${text(stickers[23], 23)}  ${text(stickers[22], 22)}
-`;
+`);
     };
 
-    public translateRotations(rotations: FaceRotation[], lineBreak: number = 5): string {
+    public printRotations(rotations: FaceRotation[], lineBreak: number = 5): void {
         let text = '';
         rotations
             .forEach((rotation: FaceRotation, index: number) => {
@@ -36,7 +35,19 @@ ${text(stickers[7], 7)}  ${text(stickers[6], 6)}   ${text(stickers[11], 11)}  ${
                     text += '\n'
                 }
             });
-        return text
+        console.log(text);
+    }
+
+    public printCubelets(cubelets: Cubelet[]): void {
+        cubelets
+            .map(cubelet => {
+                let text = ' '
+                cubelet
+                    .map(sticker => {
+                        text += `${Colors[sticker.color!]} ${Sides[sticker.side].substring(0, 1)}${CubePrinter.mapToSmallLetters(sticker.position!.toString())};  `;
+                    })
+                console.log(text)
+            })
     }
 
     private getLayer(layer?: number): string {

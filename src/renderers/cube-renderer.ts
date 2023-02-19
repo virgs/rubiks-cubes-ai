@@ -82,11 +82,11 @@ export class CubeRenderer {
     }
 
     public async rotateFace(faceRotation: FaceRotationAnimation): Promise<void> {
-        let axisName: 'x' | 'y' | 'z' = 'y'
+        let axisName: 'x' | 'y' | 'z' = 'y';
         if (faceRotation.side === Sides.BACK || faceRotation.side === Sides.FRONT) {
-            axisName = 'z'
+            axisName = 'z';
         } else if (faceRotation.side === Sides.RIGHT || faceRotation.side === Sides.LEFT) {
-            axisName = 'x'
+            axisName = 'x';
         }
         let sortFunction = (a: number, b: number) => b - a;
         let targetAngle = (Math.PI / 2) * (faceRotation.counterClockwiseDirection ? 1 : -1)
@@ -94,9 +94,6 @@ export class CubeRenderer {
             sortFunction = (a, b) => a - b;
             targetAngle *= -1;
         }
-
-        const normalizedAxisVector = new Vector3(0, 0, 0);
-        normalizedAxisVector[axisName] = 1;
 
         let numOfCubeletsToIgnore = 0;
         let numOfCubeletsToRotate = this.dimension * this.dimension;
@@ -116,13 +113,9 @@ export class CubeRenderer {
                 rotationGroup.add(cubelet);
             });
         this.rubiksCubeGroup.getWorldPosition(rotationGroup.position);
-        // rotationGroup.getWorldPosition(this.rubiksCubeGroup.position);
         this.scene.add(rotationGroup);
 
-        rotationGroup.setRotationFromEuler(this.rubiksCubeGroup.rotation.clone());
-
         const start: RotationTween = { rotation: 0 };
-        const prev: RotationTween = { rotation: 0 };
         const end: RotationTween = { rotation: targetAngle };
 
         return new Promise((resolve) => {
@@ -134,7 +127,7 @@ export class CubeRenderer {
                 })
                 .onComplete(() => {
                     rotationGroup.rotation[axisName] = targetAngle;
-                    rotationGroup.updateMatrixWorld(true)
+                    rotationGroup.updateMatrixWorld(true);
                     rotationGroup.children
                         .forEach((cubelet: Object3D) => {
                             const matrixWorld = cubelet.matrixWorld.clone()

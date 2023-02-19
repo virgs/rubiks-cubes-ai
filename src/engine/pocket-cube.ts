@@ -37,12 +37,20 @@ export type Sticker = {
 //       20 21
 //       23 22
 
-// export type Cubelet = {
-//     [Sides]: number
-// }
+export type Cubelet = { side: Sides, position?: number, color?: Colors }[];
+const cubeletMap: Cubelet[] = [
+    [{ side: Sides.FRONT, position: 8 }, { side: Sides.LEFT, position: 5 }, { side: Sides.UP, position: 3 }],
+    [{ side: Sides.FRONT, position: 9 }, { side: Sides.RIGHT, position: 12 }, { side: Sides.UP, position: 2 }],
+    [{ side: Sides.FRONT, position: 10 }, { side: Sides.LEFT, position: 6 }, { side: Sides.DOWN, position: 20 }],
+    [{ side: Sides.FRONT, position: 11 }, { side: Sides.RIGHT, position: 15 }, { side: Sides.DOWN, position: 21 }],
+
+    [{ side: Sides.BACK, position: 16 }, { side: Sides.RIGHT, position: 13 }, { side: Sides.UP, position: 1 }],
+    [{ side: Sides.BACK, position: 17 }, { side: Sides.LEFT, position: 4 }, { side: Sides.UP, position: 0 }],
+    [{ side: Sides.BACK, position: 19 }, { side: Sides.RIGHT, position: 14 }, { side: Sides.DOWN, position: 22 }],
+    [{ side: Sides.BACK, position: 23 }, { side: Sides.LEFT, position: 7 }, { side: Sides.DOWN, position: 18 }],
+];
 
 export class PocketCube {
-    // private readonly cubelets: Cubelet[]
     private readonly faceRotator: PocketCubeFaceRotator;
     private readonly stickers: Sticker[];
     private readonly hash: string;
@@ -95,6 +103,34 @@ export class PocketCube {
 
     public getHash(): string {
         return this.hash;
+    }
+
+    public getCubeletsByCorner(...sides: Sides[]): Cubelet[] {
+        const found = cubeletMap
+            .filter(cubelets => cubelets
+                .every(sticker => sides.includes(sticker.side)));
+
+        return found
+            .map(cubelet => cubelet
+                .map(sticker => ({
+                    side: sticker.side,
+                    position: sticker.position,
+                    color: this.stickers[sticker.position!].color
+                })));
+    }
+
+    public getCubeletsByColor(...colors: Colors[]): Cubelet[] {
+        const found = cubeletMap
+            .filter(cubelets => cubelets
+                .every(sticker => colors.includes(this.stickers[sticker.position!].color)));
+
+        return found
+            .map(cubelet => cubelet
+                .map(sticker => ({
+                    side: sticker.side,
+                    position: sticker.position,
+                    color: this.stickers[sticker.position!].color
+                })));
     }
 
 }
