@@ -12,6 +12,8 @@ type RotationTween = {
     rotation: number
 }
 
+type FaceRotationAnimation = FaceRotation & { duration?: number };
+
 //https://github.com/SuboptimalEng/gamedex/blob/19b0466ad30ef0fb6c760eb78f74e6cf64fa1a73/08-rubiks-cube/src/lib/Cube.js
 export class CubeRenderer {
     private static readonly cubeletSide: number = 1;
@@ -22,7 +24,7 @@ export class CubeRenderer {
 
     private readonly dimension: number;
 
-    public constructor(config: { cube: PocketCube, scene: Scene }) {
+    public constructor(config: { cube: PocketCube, scene: Scene, position: Vector3 }) {
         this.rubiksCubeGroup = new Group();
         this.scene = config.scene;
         this.dimension = config.cube.getDimension();
@@ -61,19 +63,25 @@ export class CubeRenderer {
                             //5 => 0: -2.0, 1: -1.0, 2: 0.0, 3: 1.0, 4: 2.0
 
                             const position = new Vector3(x, y, z);
-                            const cubelet = new CubeletRenderer({ sideSize: side, position, id: id++, sides: sides })
+                            const cubelet = new CubeletRenderer({
+                                sideSize: side,
+                                position: position,
+                                id: id++,
+                                sides: sides
+                            })
                             cubelet.getMesh().parent = this.rubiksCubeGroup;
                             this.rubiksCubeGroup.add(cubelet.getMesh())
                         }
                     })));
+        // this.rubiksCubeGroup.position.set(config.position.x, config.position.y, config.position.z);
         this.scene.add(this.rubiksCubeGroup);
     }
 
-    public getCube(): Object3D {
+    public getMesh(): Object3D {
         return this.rubiksCubeGroup;
     }
 
-    public async rotateFace(faceRotation: FaceRotation & { duration?: number }): Promise<void> {
+    public async rotateFace(faceRotation: FaceRotationAnimation): Promise<void> {
         let sortFunction = (a: number, b: number) => b - a;
         let targetAngle = (Math.PI / 2) * (faceRotation.counterClockwiseDirection ? 1 : -1)
 
@@ -108,6 +116,7 @@ export class CubeRenderer {
                 cubelet.parent = rotationGroup;
                 rotationGroup.add(cubelet)
             });
+        // this.rubiksCubeGroup.getWorldPosition(rotationGroup.position);
         this.scene.add(rotationGroup);
 
         rotationGroup.setRotationFromEuler(this.rubiksCubeGroup.rotation.clone());
@@ -123,6 +132,7 @@ export class CubeRenderer {
                 .onUpdate((item: RotationTween) => {
                     rotationGroup.position.applyAxisAngle(normalizedAxisVector, item.rotation - prev.rotation);
                     rotationGroup.rotateOnWorldAxis(normalizedAxisVector, item.rotation - prev.rotation);
+                    // rotationGroup.rotation[axisName] = (item.rotation);
                     prev.rotation = item.rotation;
                     rotationGroup.updateMatrixWorld();
                 })
@@ -135,10 +145,10 @@ export class CubeRenderer {
                             cubelet.position.copy(vector.clone());
                             cubelet.parent = this.rubiksCubeGroup;
                         });
-
+                    // console.log(this.rubiksCubeGroup.getWorldPosition(rotationGroup.position))
+                    // rotationGroup.getWorldPosition(this.rubiksCubeGroup.position);
                     this.rubiksCubeGroup.add(...rotationGroup.children);
                     this.scene.remove(rotationGroup);
-                    this.animation = undefined;
                     resolve();
                 })
                 .start();

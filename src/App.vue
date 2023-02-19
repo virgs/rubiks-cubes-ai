@@ -9,6 +9,7 @@ import type { FaceRotation } from "./engine/face-rotation";
 import { Sides } from "./engine/sides";
 import type { Solution } from "./engine/solvers/solution";
 import type { CubeSolver } from "./engine/solvers/cube-solver";
+import { Vector3 } from "three";
 
 export default defineComponent({
   name: 'App',
@@ -19,7 +20,7 @@ export default defineComponent({
     world.start();
 
     let cube = new PocketCube();
-    const cubeRenderer = new CubeRenderer({ scene: world.getScene(), cube: cube })
+    const cubeRenderer = new CubeRenderer({ scene: world.getScene(), cube: cube, position: new Vector3(2.5, 3, 0) })
     console.log('Scrambling')
     const scramblingRotations = new CubeScrambler(30).scramble(cube);
     this.printRotations(scramblingRotations)
@@ -27,7 +28,7 @@ export default defineComponent({
       await cubeRenderer.rotateFace({ ...rotation, duration: 100 });
       cube = cube.rotateFace(rotation);
     }
-    this.solve(cube, cubeRenderer, world);
+    // this.solve(cube, cubeRenderer, world);
   },
   methods: {
     async solve(cube: PocketCube, cubeRenderer: CubeRenderer, world: World) {

@@ -26,17 +26,9 @@ export class CubeletRenderer {
         //     CubeletRenderer.textureNormal = CubeletRenderer.textureLoader.load(textureNormalFile);
         // }
 
-        // const geometry = new BoxGeometry(config.sideSize, config.sideSize, config.sideSize);
         const geometry = new RoundedBoxGeometry(config.sideSize, config.sideSize, config.sideSize, 3, 0.1);
 
-        // console.log(config.sides.map(side => getInitialColorOfSide(side)))
         this.cubeletMesh = new Mesh(geometry, this.createMaterial(config.sides))
-
-        // const lineEdges = new EdgesGeometry(geometry);
-        // const lineMaterial = new LineBasicMaterial({ color: '#FF00FF', linewidth: 100, fog: true });
-        // const lineMesh = new LineSegments(lineEdges, lineMaterial);
-
-        // this.cubeletMesh.add(lineMesh);
         this.cubeletMesh.position.set(config.position.x, config.position.y, config.position.z);
         this.cubeletMesh.userData.id = config.id;
     }
