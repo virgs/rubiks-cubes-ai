@@ -130,16 +130,18 @@ export class CubeRenderer {
                 .to(end, faceRotation.duration !== undefined ? faceRotation.duration : CubeRenderer.animatioDuration)
                 .easing(Tween.Easing.Quadratic.Out)
                 .onUpdate((item: RotationTween) => {
-                    rotationGroup.rotation[axisName] = (item.rotation);
+                    rotationGroup.rotation[axisName] = item.rotation;
                 })
                 .onComplete(() => {
+                    rotationGroup.rotation[axisName] = targetAngle;
+                    rotationGroup.updateMatrixWorld(true)
                     rotationGroup.children
-                        .forEach((cubelet: Object3D, index: number) => {
+                        .forEach((cubelet: Object3D) => {
                             const matrixWorld = cubelet.matrixWorld.clone()
                             const vector = new Vector3();
                             vector.setFromMatrixPosition(matrixWorld);
                             cubelet.parent = this.rubiksCubeGroup;
-                            cubelet.position.copy(vector.clone().sub(this.rubiksCubeGroup.position));
+                            cubelet.position.copy(vector.clone().sub(this.rubiksCubeGroup.position.clone()));
                             cubelet.rotation.setFromRotationMatrix(matrixWorld);    
                         });
                     this.scene.remove(rotationGroup);

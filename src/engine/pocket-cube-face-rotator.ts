@@ -1,6 +1,7 @@
 import { Sides } from '@/engine/sides';
 import type { Colors } from './colors';
 import type { FaceRotation } from './face-rotation';
+import type { Sticker } from './pocket-cube';
 
 type FaceRotatorMap = {
     destination: number,
@@ -16,7 +17,7 @@ export class PocketCubeFaceRotator {
         }
     }
 
-    public rotate(currentConfiguration: Colors[], faceRotation: FaceRotation): Colors[] {
+    public rotate(currentConfiguration: Sticker[], faceRotation: FaceRotation): Sticker[] {
         const result = [...currentConfiguration];
         PocketCubeFaceRotator.faceRotatorMap.get(faceRotation.side)!
             .forEach(item => {

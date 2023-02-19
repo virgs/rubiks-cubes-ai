@@ -2,7 +2,7 @@ import type { Solution } from "./solution";
 import Heap from 'heap';
 import type { PocketCube } from "../pocket-cube";
 import { Sides } from "../sides";
-import { MetricEmitter, Metrics } from "./metric-emitter";
+import { ProcedureMeasurer } from "./procedure-measurer";
 import type { FaceRotation } from "../face-rotation";
 import type { CubeSolver } from "./cube-solver";
 import { Configuration } from "@/configuration";
@@ -13,8 +13,20 @@ type Candidate = {
     rotations: FaceRotation[]
 }
 
+export enum Metrics {
+    ADD_CANDIDATE,
+    POP_CANDIDATE,
+    CHECK_SOLUTION,
+    BREATHING_TIME,
+    HASH_CALCULATION,
+    VISISTED_LIST_CHECK,
+    ADD_TO_VISISTED_LIST_CHECK,
+    PERFORM_ROTATION
+}
+
+
 export class AStar implements CubeSolver {
-    private readonly metricEmitter: MetricEmitter;
+    private readonly measurer: ProcedureMeasurer;
         //    moves.sort((a, b) => {
     //       // Prioritize moves that push boxes onto goals
     //       const boxesOnGoals = (b[2] - a[2]) * 1000;
@@ -30,7 +42,7 @@ export class AStar implements CubeSolver {
     private iterations: number;
 
     public constructor(cube: PocketCube) {
-        this.metricEmitter = new MetricEmitter();
+        this.measurer = new MetricEmitter();
         this.visitedChecklist = new Map();
         this.candidates = new Heap((a: Candidate, b: Candidate) => a.cost - b.cost);
         this.iterations = 0;
@@ -40,7 +52,7 @@ export class AStar implements CubeSolver {
             rotations: []
         };
         this.candidates.push(current);
-        this.metricEmitter.start();
+        this.measurer.start();
         this.actions = [];
         [Sides.FRONT, Sides.UP, Sides.RIGHT]
             .map(side => {
@@ -54,24 +66,24 @@ export class AStar implements CubeSolver {
         while (this.candidates.size() > 0 && counter > 0) {
             --counter;
             ++this.iterations;
-            current = this.metricEmitter.add(Metrics.POP_CANDIDATE, () => this.candidates.pop());
-            if (this.metricEmitter.add(Metrics.VISISTED_LIST_CHECK, () => this.visitedChecklist.has(current!.cube.getHash()))) {
+            current = this.measurer.add(Metrics.POP_CANDIDATE, () => this.candidates.pop());
+            if (this.measurer.add(Metrics.VISISTED_LIST_CHECK, () => this.visitedChecklist.has(current!.cube.getHash()))) {
                 continue;
             }
-            if (this.metricEmitter.add(Metrics.CHECK_SOLUTION, () => current!.cube.isSolved())) {
-                this.metricEmitter.finish();
+            if (this.measurer.add(Metrics.CHECK_SOLUTION, () => current!.cube.isSolved())) {
+                this.measurer.finish();
                 this.candidates.clear();
                 //TODO tune these rotations (avoid things like RRRR, RR', RRR=R' of same layer)
                 return {
                     rotations: current!.rotations,
-                    totalTime: this.metricEmitter.getTotalTime()!,
+                    totalTime: this.measurer.getTotalTime()!,
                     data: {
-                        metrics: this.metricEmitter.getData(),
+                        metrics: this.measurer.getData(),
                         iterations: this.iterations
                     }
                 }
             } else {
-                this.metricEmitter.add(Metrics.ADD_TO_VISISTED_LIST_CHECK, () => this.visitedChecklist.set(current!.cube.getHash(), true));
+                this.measurer.add(Metrics.ADD_TO_VISISTED_LIST_CHECK, () => this.visitedChecklist.set(current!.cube.getHash(), true));
                 this.applyRotations(current!);
             }
         }
@@ -80,9 +92,9 @@ export class AStar implements CubeSolver {
     private applyRotations(current: Candidate): void {
         this.actions
             .forEach(rotation => {
-                const newCandidate = this.metricEmitter.add(Metrics.PERFORM_ROTATION, () => current.cube.rotateFace(rotation));
-                if (!this.metricEmitter.add(Metrics.VISISTED_LIST_CHECK, () => this.visitedChecklist.has(newCandidate.getHash()))) {
-                    this.metricEmitter.add(Metrics.ADD_CANDIDATE, () => {
+                const newCandidate = this.measurer.add(Metrics.PERFORM_ROTATION, () => current.cube.rotateFace(rotation));
+                if (!this.measurer.add(Metrics.VISISTED_LIST_CHECK, () => this.visitedChecklist.has(newCandidate.getHash()))) {
+                    this.measurer.add(Metrics.ADD_CANDIDATE, () => {
                         this.candidates.push({
                             cube: newCandidate,
                             rotations: current.rotations.concat(rotation)

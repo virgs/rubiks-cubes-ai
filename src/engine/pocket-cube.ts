@@ -21,31 +21,48 @@ export const getInitialColorOfSide = (orientation: Sides): Colors => {
     }
 }
 
+export type Sticker = {
+    color: Colors;
+    originalPosition: number;
+}
+
+// Initial configuration
+//       UP
+//        0  1
+//        3  2
+// LEFT  FRONT  RIGHT  BACK
+// 4  5   8  9  12 13  16 17
+// 7  6  11 10  15 14  19 18
+//       DOWN
+//       20 21
+//       23 22
 
 export class PocketCube {
     private readonly faceRotator: PocketCubeFaceRotator;
-    private readonly colors: Colors[];
+    private readonly stickers: Sticker[];
     private readonly hash: string;
 
 
-    public constructor(clone?: Colors[]) {
+    public constructor(clone?: Sticker[]) {
         if (clone) {
-            this.colors = [...clone];
+            this.stickers = [...clone];
         } else {
-            this.colors = [];
+            let id = 0;
+            this.stickers = [];
             getAllSides()
                 .forEach(side => {
-                    const colors = Array.from(new Array(this.getDimension() * this.getDimension()))
-                        .map(() => getInitialColorOfSide(side));
-                    this.colors.push(...colors);
+                    const stickers: Sticker[] = Array
+                        .from(new Array(this.getDimension() * this.getDimension()))
+                        .map(() => ({ color: getInitialColorOfSide(side), originalPosition: id++ }));
+                    this.stickers.push(...stickers);
                 })
         }
         this.faceRotator = new PocketCubeFaceRotator();
-        this.hash = this.colors.join('.');
+        this.hash = this.stickers.map(sticker => sticker.originalPosition).join('.');
     }
 
-    public getConfiguration(): Colors[] {
-        return [...this.colors];
+    public getConfiguration(): Sticker[] {
+        return [...this.stickers];
     }
 
     public getDimension(): number {
@@ -53,11 +70,11 @@ export class PocketCube {
     }
 
     public clone(): PocketCube {
-        return new PocketCube(this.colors);
+        return new PocketCube(this.stickers);
     }
 
     public rotateFace(faceRotation: FaceRotation): PocketCube {
-        const result = this.faceRotator.rotate(this.colors, faceRotation);
+        const result = this.faceRotator.rotate(this.stickers, faceRotation);
         return new PocketCube(result);
     }
 
@@ -67,7 +84,7 @@ export class PocketCube {
         const stickersArray = Array.from(new Array(stickersPerSide));
         return sides
             .every((_, sideIndex) => stickersArray
-                .every((_, index) => this.colors[sideIndex * stickersPerSide + index] === this.colors[sideIndex * stickersPerSide]))
+                .every((_, index) => this.stickers[sideIndex * stickersPerSide + index].color === this.stickers[sideIndex * stickersPerSide].color))
 
     }
 
@@ -75,16 +92,4 @@ export class PocketCube {
         return this.hash;
     }
 
-    public print(): void {
-        let index = 0;
-        getAllSides()
-            .forEach(side => {
-                console.log('-----', Sides[side], '-----');
-                Array.from(new Array(this.getDimension() * this.getDimension()))
-                    .forEach((_) => {
-                        console.log(Colors[this.colors[index++]]);
-                    })
-            });
-
-    }
 }
