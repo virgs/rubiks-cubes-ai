@@ -8,7 +8,7 @@ import { CubeRenderer } from "./renderers/cube-renderer";
 import type { Solution } from "./engine/solvers/solution";
 import type { CubeSolver } from "./engine/solvers/cube-solver";
 import { Vector3 } from "three";
-import { CubePrinter } from "./engine/cube-printer";
+import { Printer } from "./engine/printer";
 import { Sides } from "./engine/sides";
 import { Colors } from "./engine/colors";
 
@@ -21,7 +21,7 @@ export default defineComponent({
     world.start();
 
     let cube = new PocketCube();
-    const cubePrinter = new CubePrinter();
+    const cubePrinter = new Printer();
     const cubeRenderers = [new CubeRenderer({ scene: world.getScene(), cube: cube, position: new Vector3(3.5, 2, 0) }),
     new CubeRenderer({ scene: world.getScene(), cube: cube, position: new Vector3(-3.5, 2, 0) })]
     console.log('Scrambling')
@@ -30,14 +30,14 @@ export default defineComponent({
       await Promise.all(cubeRenderers.map(cubeRenderer => cubeRenderer.rotateFace({ ...rotation, duration: 150 })));
       cube = cube.rotateFace(rotation);
     }
-    cubePrinter.printCubelets(cube.getCubeletsByCorner(Sides.UP, Sides.FRONT, Sides.RIGHT));
+    cubePrinter.printCubelets(cube.getCubeletsBySides(Sides.UP, Sides.FRONT, Sides.RIGHT));
     cubePrinter.printCubelets(cube.getCubeletsByColor(Colors.BLUE, Colors.YELLOW, Colors.RED));
     cubePrinter.printCube(cube);
     // this.solve(cube, cubeRenderers, world);
   },
   methods: {
     async solve(cube: PocketCube, cubeRenderers: CubeRenderer[], world: World) {
-      const cubePrinter = new CubePrinter();
+      const cubePrinter = new Printer();
       console.log('Solving')
       let solver: CubeSolver | undefined = new BreadthFirstSearch(cube);
       let solution: Solution | undefined;

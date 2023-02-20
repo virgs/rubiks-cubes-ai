@@ -21,11 +21,6 @@ export const getInitialColorOfSide = (orientation: Sides): Colors => {
     }
 }
 
-export type Sticker = {
-    color: Colors;
-    originalPosition: number;
-}
-
 // Initial configuration
 //       UP
 //        0  1
@@ -37,26 +32,27 @@ export type Sticker = {
 //       20 21
 //       23 22
 
-export type Cubelet = { side: Sides, position?: number, color?: Colors }[];
-const cubeletMap: Cubelet[] = [
-    [{ side: Sides.FRONT, position: 8 }, { side: Sides.LEFT, position: 5 }, { side: Sides.UP, position: 3 }],
-    [{ side: Sides.FRONT, position: 9 }, { side: Sides.RIGHT, position: 12 }, { side: Sides.UP, position: 2 }],
-    [{ side: Sides.FRONT, position: 10 }, { side: Sides.LEFT, position: 6 }, { side: Sides.DOWN, position: 20 }],
-    [{ side: Sides.FRONT, position: 11 }, { side: Sides.RIGHT, position: 15 }, { side: Sides.DOWN, position: 21 }],
+export type Cubelet = { side: Sides, id: number, color: Colors, x: number, y: number }[];
+export type CubeletMap = { side: Sides, id: number }[];
+const cubeletMap: CubeletMap[] = [
+    [{ side: Sides.FRONT, id: 8 }, { side: Sides.LEFT, id: 5 }, { side: Sides.UP, id: 3 }],
+    [{ side: Sides.FRONT, id: 9 }, { side: Sides.RIGHT, id: 12 }, { side: Sides.UP, id: 2 }],
+    [{ side: Sides.FRONT, id: 10 }, { side: Sides.LEFT, id: 6 }, { side: Sides.DOWN, id: 20 }],
+    [{ side: Sides.FRONT, id: 11 }, { side: Sides.RIGHT, id: 15 }, { side: Sides.DOWN, id: 21 }],
 
-    [{ side: Sides.BACK, position: 16 }, { side: Sides.RIGHT, position: 13 }, { side: Sides.UP, position: 1 }],
-    [{ side: Sides.BACK, position: 17 }, { side: Sides.LEFT, position: 4 }, { side: Sides.UP, position: 0 }],
-    [{ side: Sides.BACK, position: 19 }, { side: Sides.RIGHT, position: 14 }, { side: Sides.DOWN, position: 22 }],
-    [{ side: Sides.BACK, position: 23 }, { side: Sides.LEFT, position: 7 }, { side: Sides.DOWN, position: 18 }],
+    [{ side: Sides.BACK, id: 16 }, { side: Sides.RIGHT, id: 13 }, { side: Sides.UP, id: 1 }],
+    [{ side: Sides.BACK, id: 17 }, { side: Sides.LEFT, id: 4 }, { side: Sides.UP, id: 0 }],
+    [{ side: Sides.BACK, id: 19 }, { side: Sides.RIGHT, id: 14 }, { side: Sides.DOWN, id: 22 }],
+    [{ side: Sides.BACK, id: 23 }, { side: Sides.LEFT, id: 7 }, { side: Sides.DOWN, id: 18 }],
 ];
 
 export class PocketCube {
     private readonly faceRotator: PocketCubeFaceRotator;
-    private readonly stickers: Sticker[];
+    private readonly stickers: Colors[];
     private readonly hash: string;
 
 
-    public constructor(clone?: Sticker[]) {
+    public constructor(clone?: Colors[]) {
         if (clone) {
             this.stickers = [...clone];
         } else {
@@ -64,17 +60,17 @@ export class PocketCube {
             this.stickers = [];
             getAllSides()
                 .forEach(side => {
-                    const stickers: Sticker[] = Array
+                    const stickers: Colors[] = Array
                         .from(new Array(this.getDimension() * this.getDimension()))
-                        .map(() => ({ color: getInitialColorOfSide(side), originalPosition: id++ }));
+                        .map(() => getInitialColorOfSide(side));
                     this.stickers.push(...stickers);
                 })
         }
         this.faceRotator = new PocketCubeFaceRotator();
-        this.hash = this.stickers.map(sticker => sticker.originalPosition).join('.');
+        this.hash = this.stickers.join('.');
     }
 
-    public getConfiguration(): Sticker[] {
+    public getConfiguration(): Colors[] {
         return [...this.stickers];
     }
 
@@ -97,40 +93,49 @@ export class PocketCube {
         const stickersArray = Array.from(new Array(stickersPerSide));
         return sides
             .every((_, sideIndex) => stickersArray
-                .every((_, index) => this.stickers[sideIndex * stickersPerSide + index].color === this.stickers[sideIndex * stickersPerSide].color))
-
+                .every((_, index) => this.stickers[sideIndex * stickersPerSide + index] === this.stickers[sideIndex * stickersPerSide]))
     }
 
     public getHash(): string {
         return this.hash;
     }
 
-    public getCubeletsByCorner(...sides: Sides[]): Cubelet[] {
+    public getCubeletsBySides(...sides: Sides[]): Cubelet[] {
         const found = cubeletMap
             .filter(cubelets => cubelets
                 .every(sticker => sides.includes(sticker.side)));
-
         return found
             .map(cubelet => cubelet
-                .map(sticker => ({
-                    side: sticker.side,
-                    position: sticker.position,
-                    color: this.stickers[sticker.position!].color
-                })));
+                .map(sticker => {
+                    const x = (sticker.id % 4 === 0 || sticker.id % 4 === 3) ? 0 : 1;
+                    const y = (sticker.id % 4 === 0 || sticker.id % 4 === 1) ? 0 : 1;
+                    return {
+                        side: sticker.side,
+                        id: sticker.id,
+                        color: this.stickers[sticker.id],
+                        x: x,
+                        y: y
+                    };
+                }));
     }
 
     public getCubeletsByColor(...colors: Colors[]): Cubelet[] {
         const found = cubeletMap
             .filter(cubelets => cubelets
-                .every(sticker => colors.includes(this.stickers[sticker.position!].color)));
-
+                .every(sticker => colors.includes(this.stickers[sticker.id!])));
         return found
             .map(cubelet => cubelet
-                .map(sticker => ({
-                    side: sticker.side,
-                    position: sticker.position,
-                    color: this.stickers[sticker.position!].color
-                })));
+                .map(sticker => {
+                    const x = (sticker.id % 4 === 0 || sticker.id % 4 === 3) ? 0 : 1;
+                    const y = (sticker.id % 4 === 0 || sticker.id % 4 === 1) ? 0 : 1;
+                    return {
+                        side: sticker.side,
+                        id: sticker.id,
+                        color: this.stickers[sticker.id],
+                        x: x,
+                        y: y
+                    };
+                }));
     }
 
 }
