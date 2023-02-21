@@ -19,17 +19,21 @@ export default defineComponent({
     const world = new World(container);
     world.start();
 
-    let cube = new PocketCube();
-    cube = cube.rotateFace({side: Sides.UP})
-    new Printer().printCube(cube);
-    const cubeRenderers = [new CubeRenderer({ scene: world.getScene(), cube: cube, position: new Vector3(0.5, 2, 0), size: 2 })]
+    let cube = new PocketCube().rotateFace({side: Sides.UP});
+    const cubeRenderers = [new CubeRenderer({
+      scene: world.getScene(),
+      cube: cube,
+      position: new Vector3(0.5, 2, 0),
+      size: 3
+    })]
     console.log('Scrambling')
-    const scramblingRotations = new CubeScrambler(0).scramble(cube);
+    const scramblingRotations = new CubeScrambler(30).scramble(cube);
+    new Printer().printRotations(scramblingRotations);
     for (let rotation of scramblingRotations) {
       await Promise.all(cubeRenderers.map(cubeRenderer => cubeRenderer.rotateFace({ ...rotation, duration: 150 })));
       cube = cube.rotateFace(rotation);
     }
-    // this.solve(cube, cubeRenderers, world);
+    this.solve(cube, cubeRenderers, world);
   },
   methods: {
     async solve(cube: PocketCube, cubeRenderers: CubeRenderer[], world: World) {
@@ -52,7 +56,7 @@ export default defineComponent({
     async renderSolution(cubeRenderers: CubeRenderer[], solution: Solution) {
       for (let rotation of solution.rotations) {
         await Promise.all(cubeRenderers
-          .map(cubeRenderer => cubeRenderer.rotateFace({ ...rotation, duration: 1000 })));
+          .map(cubeRenderer => cubeRenderer.rotateFace({ ...rotation, duration: 750 })));
       }
     }
   }

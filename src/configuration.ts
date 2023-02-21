@@ -1,6 +1,6 @@
 export const Configuration = {
     world: {
-        debug: false
+        debug: true
     },
     solvers: {
         bfs: {

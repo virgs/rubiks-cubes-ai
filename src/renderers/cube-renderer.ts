@@ -28,7 +28,6 @@ export class CubeRenderer {
         this.dimension = config.cube.getDimension();
 
         config.cube.getAllCubelets()
-            .filter((_, index: number) => index < 7)
             .forEach(cubelet => {
                 const side = config.size / this.dimension;
                 const renderer = new CubeletRenderer({
@@ -65,7 +64,7 @@ export class CubeRenderer {
         return new Promise((resolve) => {
             new Tween.Tween(start)
                 .to(end, faceRotation.duration !== undefined ? faceRotation.duration : CubeRenderer.animatioDuration)
-                .easing(Tween.Easing.Quadratic.Out)
+                .easing(Tween.Easing.Quadratic.InOut)
                 .onUpdate((item: RotationTween) => {
                     rotationGroup.rotation[axisName] = item.rotation;
                 })
