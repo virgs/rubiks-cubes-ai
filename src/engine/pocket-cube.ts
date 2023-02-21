@@ -1,9 +1,8 @@
 import { PocketCubeFaceRotator } from './pocket-cube-face-rotator';
-import { getAllSides, getOppositeSide, Sides } from '@/constants/sides';
+import { Sides } from '@/constants/sides';
 import { RubiksCube, type Cubelet, type StickerMap } from './rubiks-cube';
 import type { FaceRotation } from './face-rotation';
-import { Colors, getOppositeColor } from '@/constants/colors';
-import { HumanTranslator } from './human-tranlator';
+import type { Colors } from '@/constants/colors';
 
 // Initial configuration
 //       UP

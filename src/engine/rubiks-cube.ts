@@ -23,7 +23,7 @@ export type Cubelet = {
     stickers: Sticker[]
 };
 
-type StickerMap = {
+export type StickerMap = {
     side: Sides,
     id: number
 }[];
