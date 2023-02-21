@@ -8,8 +8,9 @@ import type { CubeSolver } from "./solvers/cube-solver";
 import { PocketCubeBreadthFirstSearch } from "./solvers/pocket-cube-breadth-first-search";
 import type { Solution } from "./solvers/solution";
 import { PocketCubeAStar } from "./solvers/pocket-cube-a-star";
-import { Color } from "three";
+import { Vector3 } from "three";
 import { HumanTranslator } from "./engine/human-tranlator";
+import { CubeRenderer } from "./renderers/cube-renderer";
 
 export default defineComponent({
   name: 'App',
@@ -20,13 +21,13 @@ export default defineComponent({
     world.start();
 
     let cube = new PocketCube();
-    // const cubeRenderers = [];
-    // cubeRenderers.push(new CubeRenderer({
-    //   scene: world.getScene(),
-    //   cube: cube,
-    //   position: new Vector3(3.5, 2, 0),
-    //   size: 3
-    // }))
+    const cubeRenderers = [];
+    cubeRenderers.push(new CubeRenderer({
+      scene: world.getScene(),
+      cube: cube,
+      position: new Vector3(3.5, 2, 0),
+      size: 3
+    }))
     // cubeRenderers.push(new CubeRenderer({
     //   scene: world.getScene(),
     //   cube: cube,
@@ -37,14 +38,14 @@ export default defineComponent({
     const scramblingRotations = new CubeScrambler(30).scramble(cube);
     console.log(new HumanTranslator().translateRotations(scramblingRotations));
     for (let rotation of scramblingRotations) {
-      // await Promise.all(cubeRenderers.map(cubeRenderer => cubeRenderer.rotateFace({ ...rotation, duration: 150 })));
+      await Promise.all(cubeRenderers.map(cubeRenderer => cubeRenderer.rotateFace({ ...rotation, duration: 150 })));
       cube = cube.rotateFace(rotation);
     }
     console.log(new HumanTranslator().translateCube(cube))
-    this.solve(cube, world);
+    this.solve(cube, cubeRenderers, world);
   },
   methods: {
-    async solve(cube: PocketCube, world: World) {
+    async solve(cube: PocketCube, renderers: CubeRenderer[], world: World) {
       let solvers: Map<string, CubeSolver> = new Map();
       // solvers.set('bfs', new PocketCubeBreadthFirstSearch(cube))
       solvers.set('a*', new PocketCubeAStar(cube))
@@ -56,17 +57,17 @@ export default defineComponent({
           if (solution) {
             console.log(key, solution)
             console.log(new HumanTranslator().translateRotations(solution.rotations));
-            // this.renderSolution(cubeRenderers[index], solution)
+            this.renderSolution(renderers[0], solution)
             solvers.delete(key);
           }
         }
       });
     },
-    // async renderSolution(cubeRenderer: CubeRenderer, solution: Solution) {
-    //   for (let rotation of solution.rotations) {
-    //     await cubeRenderer.rotateFace({ ...rotation, duration: 500 });
-    //   }
-    // }
+    async renderSolution(cubeRenderer: CubeRenderer, solution: Solution) {
+      for (let rotation of solution.rotations) {
+        await cubeRenderer.rotateFace({ ...rotation, duration: 500 });
+      }
+    }
   }
 })
 
