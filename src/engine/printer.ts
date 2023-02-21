@@ -25,15 +25,30 @@ ${text(stickers[7], 7)}  ${text(stickers[6], 6)}   ${text(stickers[11], 11)}  ${
 `);
     };
 
-    public printRotations(rotations: FaceRotation[], lineBreak: number = 5): void {
+    public printRotations(rotationsToPrint: FaceRotation[], lineBreak: number = 5): void {
+        const rotations = [...rotationsToPrint];
+        console.log(`Printing ${rotations.length} rotations`);
         let text = '';
-        rotations
-            .forEach((rotation: FaceRotation, index: number) => {
-                text += `| ${Sides[rotation.side].substring(0, 1)}${rotation.counterClockwiseDirection ? '\'' : ' '}${this.getLayer(rotation.layer)}  `;
-                if (index % lineBreak === lineBreak - 1) {
-                    text += '\n'
+        let index = 0;
+        let rotation = rotations.shift();
+        while (rotation) {
+            const nextRotation = rotations[0];
+            let prefix = ' ';
+            if (nextRotation) {
+                if (nextRotation.layer === rotation.layer &&
+                    nextRotation.side === rotation.side &&
+                    nextRotation.counterClockwiseDirection === rotation.counterClockwiseDirection) {
+                    rotations.shift();
+                    prefix = '2';
                 }
-            });
+            }
+            text += `|${prefix}${Sides[rotation.side].substring(0, 1)}${rotation.counterClockwiseDirection ? '\'' : ' '}${this.getLayer(rotation.layer)}  `;
+            if (index % lineBreak === lineBreak - 1) {
+                text += '\n'
+            }
+            ++index;
+            rotation = rotations.shift();
+        }
         console.log(text);
     }
 

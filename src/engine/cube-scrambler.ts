@@ -4,10 +4,10 @@ import type { FaceRotation } from "./face-rotation";
 import type { Side } from "three";
 
 export class CubeScrambler {
-    private readonly moves: number;
+    private readonly minMoves: number;
 
-    public constructor(moves: number = 30) {
-        this.moves = moves;
+    public constructor(minMoves: number = 30) {
+        this.minMoves = minMoves;
     }
 
     public scramble(cube: PocketCube): FaceRotation[] {
@@ -15,15 +15,15 @@ export class CubeScrambler {
         const layers = Math.floor(cube.getDimension() / 2);
         const allSides = getAllSides();
         const rotations: FaceRotation[] = [];
-        Array.from(new Array(this.moves))
+        Array.from(new Array(this.minMoves))
             .forEach(() => {
                 let side = Math.floor(Math.random() * allSides.length);
                 while (lastRotatedSide !== undefined && side === lastRotatedSide) {
                     side = Math.floor(Math.random() * allSides.length);
                 }
-                lastRotatedSide = side;
-                const duplicated = Math.floor(Math.random() * 2) === 0;
-                const direction = Math.floor(Math.random() * 6) === 0;
+                lastRotatedSide = side
+                const duplicated = Math.floor(Math.random() * 6) === 0;
+                const direction = Math.floor(Math.random() * 2) === 0;
                 const layer = Math.floor(Math.random() * layers);
 
                 const rotation = { side: side, counterClockwiseDirection: direction, layer: layer } as FaceRotation;

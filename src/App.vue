@@ -8,7 +8,7 @@ import { Vector3 } from "three";
 import { Printer } from "./engine/printer";
 import { Sides } from "./constants/sides";
 import type { CubeSolver } from "./solvers/cube-solver";
-import { BreadthFirstSearch } from "./solvers/pocket-cube-breadth-first-search";
+import { PocketCubeBreadthFirstSearch } from "./solvers/pocket-cube-breadth-first-search";
 import type { Solution } from "./solvers/solution";
 
 export default defineComponent({
@@ -26,7 +26,7 @@ export default defineComponent({
       position: new Vector3(0.5, 2, 0),
       size: 3
     })]
-    console.log('Scrambling')
+    console.log('Scrambling...')
     const scramblingRotations = new CubeScrambler(30).scramble(cube);
     new Printer().printRotations(scramblingRotations);
     for (let rotation of scramblingRotations) {
@@ -38,8 +38,8 @@ export default defineComponent({
   methods: {
     async solve(cube: PocketCube, cubeRenderers: CubeRenderer[], world: World) {
       const cubePrinter = new Printer();
-      console.log('Solving')
-      let solver: CubeSolver | undefined = new BreadthFirstSearch(cube);
+      console.log('Solving...')
+      let solver: CubeSolver | undefined = new PocketCubeBreadthFirstSearch(cube);
       let solution: Solution | undefined;
       world.addAnimationLoop(() => {
         if (solver) {
@@ -56,7 +56,7 @@ export default defineComponent({
     async renderSolution(cubeRenderers: CubeRenderer[], solution: Solution) {
       for (let rotation of solution.rotations) {
         await Promise.all(cubeRenderers
-          .map(cubeRenderer => cubeRenderer.rotateFace({ ...rotation, duration: 750 })));
+          .map(cubeRenderer => cubeRenderer.rotateFace({ ...rotation, duration: 500 })));
       }
     }
   }
