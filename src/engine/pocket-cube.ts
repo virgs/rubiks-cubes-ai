@@ -2,7 +2,8 @@ import { PocketCubeFaceRotator } from './pocket-cube-face-rotator';
 import { getAllSides, getOppositeSide, Sides } from '@/constants/sides';
 import { RubiksCube, type Cubelet, type StickerMap } from './rubiks-cube';
 import type { FaceRotation } from './face-rotation';
-import { getOppositeColor, type Colors } from '@/constants/colors';
+import { Colors, getOppositeColor } from '@/constants/colors';
+import { HumanTranslator } from './human-tranlator';
 
 // Initial configuration
 //       UP
@@ -30,24 +31,14 @@ const stickerMap: StickerMap[] = [
 export class PocketCube extends RubiksCube {
     private readonly faceRotator: PocketCubeFaceRotator;
 
-    public constructor(config?: {clone?: Colors[], colorMap?: Map<Sides, Colors>}) {
+    public constructor(config?: { clone?: Colors[], colorMap?: Map<Sides, Colors> }) {
         super({ dimension: 2, stickersMap: stickerMap, clone: config && config.clone, colorMap: config && config?.colorMap });
         this.faceRotator = new PocketCubeFaceRotator();
     }
 
-    public static buildSolvedFromCubelet(cubelet: Cubelet): PocketCube {
-        const colorMap: Map<Sides, Colors> = new Map();
-        cubelet.stickers
-            .forEach(sticker => {
-                colorMap.set(sticker.side, sticker.color);
-                colorMap.set(getOppositeSide(sticker.side), getOppositeColor(sticker.color));
-            });
-        return new PocketCube({colorMap});
-    }
-
     public rotateFace(faceRotation: FaceRotation): PocketCube {
         const result = this.faceRotator.rotate(this.stickers, faceRotation);
-        return new PocketCube({clone: result});
+        return new PocketCube({ clone: result });
     }
 
     public getCubeletsBySides(...sides: Sides[]): Cubelet[] {
@@ -69,21 +60,22 @@ export class PocketCube extends RubiksCube {
     }
 
     private getCubeletsFromStickers(stickers: StickerMap[]): Cubelet[] {
-        return stickers.map(stickers => ({
-            stickers: stickers
-                .map(sticker => {
-                    const x = (sticker.id % 4 === 0 || sticker.id % 4 === 3) ? 0 : 1;
-                    const y = (sticker.id % 4 === 0 || sticker.id % 4 === 1) ? 0 : 1;
-                    return {
-                        side: sticker.side,
-                        id: sticker.id,
-                        color: this.stickers[sticker.id],
-                        x: x,
-                        y: y
-                    };
+        return stickers
+            .map(stickers => ({
+                stickers: stickers
+                    .map(sticker => {
+                        const x = (sticker.id % 4 === 0 || sticker.id % 4 === 3) ? 0 : 1;
+                        const y = (sticker.id % 4 === 0 || sticker.id % 4 === 1) ? 0 : 1;
+                        return {
+                            side: sticker.side,
+                            id: sticker.id,
+                            color: this.stickers[sticker.id],
+                            x: x,
+                            y: y
+                        };
 
-                })
-        }))
+                    })
+            }))
     }
 
 }

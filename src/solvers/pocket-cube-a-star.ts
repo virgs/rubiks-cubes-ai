@@ -1,12 +1,13 @@
 import type { Solution } from "./solution";
 import Heap from 'heap';
 import { PocketCube } from "../engine/pocket-cube";
-import { Sides } from "../constants/sides";
+import { getOppositeSide, Sides } from "../constants/sides";
 import type { CubeSolver } from "./cube-solver";
 import { Configuration } from "@/configuration";
 import { ProcedureMeasurer } from "./procedure-measurer";
 import type { FaceRotation } from "@/engine/face-rotation";
-import { Printer } from "@/engine/printer";
+import { type Colors, getOppositeColor } from "@/constants/colors";
+import type { Cubelet } from "@/engine/rubiks-cube";
 
 export enum Metrics {
     ADD_CANDIDATE,
@@ -53,7 +54,7 @@ export class PocketCubeAStar implements CubeSolver {
         this.candidates.push(current);
         this.measurer.start();
         this.actions = [];
-        this.goalState = PocketCube.buildSolvedFromCubelet(cube.getCubeletsBySides(Sides.BACK, Sides.LEFT, Sides.DOWN)[0]);
+        this.goalState = this.buildSolvedPocketCubeFromCornerCubelet(cube.getCubeletsBySides(Sides.BACK, Sides.LEFT, Sides.DOWN)[0]);
         [Sides.FRONT, Sides.UP, Sides.RIGHT]
             .map(side => [true, false]
                 .map(direction => {
@@ -117,14 +118,15 @@ export class PocketCubeAStar implements CubeSolver {
             })
     }
 
+    //Calcs how many sides the cubelet corner shares with the corner where it's supposed to be
     private calculateDistanceToFinalState(cube: PocketCube): number {
         return cube.getAllCubelets()
             .reduce((acc, cubelet) => {
-                const finalPosition = this.goalState.getCubeletsByColor(...cubelet.stickers
+                const cubeletFinalPosition = this.goalState.getCubeletsByColor(...cubelet.stickers
                     .map(sticker => sticker.color))[0];
                 return acc + cubelet.stickers
                     .reduce((sum, sticker) => {
-                        if (finalPosition.stickers
+                        if (cubeletFinalPosition.stickers
                             .some(finalPositionSticker => finalPositionSticker.side === sticker.side)) {
                             return sum - 1;
                         }
@@ -132,4 +134,15 @@ export class PocketCubeAStar implements CubeSolver {
                     }, cubelet.stickers.length)
             }, 0) / 8.0;
     }
+
+    public buildSolvedPocketCubeFromCornerCubelet(cubelet: Cubelet): PocketCube {
+        const colorMap: Map<Sides, Colors> = new Map();
+        cubelet.stickers
+            .forEach(sticker => {
+                colorMap.set(sticker.side, sticker.color);
+                colorMap.set(getOppositeSide(sticker.side), getOppositeColor(sticker.color));
+            });
+        return new PocketCube({colorMap});
+    }
+
 }

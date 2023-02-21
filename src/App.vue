@@ -4,12 +4,12 @@ import { CubeScrambler } from "./engine/cube-scrambler";
 import { defineComponent } from 'vue';
 import { World } from "./renderers/world";
 // import { CubeRenderer } from "./renderers/cube-renderer";
-import { Printer } from "./engine/printer";
 import type { CubeSolver } from "./solvers/cube-solver";
 import { PocketCubeBreadthFirstSearch } from "./solvers/pocket-cube-breadth-first-search";
 import type { Solution } from "./solvers/solution";
 import { PocketCubeAStar } from "./solvers/pocket-cube-a-star";
 import { Color } from "three";
+import { HumanTranslator } from "./engine/human-tranlator";
 
 export default defineComponent({
   name: 'App',
@@ -35,17 +35,16 @@ export default defineComponent({
     // }));
     console.log('Scrambling...')
     const scramblingRotations = new CubeScrambler(30).scramble(cube);
-    new Printer().printRotations(scramblingRotations);
+    console.log(new HumanTranslator().translateRotations(scramblingRotations));
     for (let rotation of scramblingRotations) {
       // await Promise.all(cubeRenderers.map(cubeRenderer => cubeRenderer.rotateFace({ ...rotation, duration: 150 })));
       cube = cube.rotateFace(rotation);
     }
+    console.log(new HumanTranslator().translateCube(cube))
     this.solve(cube, world);
   },
   methods: {
     async solve(cube: PocketCube, world: World) {
-      const printer = new Printer();
-      printer.printCube(cube)
       let solvers: Map<string, CubeSolver> = new Map();
       // solvers.set('bfs', new PocketCubeBreadthFirstSearch(cube))
       solvers.set('a*', new PocketCubeAStar(cube))
@@ -56,7 +55,7 @@ export default defineComponent({
           const solution = solver.iterate();
           if (solution) {
             console.log(key, solution)
-            printer.printRotations(solution.rotations);
+            console.log(new HumanTranslator().translateRotations(solution.rotations));
             // this.renderSolution(cubeRenderers[index], solution)
             solvers.delete(key);
           }

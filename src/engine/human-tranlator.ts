@@ -1,33 +1,69 @@
 import { Sides } from "@/constants/sides";
 import { Colors } from "../constants/colors";
 import type { FaceRotation } from "./face-rotation";
-import type { Cubelet, RubiksCube } from "./rubiks-cube";
+import type { Cubelet, RubiksCube, Sticker } from "./rubiks-cube";
 
-export class Printer {
-    public printCube(cube: RubiksCube): void {
-        const stickers = cube.getStickers();
-        const text = (sticker: Colors, positionId: number): string => {
-            return Colors[sticker].substring(0, 1)
-                + Printer.mapToSmallBottomLetters(`${('  ' + positionId).slice(-2)}`);
-        };
-        console.log('' +
-            `           UP
-           ${text(stickers[0], 0)}  ${text(stickers[1], 1)}
-           ${text(stickers[3], 3)}  ${text(stickers[2], 2)}
+export class HumanTranslator {
+    public translateSide(side: Sides, cube: RubiksCube): string[] {
+        const cubelets = cube.getAllCubelets();
+        const dimension = cube.getDimension();
+        const lineLength = 10;
 
-LEFT       FRONT      RIGHT      BACK
-${text(stickers[4], 4)}  ${text(stickers[5], 5)}   ${text(stickers[8], 8)}  ${text(stickers[9], 9)}   ${text(stickers[12], 12)}  ${text(stickers[13], 13)}   ${text(stickers[16], 16)}  ${text(stickers[17], 17)}
-${text(stickers[7], 7)}  ${text(stickers[6], 6)}   ${text(stickers[11], 11)}  ${text(stickers[10], 10)}   ${text(stickers[15], 15)}  ${text(stickers[14], 14)}   ${text(stickers[19], 19)}  ${text(stickers[18], 18)}
+        const stickerFinder = (side: Sides, x: number, y: number): Sticker | undefined => {
+            for (const cubelet of cubelets) {
+                const sticker = cubelet.stickers
+                    .find(sticker => sticker.side === side
+                        && sticker.x === x
+                        && sticker.y === y);
+                if (sticker) {
+                    return sticker;
+                }
+            }
+        }
 
-           DOWN
-           ${text(stickers[20], 20)}  ${text(stickers[21], 21)}
-           ${text(stickers[23], 23)}  ${text(stickers[22], 22)}
-`);
-    };
+        const text = [];
+        text.push(`${(Sides[side] + Array.from(new Array(lineLength)).fill(' ').join('')).substring(0, lineLength)}`);
+        for (let y = 0; y < dimension; ++y) {
+            let line = '';
+            for (let x = 0; x < dimension; ++x) {
+                const sticker = stickerFinder(side, x, y)!;
+                line += Colors[sticker.color].substring(0, 1) + HumanTranslator.mapToSmallBottomLetters(`${('  ' + sticker.id).slice(-2)}  `);
+            }
+            text.push(line);
+        }
+        return text;
+    }
 
-    public printRotations(rotationsToPrint: FaceRotation[], lineBreak: number = 5): void {
+    public translateCube(cube: RubiksCube): string {
+        const dimension = cube.getDimension();
+
+        const up = this.translateSide(Sides.UP, cube);
+        const left = this.translateSide(Sides.LEFT, cube);
+        const front = this.translateSide(Sides.FRONT, cube);
+        const right = this.translateSide(Sides.RIGHT, cube);
+        const back = this.translateSide(Sides.BACK, cube);
+        const down = this.translateSide(Sides.DOWN, cube);
+        let text = '';
+        up
+            .forEach(line => {
+                text += Array.from(new Array(up[0].length)).fill(' ').join('') + line + '\n'
+            });
+
+        for (let y = 0; y < dimension + 1; ++y) {
+            text += left[y]
+            text += front[y]
+            text += right[y]
+            text += back[y] + '\n';
+        }
+        down
+            .forEach(line => {
+                text += Array.from(new Array(down[0].length)).fill(' ').join('') + line + '\n'
+            });
+        return text;
+    }
+
+    public translateRotations(rotationsToPrint: FaceRotation[], lineBreak: number = 5): string {
         const rotations = [...rotationsToPrint];
-        console.log(`Printing ${rotations.length} rotations`);
         let text = '';
         let index = 0;
         let rotation = rotations.shift();
@@ -49,10 +85,11 @@ ${text(stickers[7], 7)}  ${text(stickers[6], 6)}   ${text(stickers[11], 11)}  ${
             ++index;
             rotation = rotations.shift();
         }
-        console.log(text);
+        return text;
     }
 
-    public printCubelets(cubelets: Cubelet[]): void {
+    public translateCubelets(cubelets: Cubelet[]): string {
+        let text = ''
         cubelets
             .map(cubelet => {
                 let text = ' ';
@@ -61,19 +98,20 @@ ${text(stickers[7], 7)}  ${text(stickers[6], 6)}   ${text(stickers[11], 11)}  ${
                     .map(sticker => {
                         const color = Colors[sticker.color!];
                         const side = Sides[sticker.side].substring(0, 1);
-                        const id = Printer.mapToSmallTopLetters(sticker.id.toString());
-                        const position = `${Printer.mapToSmallBottomLetters('(' + sticker.x + ',' + sticker.y + ')')}`;
+                        const id = HumanTranslator.mapToSmallTopLetters(sticker.id.toString());
+                        const position = `${HumanTranslator.mapToSmallBottomLetters('(' + sticker.x + ',' + sticker.y + ')')}`;
                         text += `${color} ${side}${id}${position};  `;
                     })
-                console.log(text);
+                text += '\n';
             })
+        return text;
     }
 
     private getLayer(layer?: number): string {
-        return Printer.mapToSmallBottomLetters((layer || 0).toString());
+        return HumanTranslator.mapToSmallBottomLetters((layer || 0).toString());
     }
 
-    private static mapToSmallTopLetters(text: string): string {
+    public static mapToSmallTopLetters(text: string): string {
         const lettersMap = new Map<string, string>();
         lettersMap.set('0', '⁰');
         lettersMap.set('1', '¹');
@@ -97,7 +135,7 @@ ${text(stickers[7], 7)}  ${text(stickers[6], 6)}   ${text(stickers[11], 11)}  ${
             .join('');
     }
 
-    private static mapToSmallBottomLetters(text: string): string {
+    public static mapToSmallBottomLetters(text: string): string {
         const lettersMap = new Map<string, string>();
         lettersMap.set('0', '₀');
         lettersMap.set('1', '₁');

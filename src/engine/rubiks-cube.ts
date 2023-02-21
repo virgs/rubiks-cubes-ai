@@ -11,16 +11,19 @@ defaultColorMap.set(Sides.LEFT, Colors.ORANGE);
 defaultColorMap.set(Sides.BACK, Colors.GREEN);
 defaultColorMap.set(Sides.DOWN, Colors.WHITE);
 
-export type Cubelet = {
-    stickers: {
-        side: Sides,
-        id: number,
-        color: Colors,
-        x: number,
-        y: number
-    }[]
+export type Sticker = {
+    side: Sides,
+    id: number,
+    color: Colors,
+    x: number,
+    y: number
 };
-export type StickerMap = {
+
+export type Cubelet = {
+    stickers: Sticker[]
+};
+
+type StickerMap = {
     side: Sides,
     id: number
 }[];
@@ -61,7 +64,7 @@ export abstract class RubiksCube {
     }
 
     public clone(): PocketCube {
-        return new PocketCube(this.stickers);
+        return new PocketCube({ clone: this.stickers });
     }
 
     public isSolved(): boolean {
