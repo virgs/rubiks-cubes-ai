@@ -3,22 +3,13 @@ import { getAllSides, Sides } from '@/constants/sides';
 import type { FaceRotation } from './face-rotation';
 import { PocketCube } from './pocket-cube';
 
-export const getInitialColorOfSide = (orientation: Sides): Colors => {
-    switch (orientation) {
-        case Sides.FRONT:
-            return Colors.BLUE;
-        case Sides.UP:
-            return Colors.YELLOW;
-        case Sides.RIGHT:
-            return Colors.RED;
-        case Sides.LEFT:
-            return Colors.ORANGE
-        case Sides.BACK:
-            return Colors.GREEN;
-        case Sides.DOWN:
-            return Colors.WHITE;
-    }
-}
+const defaultColorMap: Map<Sides, Colors> = new Map();
+defaultColorMap.set(Sides.FRONT, Colors.BLUE);
+defaultColorMap.set(Sides.UP, Colors.YELLOW);
+defaultColorMap.set(Sides.RIGHT, Colors.RED);
+defaultColorMap.set(Sides.LEFT, Colors.ORANGE);
+defaultColorMap.set(Sides.BACK, Colors.GREEN);
+defaultColorMap.set(Sides.DOWN, Colors.WHITE);
 
 export type Cubelet = {
     stickers: {
@@ -39,17 +30,21 @@ export abstract class RubiksCube {
     protected readonly stickers: Colors[];
     protected readonly dimension: number;
 
-    public constructor(config: { dimension: number, stickersMap: StickerMap[], clone?: Colors[] }) {
+    public constructor(config: { dimension: number, stickersMap: StickerMap[], clone?: Colors[], colorMap?: Map<Sides, Colors> }) {
         this.dimension = config.dimension;
         if (config.clone) {
             this.stickers = [...config.clone];
         } else {
+            let colorMap = defaultColorMap;
+            if (config.colorMap) {
+                colorMap = config.colorMap;
+            }
             this.stickers = [];
             getAllSides()
                 .forEach(side => {
                     const stickers: Colors[] = Array
                         .from(new Array(this.getDimension() * this.getDimension()))
-                        .map(() => getInitialColorOfSide(side));
+                        .map(() => colorMap.get(side)!);
                     this.stickers.push(...stickers);
                 })
         }

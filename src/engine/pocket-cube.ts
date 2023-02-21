@@ -1,9 +1,8 @@
 import { PocketCubeFaceRotator } from './pocket-cube-face-rotator';
-import { Sides } from '@/constants/sides';
+import { getAllSides, getOppositeSide, Sides } from '@/constants/sides';
 import { RubiksCube, type Cubelet, type StickerMap } from './rubiks-cube';
 import type { FaceRotation } from './face-rotation';
-import type { Colors } from '@/constants/colors';
-
+import { getOppositeColor, type Colors } from '@/constants/colors';
 
 // Initial configuration
 //       UP
@@ -31,14 +30,24 @@ const stickerMap: StickerMap[] = [
 export class PocketCube extends RubiksCube {
     private readonly faceRotator: PocketCubeFaceRotator;
 
-    public constructor(clone?: Colors[]) {
-        super({ dimension: 2, stickersMap: stickerMap, clone: clone });
+    public constructor(config?: {clone?: Colors[], colorMap?: Map<Sides, Colors>}) {
+        super({ dimension: 2, stickersMap: stickerMap, clone: config && config.clone, colorMap: config && config?.colorMap });
         this.faceRotator = new PocketCubeFaceRotator();
+    }
+
+    public static buildSolvedFromCubelet(cubelet: Cubelet): PocketCube {
+        const colorMap: Map<Sides, Colors> = new Map();
+        cubelet.stickers
+            .forEach(sticker => {
+                colorMap.set(sticker.side, sticker.color);
+                colorMap.set(getOppositeSide(sticker.side), getOppositeColor(sticker.color));
+            });
+        return new PocketCube({colorMap});
     }
 
     public rotateFace(faceRotation: FaceRotation): PocketCube {
         const result = this.faceRotator.rotate(this.stickers, faceRotation);
-        return new PocketCube(result);
+        return new PocketCube({clone: result});
     }
 
     public getCubeletsBySides(...sides: Sides[]): Cubelet[] {

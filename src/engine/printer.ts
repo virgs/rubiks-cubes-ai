@@ -42,7 +42,7 @@ ${text(stickers[7], 7)}  ${text(stickers[6], 6)}   ${text(stickers[11], 11)}  ${
                     prefix = '2';
                 }
             }
-            text += `|${prefix}${Sides[rotation.side].substring(0, 1)}${rotation.counterClockwiseDirection ? '\'' : ' '}${this.getLayer(rotation.layer)}  `;
+            text += `| ${prefix}${Sides[rotation.side].substring(0, 1)}${rotation.counterClockwiseDirection ? '\'' : ' '}${this.getLayer(rotation.layer)}  `;
             if (index % lineBreak === lineBreak - 1) {
                 text += '\n'
             }

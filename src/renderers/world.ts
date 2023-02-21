@@ -76,9 +76,9 @@ export class World {
         const fov = 35; // AKA Field of View
         const aspect = container.clientWidth / container.clientHeight;
         const near = 0.1; // the near clipping plane
-        const far = 50; // the far clipping plane
+        const far = 75; // the far clipping plane
         const camera = new PerspectiveCamera(fov, aspect, near, far);
-        camera.position.set(15, 10, 20);
+        camera.position.set(15, 10, 30);
         camera.lookAt(new Vector3(0, 0, 0))
         return camera;
     }
