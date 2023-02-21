@@ -1,5 +1,3 @@
-import { Color } from "three";
-
 export enum Colors {
     YELLOW,
     ORANGE,

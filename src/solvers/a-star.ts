@@ -1,11 +1,11 @@
 import type { Solution } from "./solution";
 import Heap from 'heap';
-import type { PocketCube } from "../pocket-cube";
-import { Sides } from "../sides";
-import { ProcedureMeasurer } from "./procedure-measurer";
-import type { FaceRotation } from "../face-rotation";
+import type { PocketCube } from "../engine/pocket-cube";
+import { Sides } from "../constants/sides";
+import type { FaceRotation } from "../constants/face-rotation";
 import type { CubeSolver } from "./cube-solver";
 import { Configuration } from "@/configuration";
+import type { ProcedureMeasurer } from "./procedure-measurer";
 
 type Candidate = {
     cost: number,

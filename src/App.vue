@@ -1,16 +1,15 @@
 <script lang="ts">
 import { PocketCube } from "@/engine/pocket-cube";
 import { CubeScrambler } from "./engine/cube-scrambler";
-import { BreadthFirstSearch } from "./engine/solvers/breadth-first-search";
 import { defineComponent } from 'vue';
 import { World } from "./renderers/world";
 import { CubeRenderer } from "./renderers/cube-renderer";
-import type { Solution } from "./engine/solvers/solution";
-import type { CubeSolver } from "./engine/solvers/cube-solver";
 import { Vector3 } from "three";
 import { Printer } from "./engine/printer";
-import { Sides } from "./engine/sides";
-import { Colors } from "./engine/colors";
+import { Sides } from "./constants/sides";
+import type { CubeSolver } from "./solvers/cube-solver";
+import { BreadthFirstSearch } from "./solvers/pocket-cube-breadth-first-search";
+import type { Solution } from "./solvers/solution";
 
 export default defineComponent({
   name: 'App',
@@ -21,18 +20,15 @@ export default defineComponent({
     world.start();
 
     let cube = new PocketCube();
-    const cubePrinter = new Printer();
-    const cubeRenderers = [new CubeRenderer({ scene: world.getScene(), cube: cube, position: new Vector3(3.5, 2, 0) }),
-    new CubeRenderer({ scene: world.getScene(), cube: cube, position: new Vector3(-3.5, 2, 0) })]
+    cube = cube.rotateFace({side: Sides.UP})
+    new Printer().printCube(cube);
+    const cubeRenderers = [new CubeRenderer({ scene: world.getScene(), cube: cube, position: new Vector3(0.5, 2, 0), size: 2 })]
     console.log('Scrambling')
-    const scramblingRotations = new CubeScrambler(1).scramble(cube);
+    const scramblingRotations = new CubeScrambler(0).scramble(cube);
     for (let rotation of scramblingRotations) {
       await Promise.all(cubeRenderers.map(cubeRenderer => cubeRenderer.rotateFace({ ...rotation, duration: 150 })));
       cube = cube.rotateFace(rotation);
     }
-    cubePrinter.printCubelets(cube.getCubeletsBySides(Sides.UP, Sides.FRONT, Sides.RIGHT));
-    cubePrinter.printCubelets(cube.getCubeletsByColor(Colors.BLUE, Colors.YELLOW, Colors.RED));
-    cubePrinter.printCube(cube);
     // this.solve(cube, cubeRenderers, world);
   },
   methods: {

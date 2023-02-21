@@ -1,15 +1,16 @@
 import type { Solution } from "./solution";
 import LinkedList from "double-linked-list";
-import type { PocketCube } from "../pocket-cube";
-import { Sides } from "../sides";
+import type { PocketCube } from "../engine/pocket-cube";
+import { Sides } from "../constants/sides";
 import { ProcedureMeasurer } from "./procedure-measurer";
-import type { FaceRotation } from "../face-rotation";
 import type { CubeSolver } from "./cube-solver";
 import { Configuration } from "@/configuration";
+import type { FaceRotation } from "@/engine/face-rotation";
 
 type Candidate = {
     cube: PocketCube;
-    rotations: FaceRotation[]
+    rotation?: FaceRotation,
+    parent?: Candidate
 }
 
 enum Metrics {
@@ -40,7 +41,8 @@ export class BreadthFirstSearch implements CubeSolver {
         this.iterations = 0;
         const current: Candidate = {
             cube: cube,
-            rotations: []
+            rotation: undefined,
+            parent: undefined,
         };
         this.candidates.push(current);
         this.measurer.start();
@@ -64,17 +66,26 @@ export class BreadthFirstSearch implements CubeSolver {
             }
             if (this.measurer.add(Metrics[Metrics.CHECK_SOLUTION], () => current!.cube.isSolved())) {
                 this.measurer.finish();
-                return {
-                    rotations: current!.rotations,
-                    totalTime: this.measurer.getTotalTime()!,
-                    data: {
-                        metrics: this.measurer.getData(Metrics[Metrics.NOT_MEASURED]),
-                        iterations: this.iterations
-                    }
-                }
+                return this.createSolution(current!);
             } else {
                 this.measurer.add(Metrics[Metrics.ADD_TO_VISISTED_LIST_CHECK], () => this.visitedChecklist.set(current!.cube.getHash(), true));
                 this.applyRotations(current!);
+            }
+        }
+    }
+    private createSolution(candidate: Candidate): Solution {
+        const rotations: FaceRotation[] = [];
+        let current: Candidate | undefined = candidate;
+        while (current && current.rotation) {
+            rotations.unshift(current.rotation);
+            current = current.parent;
+        } 
+        return {
+            rotations: rotations,
+            totalTime: this.measurer.getTotalTime()!,
+            data: {
+                metrics: this.measurer.getData(Metrics[Metrics.NOT_MEASURED]),
+                iterations: this.iterations
             }
         }
     }
@@ -87,7 +98,8 @@ export class BreadthFirstSearch implements CubeSolver {
                     this.measurer.add(Metrics[Metrics.ADD_CANDIDATE], () => {
                         this.candidates.push({
                             cube: newCandidate,
-                            rotations: current.rotations.concat(rotation)
+                            rotation: rotation,
+                            parent: current
                         });
 
                     })

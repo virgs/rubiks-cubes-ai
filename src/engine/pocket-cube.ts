@@ -1,6 +1,7 @@
-import { Colors } from './colors';
+import { Colors } from '../constants/colors';
 import { PocketCubeFaceRotator } from './pocket-cube-face-rotator';
-import { getAllSides, Sides } from '@/engine/sides';
+import { getAllSides, Sides } from '@/constants/sides';
+import type { Cubelet, RubiksCube } from './rubiks-cube';
 import type { FaceRotation } from './face-rotation';
 
 
@@ -32,13 +33,12 @@ export const getInitialColorOfSide = (orientation: Sides): Colors => {
 //       20 21
 //       23 22
 
-export type Cubelet = { side: Sides, id: number, color: Colors, x: number, y: number }[];
-export type CubeletMap = { side: Sides, id: number }[];
-const cubeletMap: CubeletMap[] = [
+export type StickerMap = { side: Sides, id: number }[];
+const stickerMap: StickerMap[] = [
     [{ side: Sides.FRONT, id: 8 }, { side: Sides.LEFT, id: 5 }, { side: Sides.UP, id: 3 }],
     [{ side: Sides.FRONT, id: 9 }, { side: Sides.RIGHT, id: 12 }, { side: Sides.UP, id: 2 }],
-    [{ side: Sides.FRONT, id: 10 }, { side: Sides.LEFT, id: 6 }, { side: Sides.DOWN, id: 20 }],
-    [{ side: Sides.FRONT, id: 11 }, { side: Sides.RIGHT, id: 15 }, { side: Sides.DOWN, id: 21 }],
+    [{ side: Sides.FRONT, id: 11 }, { side: Sides.LEFT, id: 6 }, { side: Sides.DOWN, id: 20 }],
+    [{ side: Sides.FRONT, id: 10 }, { side: Sides.RIGHT, id: 15 }, { side: Sides.DOWN, id: 21 }],
 
     [{ side: Sides.BACK, id: 16 }, { side: Sides.RIGHT, id: 13 }, { side: Sides.UP, id: 1 }],
     [{ side: Sides.BACK, id: 17 }, { side: Sides.LEFT, id: 4 }, { side: Sides.UP, id: 0 }],
@@ -46,7 +46,7 @@ const cubeletMap: CubeletMap[] = [
     [{ side: Sides.BACK, id: 23 }, { side: Sides.LEFT, id: 7 }, { side: Sides.DOWN, id: 18 }],
 ];
 
-export class PocketCube {
+export class PocketCube implements RubiksCube {
     private readonly faceRotator: PocketCubeFaceRotator;
     private readonly stickers: Colors[];
     private readonly hash: string;
@@ -70,7 +70,7 @@ export class PocketCube {
         this.hash = this.stickers.join('.');
     }
 
-    public getConfiguration(): Colors[] {
+    public getStickers(): Colors[] {
         return [...this.stickers];
     }
 
@@ -101,32 +101,31 @@ export class PocketCube {
     }
 
     public getCubeletsBySides(...sides: Sides[]): Cubelet[] {
-        const found = cubeletMap
+        const found = stickerMap
             .filter(cubelets => cubelets
                 .every(sticker => sides.includes(sticker.side)));
-        return found
-            .map(cubelet => cubelet
-                .map(sticker => {
-                    const x = (sticker.id % 4 === 0 || sticker.id % 4 === 3) ? 0 : 1;
-                    const y = (sticker.id % 4 === 0 || sticker.id % 4 === 1) ? 0 : 1;
-                    return {
-                        side: sticker.side,
-                        id: sticker.id,
-                        color: this.stickers[sticker.id],
-                        x: x,
-                        y: y
-                    };
-                }));
+        return this.getCubeletsFromStickers(found);
     }
 
     public getCubeletsByColor(...colors: Colors[]): Cubelet[] {
-        const found = cubeletMap
+        const found = stickerMap
             .filter(cubelets => cubelets
                 .every(sticker => colors.includes(this.stickers[sticker.id!])));
-        return found
-            .map(cubelet => cubelet
+        return this.getCubeletsFromStickers(found);
+    }
+
+    public getAllCubelets(): Cubelet[] {
+        return this.getCubeletsFromStickers(stickerMap);
+    }
+
+    private getCubeletsFromStickers(stickers: StickerMap[]): Cubelet[] {
+        return stickers.map(stickers => ({
+            stickers: stickers
                 .map(sticker => {
-                    const x = (sticker.id % 4 === 0 || sticker.id % 4 === 3) ? 0 : 1;
+                    let x = (sticker.id % 4 === 0 || sticker.id % 4 === 3) ? 0 : 1;
+                    if (sticker.side === Sides.BACK) {
+                        // x = 1 - x;
+                    }
                     const y = (sticker.id % 4 === 0 || sticker.id % 4 === 1) ? 0 : 1;
                     return {
                         side: sticker.side,
@@ -135,7 +134,9 @@ export class PocketCube {
                         x: x,
                         y: y
                     };
-                }));
+
+                })
+        }))
     }
 
 }

@@ -1,4 +1,4 @@
-import type { FaceRotation } from "../face-rotation";
+import type { FaceRotation } from "@/engine/face-rotation";
 
 export type Solution = {
     rotations: FaceRotation[];

@@ -1,11 +1,11 @@
-import type { FaceRotation } from "@/engine/face-rotation";
-import { Sides } from "@/engine/sides";
-import { Colors } from "./colors";
-import type { Cubelet, PocketCube } from "./pocket-cube";
+import { Sides } from "@/constants/sides";
+import { Colors } from "../constants/colors";
+import type { FaceRotation } from "./face-rotation";
+import type { Cubelet, RubiksCube } from "./rubiks-cube";
 
 export class Printer {
-    public printCube(cube: PocketCube): void {
-        const stickers = cube.getConfiguration();
+    public printCube(cube: RubiksCube): void {
+        const stickers = cube.getStickers();
         const text = (sticker: Colors, positionId: number): string => {
             return Colors[sticker].substring(0, 1)
                 + Printer.mapToSmallBottomLetters(`${('  ' + positionId).slice(-2)}`);
@@ -40,8 +40,9 @@ ${text(stickers[7], 7)}  ${text(stickers[6], 6)}   ${text(stickers[11], 11)}  ${
     public printCubelets(cubelets: Cubelet[]): void {
         cubelets
             .map(cubelet => {
-                let text = ' '
+                let text = ' ';
                 cubelet
+                    .stickers
                     .map(sticker => {
                         const color = Colors[sticker.color!];
                         const side = Sides[sticker.side].substring(0, 1);
@@ -69,8 +70,6 @@ ${text(stickers[7], 7)}  ${text(stickers[6], 6)}   ${text(stickers[11], 11)}  ${
         lettersMap.set('7', '⁷');
         lettersMap.set('8', '⁸');
         lettersMap.set('9', '⁹');
-        // lettersMap.set('=', '⁼₌﹐')
-        // lettersMap.set('=', '⁼');
         lettersMap.set(',', '﹐');
         return text
             .split('')

@@ -1,6 +1,6 @@
-import type { FaceRotation } from "./face-rotation";
+import type { FaceRotation } from "../constants/face-rotation";
 import type { PocketCube } from "./pocket-cube";
-import { getAllSides, Sides } from "./sides";
+import { getAllSides, Sides } from "../constants/sides";
 
 export class CubeScrambler {
     private readonly moves: number;

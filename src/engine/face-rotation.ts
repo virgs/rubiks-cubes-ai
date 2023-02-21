@@ -1,4 +1,4 @@
-import type { Sides } from "./sides";
+import type { Sides } from "../constants/sides";
 
 export type FaceRotation = {
     side: Sides;
