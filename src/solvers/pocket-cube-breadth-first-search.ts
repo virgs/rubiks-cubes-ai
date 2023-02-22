@@ -47,6 +47,10 @@ export class PocketCubeBreadthFirstSearch implements CubeSolver {
                 }));
     }
 
+    public static getSolverTag(): string {
+        return "BFS";
+    }
+
     public async findSolution(): Promise<Solution> {
         return new Promise(resolve => {
             this.measurer.start();

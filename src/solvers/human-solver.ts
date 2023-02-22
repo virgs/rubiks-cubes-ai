@@ -3,6 +3,11 @@ import type { FaceRotation } from "@/engine/face-rotation";
 import type { RubiksCube } from "@/engine/rubiks-cube";
 import type { CubeSolver, Solution } from "./cube-solver";
 
+export type KeyboardEvent = {
+    key: string,
+    shiftKey: boolean
+}
+
 export class HumanSolver implements CubeSolver {
     private readonly moves: FaceRotation[];
     private cube: RubiksCube;
@@ -10,9 +15,12 @@ export class HumanSolver implements CubeSolver {
     private startTime?: number;
 
     public constructor(cube: RubiksCube) {
-        window.addEventListener('keypress', (event) => this.readKeys(event));
         this.cube = cube;
         this.moves = [];
+    }
+
+    public static getSolverTag(): string {
+        return "Human";
     }
 
     public async findSolution(): Promise<Solution> {
@@ -22,7 +30,7 @@ export class HumanSolver implements CubeSolver {
         });
     }
 
-    private async readKeys(event: KeyboardEvent): Promise<void> {
+    public async readKeys(event: KeyboardEvent): Promise<FaceRotation | undefined> {
         if (this.cube.isSolved()) {
             return;
         }
@@ -59,6 +67,7 @@ export class HumanSolver implements CubeSolver {
                     data: {}
                 })
             }
+            return faceRotation;
         }
     }
 }

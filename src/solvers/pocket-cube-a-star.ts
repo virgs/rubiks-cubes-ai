@@ -54,6 +54,10 @@ export class PocketCubeAStar implements CubeSolver {
                 }));
     }
 
+    public static getSolverTag(): string {
+        return "A*";
+    }
+
     public async findSolution(): Promise<Solution> {
         return new Promise(resolve => {
             this.measurer.start();

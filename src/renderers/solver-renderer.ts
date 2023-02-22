@@ -8,7 +8,7 @@ import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry";
 import type { Font } from "three/examples/jsm/loaders/FontLoader";
 import SolversMapWorker from "../solvers/pocket-cube-solvers-map-worker?worker";
 import type { Solution } from "../solvers/cube-solver";
-import type { SolverWorkerResponse } from "../solvers/pocket-cube-solvers-map-worker";
+import type { SolverWorkerRequest, SolverWorkerResponse } from "../solvers/pocket-cube-solvers-map-worker";
 import { Configuration } from "@/configuration";
 
 export type SolverRendererConfig = {
@@ -68,12 +68,16 @@ export class SolverRenderer {
                 // console.log(new HumanTranslator().translateRotations(solution.rotations));
                 for (let rotation of solution.rotations) {
                     await this.cubeRenderer.rotateFace({ ...rotation, duration: Configuration.renderers.rotationDuration })
-                }    
+                }
+            } else if (event.data.faceRotation) {
+                await this.cubeRenderer.rotateFace({ ...event.data.faceRotation, duration: Configuration.renderers.rotationDuration })
             }
         }
-        window.addEventListener('keypress', console.log);
         const solversMapWorker = new SolversMapWorker();
-        solversMapWorker.postMessage({ cube: this.config.cube.getConfiguration(), solverKey: this.config.key });
+        window.addEventListener('keypress', (event: KeyboardEvent) => {
+            solversMapWorker.postMessage({ keyboardEvent: { key: event.key, shiftKey: event.shiftKey }, solverTag: this.config.key } as SolverWorkerRequest);
+        });
+        solversMapWorker.postMessage({ cube: this.config.cube.getConfiguration(), solverTag: this.config.key } as SolverWorkerRequest);
         solversMapWorker.onmessage = onMessage;
     }
 

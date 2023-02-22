@@ -1,5 +1,7 @@
 # poket-cube
 
+Show average time table. Tell the distinctions of each method. Show gifs.
+Explain they compete for CPU resources
 
 Copy the readme from https://github.com/achmand/Solving-2x2-Rubiks-Cube and adapt it
 

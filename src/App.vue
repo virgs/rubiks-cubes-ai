@@ -10,6 +10,10 @@ import { SolverRenderer } from "./renderers/solver-renderer";
 import { Font, FontLoader } from "three/examples/jsm/loaders/FontLoader";
 import { Configuration } from "./configuration";
 
+import {PocketCubeAStar} from "@/solvers/pocket-cube-a-star";
+import {PocketCubeBreadthFirstSearch} from "@/solvers/pocket-cube-breadth-first-search";
+import { HumanSolver } from "./solvers/human-solver";
+
 //They have to be non reactive
 let world: World;
 let cubeRenderer: CubeRenderer;
@@ -23,16 +27,13 @@ export default defineComponent({
       aiMethods: [
         {
           checked: true,
-          name: 'BFS'
+          name: PocketCubeBreadthFirstSearch.getSolverTag()
         },
         {
           checked: true,
-          name: 'A*'
+          name: PocketCubeAStar.getSolverTag()
         },
-        {
-          checked: false,
-          name: 'IDA'
-        }],
+],
       shuffled: false,
       font: undefined as Font | undefined,
       cube: new PocketCube() as PocketCube
@@ -87,7 +88,7 @@ export default defineComponent({
         .filter(method => method.checked)
         .map(method => method.name);
       if (this.humanEnabled) {
-        solverKeys.push('Human');
+        solverKeys.push(HumanSolver.getSolverTag());
       }
 
       solverRenderers = solverKeys
