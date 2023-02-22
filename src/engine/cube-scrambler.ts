@@ -1,7 +1,7 @@
-import type { PocketCube } from "./pocket-cube";
 import { getAllSides } from "../constants/sides";
 import type { FaceRotation } from "./face-rotation";
 import type { Side } from "three";
+import type { RubiksCube } from "./rubiks-cube";
 
 export class CubeScrambler {
     private readonly minMoves: number;
@@ -10,7 +10,7 @@ export class CubeScrambler {
         this.minMoves = minMoves;
     }
 
-    public scramble(cube: PocketCube): FaceRotation[] {
+    public scramble(cube: RubiksCube): FaceRotation[] {
         let lastRotatedSide: Side | undefined = undefined;
         const layers = Math.floor(cube.getDimension() / 2);
         const allSides = getAllSides();

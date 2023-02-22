@@ -1,7 +1,6 @@
 import { Colors } from '../constants/colors';
 import { getAllSides, Sides } from '@/constants/sides';
 import type { FaceRotation } from './face-rotation';
-import { PocketCube } from './pocket-cube';
 
 const defaultColorMap: Map<Sides, Colors> = new Map();
 defaultColorMap.set(Sides.FRONT, Colors.BLUE);

@@ -19,11 +19,9 @@ export class World {
         this.animations = [];
         // create a Scene
         this.scene = new Scene();
-
-        // Set the background color
         this.scene.background = new Color(0x111111);
 
-        const light = new DirectionalLight(0xAAAAAA, 2);
+        const light = new DirectionalLight(0xAAAAAA, 3);
         light.position.set(10, 10, 10);
         light.castShadow = true;
         this.scene.add(light);
@@ -31,7 +29,7 @@ export class World {
         this.scene.add(new HemisphereLight(
             0xAAAAAA, // bright sky color
             0x2f4f4f, // dim ground color
-            3.5, // intensity
+            4.5, // intensity
         ));
 
         this.camera = this.createCamera(container);
@@ -46,8 +44,16 @@ export class World {
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.controls.target.set(0, 0, 0);
         this.controls.enableDamping = true;
-        this.controls.minDistance = 15;
-        this.controls.maxDistance = 30;
+        this.controls.minDistance = 30;
+        this.controls.maxDistance = 100;
+        this.controls.minAzimuthAngle = -Math.PI / 2; // radians
+        this.controls.maxAzimuthAngle = Math.PI / 2; // radians
+        this.controls.keys = {
+            LEFT: 'ArrowLeft', //left arrow
+            UP: 'ArrowUp', // up arrow
+            RIGHT: 'ArrowRight', // right arrow
+            BOTTOM: 'ArrowDown' // down arrow
+        };
 
 
         // turn on the physically correct lighting model
@@ -64,10 +70,7 @@ export class World {
     private adjustSize(container: HTMLElement): void {
         this.camera.aspect = container.clientWidth / container.clientHeight;
         this.camera.updateProjectionMatrix();
-        // next, set the renderer to the same size as our container element
         this.renderer.setSize(container.clientWidth, container.clientHeight);
-
-        // finally, set the pixel ratio so that our scene will look good on HiDPI displays
         this.renderer.setPixelRatio(window.devicePixelRatio);
     }
 
@@ -76,10 +79,10 @@ export class World {
         const fov = 35; // AKA Field of View
         const aspect = container.clientWidth / container.clientHeight;
         const near = 0.1; // the near clipping plane
-        const far = 75; // the far clipping plane
+        const far = 100; // the far clipping plane
         const camera = new PerspectiveCamera(fov, aspect, near, far);
         camera.position.set(15, 10, 30);
-        camera.lookAt(new Vector3(0, 0, 0))
+        camera.lookAt(new Vector3(0, 0, 0));
         return camera;
     }
 
@@ -107,7 +110,6 @@ export class World {
     }
 
     private render(): void {
-        // render, or 'create a still image', of the scene
         this.renderer.render(this.scene, this.camera);
     }
 }

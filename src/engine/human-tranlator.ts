@@ -62,7 +62,7 @@ export class HumanTranslator {
         return text;
     }
 
-    public translateRotations(rotationsToPrint: FaceRotation[], lineBreak: number = 5): string {
+    public translateRotations(rotationsToPrint: FaceRotation[], lineBreak?: number): string {
         const rotations = [...rotationsToPrint];
         let text = '';
         let index = 0;
@@ -78,8 +78,8 @@ export class HumanTranslator {
                     prefix = '2';
                 }
             }
-            text += `| ${prefix}${Sides[rotation.side].substring(0, 1)}${rotation.counterClockwiseDirection ? '\'' : ' '}${this.getLayer(rotation.layer)}  `;
-            if (index % lineBreak === lineBreak - 1) {
+            text += `${prefix}${Sides[rotation.side].substring(0, 1)}${rotation.counterClockwiseDirection ? '\'' : ' '}${this.getLayer(rotation.layer)}  `;
+            if (lineBreak !== undefined && index % lineBreak === lineBreak - 1) {
                 text += '\n'
             }
             ++index;
