@@ -1,6 +1,8 @@
 export const Configuration = {
     world: {
-        debug: false
+        debug: false,
+        scrambleMoves: 20,
+        scrambleRotationDuration: 100
     },
     solvers: {
         bfs: {

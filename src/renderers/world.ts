@@ -25,7 +25,6 @@ export class World {
         light.position.set(10, 10, 10);
         light.castShadow = true;
         this.scene.add(light);
-
         this.scene.add(new HemisphereLight(
             0xAAAAAA, // bright sky color
             0x2f4f4f, // dim ground color
@@ -36,35 +35,34 @@ export class World {
 
         // create the renderer
         this.renderer = new WebGLRenderer({ antialias: true });
+        this.renderer.physicallyCorrectLights = true;
 
         if (Configuration.world.debug) {
             this.scene.add(new AxesHelper(50));
         }
 
-        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-        this.controls.target.set(0, 0, 0);
-        this.controls.enableDamping = true;
-        this.controls.minDistance = 30;
-        this.controls.maxDistance = 100;
-        this.controls.minAzimuthAngle = -Math.PI / 2; // radians
-        this.controls.maxAzimuthAngle = Math.PI / 2; // radians
-        this.controls.keys = {
+        this.controls = this.createControls();
+
+        this.adjustSize(container);
+        container.append(this.renderer.domElement);
+        window.addEventListener('resize', () => this.adjustSize(container));
+    }
+
+    private createControls(): OrbitControls {
+        const controls = new OrbitControls(this.camera, this.renderer.domElement);
+        controls.target.set(0, 0, 0);
+        controls.enableDamping = true;
+        controls.minDistance = 30;
+        controls.maxDistance = 100;
+        controls.minAzimuthAngle = -Math.PI / 2; // radians
+        controls.maxAzimuthAngle = Math.PI / 2; // radians
+        controls.keys = {
             LEFT: 'ArrowLeft', //left arrow
             UP: 'ArrowUp', // up arrow
             RIGHT: 'ArrowRight', // right arrow
             BOTTOM: 'ArrowDown' // down arrow
         };
-
-
-        // turn on the physically correct lighting model
-        this.renderer.physicallyCorrectLights = true;
-
-        this.adjustSize(container);
-
-        // add the automatically created <canvas> element to the page
-        container.append(this.renderer.domElement);
-
-        window.addEventListener('resize', () => this.adjustSize(container));
+        return controls;
     }
 
     private adjustSize(container: HTMLElement): void {
@@ -75,13 +73,12 @@ export class World {
     }
 
     private createCamera(container: HTMLElement): PerspectiveCamera {
-        // Create a camera
         const fov = 35; // AKA Field of View
         const aspect = container.clientWidth / container.clientHeight;
         const near = 0.1; // the near clipping plane
         const far = 100; // the far clipping plane
         const camera = new PerspectiveCamera(fov, aspect, near, far);
-        camera.position.set(15, 10, 30);
+        camera.position.set(0, 20, 40);
         camera.lookAt(new Vector3(0, 0, 0));
         return camera;
     }

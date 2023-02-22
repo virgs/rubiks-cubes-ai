@@ -11,6 +11,7 @@ import type { Solution } from "./solvers/cube-solver";
 import type { SolverWorkerResponse } from "./solvers/pocket-cube-solvers-map-worker";
 import { HumanPlayer } from "./players/human-player";
 import { Font, FontLoader } from "three/examples/jsm/loaders/FontLoader";
+import { Configuration } from "./configuration";
 
 //It has to be non reactive
 let world: World;
@@ -68,11 +69,11 @@ export default defineComponent({
     },
     async shuffle() {
       console.log('Scrambling...')
-      const scramblingRotations = new CubeScrambler(30).scramble(this.cube as PocketCube);
+      const scramblingRotations = new CubeScrambler(Configuration.world.scrambleMoves).scramble(this.cube as PocketCube);
       console.log(new HumanTranslator().translateRotations(scramblingRotations, 5));
       this.createCubeRenderer();
       for (let rotation of scramblingRotations) {
-        await cubeRenderer!.rotateFace({ ...rotation, duration: 150 });
+        await cubeRenderer!.rotateFace({ ...rotation, duration: Configuration.world.scrambleRotationDuration });
         this.cube = this.cube.rotateFace(rotation);
       }
       console.log(new HumanTranslator().translateCube(this.cube as PocketCube));
@@ -85,14 +86,19 @@ export default defineComponent({
         rendererSize: 3,
         cube: this.cube as PocketCube,
         position: {
-          from: cubeRenderer.getMesh().position,
+          from: cubeRenderer.getMesh().position.clone(),
           to: new Vector3(3, 0, 0)
         },
         title: "Human"
       });
       world!.getScene().remove(cubeRenderer.getMesh());
-      // await player.remove();
-      this.cube = new PocketCube();
+      setTimeout(async () => {
+        await player.remove();
+        this.createCubeRenderer();
+      }, 3000)
+
+      // this.cube = new PocketCube();
+
       // const onMessage = async (event: MessageEvent<SolverWorkerResponse>) => {
       //   const solution = JSON.parse(event.data.solution!) as Solution;
       //   console.log(solution);
@@ -135,6 +141,7 @@ export default defineComponent({
           <button type="button" class="btn btn-outline-info dropdown-toggle" data-bs-toggle="dropdown"
             aria-expanded="false" style="margin-left: 10px;">
             2x2
+            <i class="fa-solid fa-caret-down" style="float: right; margin-top: 3px;"></i>
           </button>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="#">2x2</a></li>
@@ -155,4 +162,8 @@ export default defineComponent({
   </div>
 </template>
 
-<style scoped></style>
+<style>
+.dropdown-toggle::after {
+  display: none !important;
+}
+</style>

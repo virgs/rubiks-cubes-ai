@@ -45,7 +45,6 @@ export class PocketCubeAStar implements CubeSolver {
             parent: undefined,
         };
         this.candidates.push(current);
-        this.measurer.start();
         this.actions = [];
         this.goalState = this.buildSolvedPocketCubeFromCornerCubelet(cube.getCubeletsBySides(Sides.BACK, Sides.LEFT, Sides.DOWN)[0]);
         [Sides.FRONT, Sides.UP, Sides.RIGHT]
@@ -55,24 +54,27 @@ export class PocketCubeAStar implements CubeSolver {
                 }));
     }
 
-    public findSolution(): Solution | undefined {
-        let current: Candidate | undefined;
-        let iterations = 0;
-        while (this.candidates.size() > 0) {
-            ++iterations;
-            current = this.measurer.add(Metrics[Metrics.POP_CANDIDATE], () => this.candidates.pop());
-            if (this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.visitedChecklist.has(current!.cube.getHash()))) {
-                continue;
+    public async findSolution(): Promise<Solution | undefined> {
+        return new Promise(resolve => {
+            this.measurer.start();
+            let current: Candidate | undefined;
+            let iterations = 0;
+            while (this.candidates.size() > 0) {
+                ++iterations;
+                current = this.measurer.add(Metrics[Metrics.POP_CANDIDATE], () => this.candidates.pop());
+                if (this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.visitedChecklist.has(current!.cube.getHash()))) {
+                    continue;
+                }
+                if (this.measurer.add(Metrics[Metrics.CHECK_SOLUTION], () => current!.cube.isSolved())) {
+                    this.measurer.finish();
+                    this.candidates.clear();
+                    return resolve(this.createSolution(current!, iterations));
+                } else {
+                    this.measurer.add(Metrics[Metrics.ADD_TO_VISISTED_LIST_CHECK], () => this.visitedChecklist.set(current!.cube.getHash(), true));
+                    this.applyRotations(current!);
+                }
             }
-            if (this.measurer.add(Metrics[Metrics.CHECK_SOLUTION], () => current!.cube.isSolved())) {
-                this.measurer.finish();
-                this.candidates.clear();
-                return this.createSolution(current!, iterations);
-            } else {
-                this.measurer.add(Metrics[Metrics.ADD_TO_VISISTED_LIST_CHECK], () => this.visitedChecklist.set(current!.cube.getHash(), true));
-                this.applyRotations(current!);
-            }
-        }
+        })
     }
     private createSolution(candidate: Candidate, iterations: number): Solution {
         const rotations: FaceRotation[] = [];
@@ -134,7 +136,7 @@ export class PocketCubeAStar implements CubeSolver {
                 colorMap.set(sticker.side, sticker.color);
                 colorMap.set(getOppositeSide(sticker.side), getOppositeColor(sticker.color));
             });
-        return new PocketCube({colorMap});
+        return new PocketCube({ colorMap });
     }
 
 }

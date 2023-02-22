@@ -20,6 +20,7 @@ export type HumanRendererConfig = {
 }
 
 export class HumanPlayer {
+    private static readonly translationDuration: number = 500;
     private readonly cubeRenderer: CubeRenderer;
     private readonly moves: FaceRotation[];
     private readonly config: HumanRendererConfig;
@@ -29,7 +30,6 @@ export class HumanPlayer {
     private moving: boolean = false;
 
     public constructor(config: HumanRendererConfig) {
-        window.addEventListener('keypress', (event) => this.doCommand(event));
         this.moves = [];
         this.moving = false;
         this.cube = config.cube;
@@ -38,14 +38,14 @@ export class HumanPlayer {
         this.cubeRenderer = new CubeRenderer({
             parent: config.scene,
             cube: this.cube,
-            position: config.position.from,
+            position: this.config.position.from.clone(),
             size: 3
         });
 
         config.scene.add(this.cubeRenderer.getMesh());
         this.createTitle();
     }
-    
+
     private createTitle(): void {
         const geometry = new TextGeometry(this.config.title, {
             font: this.config.font,
@@ -57,8 +57,8 @@ export class HumanPlayer {
         });
         this.title = new Mesh(geometry, material)
 
-        new Tween.Tween(this.config.position.from)
-            .to(this.config.position.to, 1500)
+        new Tween.Tween(this.config.position.from.clone())
+            .to(this.config.position.to, HumanPlayer.translationDuration)
             .easing(Tween.Easing.Quadratic.InOut)
             .onUpdate((position: Vector3) => {
                 this.cubeRenderer.getMesh().position.set(position.x, position.y, position.z);
@@ -69,59 +69,27 @@ export class HumanPlayer {
                 this.title!.position.set(position.x - this.title!.scale.x * 2, position.y + 5, position.z);
             })
             .start();
-            this.config.scene.add(this.title)
+        this.config.scene.add(this.title)
     }
 
     public async remove(): Promise<void> {
         return new Promise(resolve => {
             new Tween.Tween(this.config.position.to)
-            .to(this.config.position.from, 500)
-            .easing(Tween.Easing.Quadratic.InOut)
-            .onUpdate((position: Vector3) => {
-                this.cubeRenderer.getMesh().position.set(position.x, position.y, position.z);
-                this.title!.position.set(position.x - this.title!.scale.x * 2, position.y + 5, position.z);
-            })
-            .onComplete((position: Vector3) => {
-                this.config.scene.remove(this.cubeRenderer.getMesh());
-                this.config.scene.remove(this.title!);                
-            })
-            .start();
+                .to(this.config.position.from, HumanPlayer.translationDuration)
+                .easing(Tween.Easing.Quadratic.InOut)
+                .onUpdate((position: Vector3) => {
+                    this.cubeRenderer.getMesh().position.set(position.x, position.y, position.z);
+                    this.title!.position.set(position.x - this.title!.scale.x * 2, position.y + 5, position.z);
+                })
+                .onComplete(() => {
+                    this.config.scene.remove(this.cubeRenderer.getMesh());
+                    this.config.scene.remove(this.title!);
+                    resolve()
+                })
+                .start();
         });
     }
 
-    private async doCommand(event: KeyboardEvent): Promise<void> {
-        if (this.cube.isSolved()) {
-            return;
-        }
-        let side: Sides | undefined;
-        switch (event.key.toLowerCase()) {
-            case 'w':
-                side = Sides.UP;
-                break;
-            case 'a':
-                side = Sides.LEFT;
-                break;
-            case 's':
-                side = Sides.FRONT;
-                break;
-            case 'd':
-                side = Sides.RIGHT;
-                break;
-            case 'f':
-                side = Sides.BACK;
-                break;
-            case 'x':
-                side = Sides.DOWN;
-                break;
-        }
-        if (side !== undefined && !this.moving) {
-            this.moving = true;
-            const faceRotation = { side: side, counterClockwiseDirection: event.shiftKey };
-            this.moves.push(faceRotation);
-            await this.cubeRenderer.rotateFace({ ...faceRotation, duration: 500 });
-            this.cube = this.cube.rotateFace(faceRotation)
-            this.moving = false;
-        }
-    }
+   
 
 }

@@ -7,5 +7,5 @@ export type Solution = {
 };
 
 export interface CubeSolver {
-    findSolution(): Solution | undefined;
+    findSolution(): Promise<Solution | undefined>;
 }
