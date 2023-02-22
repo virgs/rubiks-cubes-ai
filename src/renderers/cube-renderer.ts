@@ -18,13 +18,13 @@ type FaceRotationAnimation = FaceRotation & { duration?: number };
 //https://github.com/SuboptimalEng/gamedex/blob/19b0466ad30ef0fb6c760eb78f74e6cf64fa1a73/08-rubiks-cube/src/lib/Cube.js
 export class CubeRenderer {
     private static readonly animatioDuration: number = 250;
-    private readonly scene: Scene;
+    private readonly parent: Object3D;
     private readonly dimension: number;
     private rubiksCubeGroup: Group;
 
-    public constructor(config: { cube: RubiksCube, scene: Scene, position: Vector3, size: number }) {
+    public constructor(config: { cube: RubiksCube, parent: Object3D, position: Vector3, size: number }) {
         this.rubiksCubeGroup = new Group();
-        this.scene = config.scene;
+        this.parent = config.parent;
         this.dimension = config.cube.getDimension();
 
         config.cube.getAllCubelets()
@@ -40,7 +40,7 @@ export class CubeRenderer {
             });
 
         this.rubiksCubeGroup.position.set(config.position.x, config.position.y, config.position.z);
-        this.scene.add(this.rubiksCubeGroup);
+        this.parent.add(this.rubiksCubeGroup);
     }
 
     public getMesh(): Object3D {
@@ -56,7 +56,7 @@ export class CubeRenderer {
         }
 
         const rotationGroup = this.createRotationGroup(axisName, faceRotation);
-        this.scene.add(rotationGroup);
+        this.parent.add(rotationGroup);
 
         const start: RotationTween = { rotation: 0 };
         const end: RotationTween = { rotation: targetAngle };
@@ -80,7 +80,7 @@ export class CubeRenderer {
                             cubelet.position.copy(vector.clone().sub(this.rubiksCubeGroup.position.clone()));
                             cubelet.rotation.setFromRotationMatrix(matrixWorld);
                         });
-                    this.scene.remove(rotationGroup);
+                    this.parent.remove(rotationGroup);
                     resolve();
                 })
                 .start();

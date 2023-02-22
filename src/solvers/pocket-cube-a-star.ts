@@ -1,8 +1,7 @@
-import type { Solution } from "./solution";
 import Heap from 'heap';
 import { PocketCube } from "../engine/pocket-cube";
 import { getOppositeSide, Sides } from "../constants/sides";
-import type { CubeSolver } from "./cube-solver";
+import type { CubeSolver, Solution } from "./cube-solver";
 import { ProcedureMeasurer } from "./procedure-measurer";
 import type { FaceRotation } from "@/engine/face-rotation";
 import { type Colors, getOppositeColor } from "@/constants/colors";
@@ -112,6 +111,7 @@ export class PocketCubeAStar implements CubeSolver {
 
     //Calcs how many sides the cubelet corner shares with the corner where it's supposed to be
     private calculateDistanceToFinalState(cube: PocketCube): number {
+        const numberOfCubeletsMovedInOneTwist: number = 4.0;
         return cube.getAllCubelets()
             .reduce((acc, cubelet) => {
                 const cubeletFinalPosition = this.goalState.getCubeletsByColor(...cubelet.stickers
@@ -124,7 +124,7 @@ export class PocketCubeAStar implements CubeSolver {
                         }
                         return sum;
                     }, cubelet.stickers.length)
-            }, 0) / 8.0;
+            }, 0) / numberOfCubeletsMovedInOneTwist;
     }
 
     public buildSolvedPocketCubeFromCornerCubelet(cubelet: Cubelet): PocketCube {

@@ -1,9 +1,8 @@
-import type { Solution } from "./solution";
 import LinkedList from "double-linked-list";
 import type { PocketCube } from "../engine/pocket-cube";
 import { Sides } from "../constants/sides";
 import { ProcedureMeasurer } from "./procedure-measurer";
-import type { CubeSolver } from "./cube-solver";
+import type { CubeSolver, Solution } from "./cube-solver";
 import type { FaceRotation } from "@/engine/face-rotation";
 
 enum Metrics {

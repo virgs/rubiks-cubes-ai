@@ -8,3 +8,5 @@ https://www.google.ca/search?q=pocket+cube+evolutionary+neural+network&ie=UTF-8&
 
 
 https://github.com/BenSDuggan/CubeAI
+
+Copy the readme from https://github.com/achmand/Solving-2x2-Rubiks-Cube and adapt it

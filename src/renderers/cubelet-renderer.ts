@@ -1,9 +1,9 @@
 import {
-    Mesh, MeshStandardMaterial, Material, DoubleSide, Vector3, ConeGeometry
+    Mesh, MeshStandardMaterial, Material, Vector3
 } from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry";
 import { Sides } from "@/constants/sides";
-import { Colors, mapColorsToHex } from "@/constants/colors";
+import { mapColorsToHex } from "@/constants/colors";
 import type { Cubelet } from "@/engine/rubiks-cube";
 
 type Config = {

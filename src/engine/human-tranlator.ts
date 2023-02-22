@@ -108,7 +108,11 @@ export class HumanTranslator {
     }
 
     private getLayer(layer?: number): string {
-        return HumanTranslator.mapToSmallBottomLetters((layer || 0).toString());
+        let value = 1;
+        if (layer !== undefined) {
+            value = layer + 1;
+        }
+        return HumanTranslator.mapToSmallBottomLetters(value.toString());
     }
 
     public static mapToSmallTopLetters(text: string): string {

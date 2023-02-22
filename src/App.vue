@@ -1,18 +1,16 @@
 <script lang="ts">
 import { PocketCube } from "@/engine/pocket-cube";
-import { CubeScrambler } from "./engine/cube-scrambler";
 import { defineComponent } from 'vue';
+import { CubeScrambler } from "./engine/cube-scrambler";
 import { World } from "./renderers/world";
-// import { CubeRenderer } from "./renderers/cube-renderer";
-import type { CubeSolver } from "./solvers/cube-solver";
-import { PocketCubeBreadthFirstSearch } from "./solvers/pocket-cube-breadth-first-search";
-import { PocketCubeAStar } from "./solvers/pocket-cube-a-star";
-import type { Solution } from "./solvers/solution";
-import SolversMapWorker from "./solvers/solvers-map-worker?worker"
-import { Vector3 } from "three";
+import { Object3D, Vector3 } from "three";
 import { HumanTranslator } from "./engine/human-tranlator";
 import { CubeRenderer } from "./renderers/cube-renderer";
-import type { WorkerResponse } from "./solvers/solvers-map-worker";
+import SolversMapWorker from "./solvers/pocket-cube-solvers-map-worker?worker";
+import type { Solution } from "./solvers/cube-solver";
+import type { SolverWorkerResponse } from "./solvers/pocket-cube-solvers-map-worker";
+import { Group } from "@tweenjs/tween.js";
+import { HumanRenderer } from "./renderers/human-renderer";
 
 export default defineComponent({
   name: 'App',
@@ -22,71 +20,72 @@ export default defineComponent({
     world.start();
 
     let cube = new PocketCube();
-    const cubeRenderers = [];
-    cubeRenderers.push(new CubeRenderer({
-      scene: world.getScene(),
+    const cubeRenderer = new CubeRenderer({
+      parent: world.getScene(),
       cube: cube,
-      position: new Vector3(3.5, 2, 0),
+      position: new Vector3(0, 0, 0),
       size: 3
-    }))
-    // cubeRenderers.push(new CubeRenderer({
-    //   scene: world.getScene(),
-    //   cube: cube,
-    //   position: new Vector3(-3.5, 2, 0),
-    //   size: 3
-    // }));
+    });
+
     console.log('Scrambling...')
-    const scramblingRotations = new CubeScrambler(30).scramble(cube);
-    // console.log(new HumanTranslator().translateRotations(scramblingRotations));
+    const scramblingRotations = new CubeScrambler(3).scramble(cube);
+    console.log(new HumanTranslator().translateRotations(scramblingRotations));
     for (let rotation of scramblingRotations) {
-      await Promise.all(cubeRenderers.map(cubeRenderer => cubeRenderer.rotateFace({ ...rotation, duration: 150 })));
+      await cubeRenderer.rotateFace({ ...rotation, duration: 150 });
       cube = cube.rotateFace(rotation);
     }
+
+    new HumanRenderer({
+      scene: world.getScene(),
+      rendererSize: 3,
+      cube: cube,
+      position: {
+        from: cubeRenderer.getMesh().position,
+        to: new Vector3(3, 0, 0)
+      },
+      title: "Human"
+    });
+    world.getScene().remove(cubeRenderer.getMesh());
+    // cubeRenderers.push()
+    // cubeRenderers.push(new CubeRenderer({
+    //   parent: group,
+    //   cube: cube,
+    //   position: new Vector3(3.5, 2, 0),
+    //   size: 3
+    // }));
     // console.log(new HumanTranslator().translateCube(cube))
-    this.solve(cube, cubeRenderers, world);
+    // this.solve(cube, cubeRenderers);
   },
   methods: {
-    async solve(cube: PocketCube, renderers: CubeRenderer[], world: World) {
-      const solversMapWorker = new SolversMapWorker()
-      solversMapWorker.postMessage({ cube: cube.getConfiguration(), solverKey: 'a*', id: 0 });
-      solversMapWorker.onmessage = async (event: MessageEvent<WorkerResponse>) => {
-        const solution = JSON.parse(event.data.solution) as Solution;
+    async solve(cube: PocketCube, renderers: CubeRenderer[]) {
+      const onMessage = async (event: MessageEvent<SolverWorkerResponse>) => {
+        const solution = JSON.parse(event.data.solution!) as Solution;
         console.log(solution);
+        console.log(new HumanTranslator().translateRotations(solution.rotations));
         for (let rotation of solution.rotations) {
-          await Promise.all(renderers.map(cubeRenderer => cubeRenderer.rotateFace({ ...rotation, duration: 150 })));
+          await renderers[event.data.id].rotateFace({ ...rotation, duration: 150 });
           cube = cube.rotateFace(rotation);
         }
       }
-      // world.addAnimationLoop(() => {
-      //   for (const [key, solver] of solvers.entries()) {
-      //     const solution = solver.findSolution();
-      //     if (solution) {
-      //       console.log(key, solution)
-      //       console.log(new HumanTranslator().translateRotations(solution.rotations));
-      //       this.renderSolution(renderers[0], solution)
-      //       solvers.delete(key);
-      //     }
-      //   }
-      // });
+      const solversMapWorkers = [new SolversMapWorker(), new SolversMapWorker()];
+      solversMapWorkers[0].postMessage({ cube: cube.getConfiguration(), solverKey: 'a*', id: 0 });
+      solversMapWorkers[1].postMessage({ cube: cube.getConfiguration(), solverKey: 'bfs', id: 1 });
+      solversMapWorkers[0].onmessage = onMessage;
+      solversMapWorkers[1].onmessage = onMessage;
     },
-    async renderSolution(cubeRenderer: CubeRenderer, solution: Solution) {
-      for (let rotation of solution.rotations) {
-        await cubeRenderer.rotateFace({ ...rotation, duration: 500 });
-      }
-    }
   }
 })
 
 </script>
 
 <template>
-  <div id="scene-container" class="wrapper">
+  <div id="scene-container">
   </div>
 </template>
 
 <style scoped>
-.wrapper {
-  /* height: 100vh; */
+#scene-container {
   min-height: 100%;
+  min-width: 100%;
 }
 </style>
