@@ -35,6 +35,10 @@ export class PocketCube extends RubiksCube {
         this.faceRotator = new PocketCubeFaceRotator();
     }
 
+    public clone(): PocketCube {
+        return new PocketCube({ clone: this.stickers });
+    }
+
     public rotateFace(faceRotation: FaceRotation): PocketCube {
         const result = this.faceRotator.rotate(this.stickers, faceRotation);
         return new PocketCube({ clone: result });

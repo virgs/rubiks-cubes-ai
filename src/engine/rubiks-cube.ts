@@ -63,8 +63,8 @@ export abstract class RubiksCube {
         return this.dimension;
     }
 
-    public clone(): PocketCube {
-        return new PocketCube({ clone: this.stickers });
+    public getConfiguration(): Colors[] {
+        return [...this.stickers];
     }
 
     public isSolved(): boolean {
@@ -80,6 +80,7 @@ export abstract class RubiksCube {
         return this.hash;
     }
 
+    public abstract clone(): RubiksCube;
     public abstract rotateFace(faceRotation: FaceRotation): RubiksCube;
     public abstract getAllCubelets(): Cubelet[];
 }

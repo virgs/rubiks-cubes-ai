@@ -4,7 +4,6 @@ import type { PocketCube } from "../engine/pocket-cube";
 import { Sides } from "../constants/sides";
 import { ProcedureMeasurer } from "./procedure-measurer";
 import type { CubeSolver } from "./cube-solver";
-import { Configuration } from "@/configuration";
 import type { FaceRotation } from "@/engine/face-rotation";
 
 enum Metrics {
@@ -29,14 +28,9 @@ export class PocketCubeBreadthFirstSearch implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
     private readonly candidates: LinkedList;
     private readonly visitedChecklist: Map<string, boolean>;
-    private readonly internalIterations: number = Configuration.solvers.bfs.iterations;
-    private solution?: Solution;
-;
     private readonly actions: FaceRotation[];
-    private iterations: number;
 
-    public constructor(cube: PocketCube) {
-        this.iterations = 0;
+    public constructor(cube: PocketCube) {    
         this.measurer = new ProcedureMeasurer();
         this.visitedChecklist = new Map();
         this.candidates = new LinkedList();
@@ -55,39 +49,37 @@ export class PocketCubeBreadthFirstSearch implements CubeSolver {
                 }));
     }
 
-    public iterate(): Solution | undefined {
+    public findSolution(): Solution | undefined {
         let current: Candidate | undefined;
-        let counter = this.internalIterations;
-        while (!this.solution && this.candidates.length > 0 && counter > 0) {
-            --counter;
-            ++this.iterations;
+        let iterations = 0;
+        while (this.candidates.length > 0) {
+            ++iterations;
             current = this.measurer.add(Metrics[Metrics.POP_CANDIDATE], () => this.candidates.shift());
             if (this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.visitedChecklist.has(current!.cube.getHash()))) {
                 continue;
             }
             if (this.measurer.add(Metrics[Metrics.CHECK_SOLUTION], () => current!.cube.isSolved())) {
                 this.measurer.finish();
-                this.solution = this.createSolution(current!);
+                return this.createSolution(current!, iterations);
             } else {
                 this.measurer.add(Metrics[Metrics.ADD_TO_VISISTED_LIST_CHECK], () => this.visitedChecklist.set(current!.cube.getHash(), true));
                 this.applyRotations(current!);
             }
         }
-        return this.solution;
     }
-    private createSolution(candidate: Candidate): Solution {
+    private createSolution(candidate: Candidate, iterations: number): Solution {
         const rotations: FaceRotation[] = [];
         let current: Candidate | undefined = candidate;
         while (current && current.rotation) {
             rotations.unshift(current.rotation);
             current = current.parent;
-        } 
+        }
         return {
             rotations: rotations,
             totalTime: this.measurer.getTotalTime()!,
             data: {
                 metrics: this.measurer.getData(Metrics[Metrics.NOT_MEASURED]),
-                iterations: this.iterations
+                iterations: iterations
             }
         }
     }

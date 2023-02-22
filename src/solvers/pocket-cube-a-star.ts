@@ -3,7 +3,6 @@ import Heap from 'heap';
 import { PocketCube } from "../engine/pocket-cube";
 import { getOppositeSide, Sides } from "../constants/sides";
 import type { CubeSolver } from "./cube-solver";
-import { Configuration } from "@/configuration";
 import { ProcedureMeasurer } from "./procedure-measurer";
 import type { FaceRotation } from "@/engine/face-rotation";
 import { type Colors, getOppositeColor } from "@/constants/colors";
@@ -32,19 +31,14 @@ export class PocketCubeAStar implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
     private readonly candidates: Heap<Candidate>;
     private readonly goalState: PocketCube;
-
     private readonly visitedChecklist: Map<string, boolean>;
-    private readonly internalIterations: number = Configuration.solvers.aStar.iterations;
     private readonly actions: FaceRotation[];
-    private iterations: number;
-    private solution?: Solution;
 
     public constructor(cube: PocketCube) {
         this.measurer = new ProcedureMeasurer();
         this.candidates = new Heap((a: Candidate, b: Candidate) => a.cost - b.cost);
 
         this.visitedChecklist = new Map();
-        this.iterations = 0;
         const current: Candidate = {
             cost: 0,
             cube: cube,
@@ -62,12 +56,11 @@ export class PocketCubeAStar implements CubeSolver {
                 }));
     }
 
-    public iterate(): Solution | undefined {
+    public findSolution(): Solution | undefined {
         let current: Candidate | undefined;
-        let counter = this.internalIterations;
-        while (!this.solution && this.candidates.size() > 0 && counter > 0) {
-            --counter;
-            ++this.iterations;
+        let iterations = 0;
+        while (this.candidates.size() > 0) {
+            ++iterations;
             current = this.measurer.add(Metrics[Metrics.POP_CANDIDATE], () => this.candidates.pop());
             if (this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.visitedChecklist.has(current!.cube.getHash()))) {
                 continue;
@@ -75,15 +68,14 @@ export class PocketCubeAStar implements CubeSolver {
             if (this.measurer.add(Metrics[Metrics.CHECK_SOLUTION], () => current!.cube.isSolved())) {
                 this.measurer.finish();
                 this.candidates.clear();
-                this.solution = this.createSolution(current!);
+                return this.createSolution(current!, iterations);
             } else {
                 this.measurer.add(Metrics[Metrics.ADD_TO_VISISTED_LIST_CHECK], () => this.visitedChecklist.set(current!.cube.getHash(), true));
                 this.applyRotations(current!);
             }
         }
-        return this.solution;
     }
-    private createSolution(candidate: Candidate): Solution {
+    private createSolution(candidate: Candidate, iterations: number): Solution {
         const rotations: FaceRotation[] = [];
         let current: Candidate | undefined = candidate;
         while (current && current.rotation) {
@@ -95,7 +87,7 @@ export class PocketCubeAStar implements CubeSolver {
             totalTime: this.measurer.getTotalTime()!,
             data: {
                 metrics: this.measurer.getData(Metrics[Metrics.NOT_MEASURED]),
-                iterations: this.iterations
+                iterations: iterations
             }
         }
     }
