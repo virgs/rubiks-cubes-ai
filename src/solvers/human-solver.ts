@@ -15,7 +15,7 @@ export class HumanSolver implements CubeSolver {
         this.moves = [];
     }
 
-    public async findSolution(): Promise<Solution | undefined> {
+    public async findSolution(): Promise<Solution> {
         this.startTime = Date.now()
         return new Promise(resolve => {
             this.findSolutionResolve = resolve;

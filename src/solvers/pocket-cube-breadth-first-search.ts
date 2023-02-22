@@ -47,7 +47,7 @@ export class PocketCubeBreadthFirstSearch implements CubeSolver {
                 }));
     }
 
-    public async findSolution(): Promise<Solution | undefined> {
+    public async findSolution(): Promise<Solution> {
         return new Promise(resolve => {
             this.measurer.start();
             let current: Candidate | undefined;

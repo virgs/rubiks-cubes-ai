@@ -78,7 +78,7 @@ export class World {
         const near = 0.1; // the near clipping plane
         const far = 100; // the far clipping plane
         const camera = new PerspectiveCamera(fov, aspect, near, far);
-        camera.position.set(0, 20, 40);
+        camera.position.set(0, 10, 50);
         camera.lookAt(new Vector3(0, 0, 0));
         return camera;
     }

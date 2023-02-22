@@ -6,16 +6,14 @@ import { World } from "./renderers/world";
 import { Vector3 } from "three";
 import { HumanTranslator } from "./engine/human-tranlator";
 import { CubeRenderer } from "./renderers/cube-renderer";
-import SolversMapWorker from "./solvers/pocket-cube-solvers-map-worker?worker";
-import type { Solution } from "./solvers/cube-solver";
-import type { SolverWorkerResponse } from "./solvers/pocket-cube-solvers-map-worker";
-import { HumanPlayer } from "./players/human-player";
+import { SolverRenderer } from "./renderers/solver-renderer";
 import { Font, FontLoader } from "three/examples/jsm/loaders/FontLoader";
 import { Configuration } from "./configuration";
 
-//It has to be non reactive
+//They have to be non reactive
 let world: World;
 let cubeRenderer: CubeRenderer;
+let solverRenderers: SolverRenderer[] = [];
 
 export default defineComponent({
   name: 'App',
@@ -64,10 +62,14 @@ export default defineComponent({
         parent: world.getScene(),
         cube: this.cube as PocketCube,
         position: new Vector3(0, 0, 0),
-        size: 3
+        size: Configuration.renderers.cubeSize
       });
     },
     async shuffle() {
+      await Promise.all(solverRenderers
+        .map(solver => solver.remove()));
+      solverRenderers = [];
+
       console.log('Scrambling...')
       const scramblingRotations = new CubeScrambler(Configuration.world.scrambleMoves).scramble(this.cube as PocketCube);
       console.log(new HumanTranslator().translateRotations(scramblingRotations, 5));
@@ -80,39 +82,34 @@ export default defineComponent({
       this.shuffled = true;
     },
     async solve() {
-      const player = new HumanPlayer({
-        font: this.font!,
-        scene: world!.getScene(),
-        rendererSize: 3,
-        cube: this.cube as PocketCube,
-        position: {
-          from: cubeRenderer.getMesh().position.clone(),
-          to: new Vector3(3, 0, 0)
-        },
-        title: "Human"
-      });
+      this.shuffled = false;
+      const solverKeys: string[] = this.aiMethods
+        .filter(method => method.checked)
+        .map(method => method.name);
+      if (this.humanEnabled) {
+        solverKeys.push('Human');
+      }
+
+      solverRenderers = solverKeys
+        .map((key, index) => {
+          const angle = index * (2 * Math.PI / solverKeys.length)
+          return new SolverRenderer({
+            font: this.font!,
+            scene: world!.getScene(),
+            rendererSize: Configuration.renderers.cubeSize,
+            cube: this.cube as PocketCube,
+            position: {
+              from: cubeRenderer.getMesh().position.clone(),
+              angle: angle
+            },
+            key: key
+          });
+        })
+        .map(renderer => {
+          renderer.start();
+          return renderer;
+        })
       world!.getScene().remove(cubeRenderer.getMesh());
-      setTimeout(async () => {
-        await player.remove();
-        this.createCubeRenderer();
-      }, 3000)
-
-      // this.cube = new PocketCube();
-
-      // const onMessage = async (event: MessageEvent<SolverWorkerResponse>) => {
-      //   const solution = JSON.parse(event.data.solution!) as Solution;
-      //   console.log(solution);
-      //   console.log(new HumanTranslator().translateRotations(solution.rotations));
-      //   for (let rotation of solution.rotations) {
-      //     await renderers[event.data.id].rotateFace({ ...rotation, duration: 150 });
-      //     cube = cube.rotateFace(rotation);
-      //   }
-      // }
-      // const solversMapWorkers = [new SolversMapWorker(), new SolversMapWorker()];
-      // solversMapWorkers[0].postMessage({ cube: cube.getConfiguration(), solverKey: 'a*', id: 0 });
-      // solversMapWorkers[1].postMessage({ cube: cube.getConfiguration(), solverKey: 'bfs', id: 1 });
-      // solversMapWorkers[0].onmessage = onMessage;
-      // solversMapWorkers[1].onmessage = onMessage;
     },
   }
 })
