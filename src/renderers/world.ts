@@ -48,6 +48,13 @@ export class World {
         window.addEventListener('resize', () => this.adjustSize(container));
     }
 
+    private adjustSize(container: HTMLElement): void {
+        this.camera.aspect = container.clientWidth / container.clientHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(container.clientWidth, container.clientHeight);
+        this.renderer.setPixelRatio(window.devicePixelRatio);
+    }
+
     private createControls(): OrbitControls {
         const controls = new OrbitControls(this.camera, this.renderer.domElement);
         controls.target.set(0, 0, 0);
@@ -65,20 +72,13 @@ export class World {
         return controls;
     }
 
-    private adjustSize(container: HTMLElement): void {
-        this.camera.aspect = container.clientWidth / container.clientHeight;
-        this.camera.updateProjectionMatrix();
-        this.renderer.setSize(container.clientWidth, container.clientHeight);
-        this.renderer.setPixelRatio(window.devicePixelRatio);
-    }
-
     private createCamera(container: HTMLElement): PerspectiveCamera {
         const fov = 35; // AKA Field of View
         const aspect = container.clientWidth / container.clientHeight;
         const near = 0.1; // the near clipping plane
-        const far = 120; // the far clipping plane
+        const far = 150; // the far clipping plane
         const camera = new PerspectiveCamera(fov, aspect, near, far);
-        camera.position.set(0, 10, 50);
+        camera.position.set(-10, -10, 50);
         camera.lookAt(new Vector3(0, 0, 0));
         return camera;
     }

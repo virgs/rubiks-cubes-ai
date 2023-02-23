@@ -16,6 +16,7 @@ export type SolverRendererConfig = {
     scene: Object3D,
     rendererSize: number,
     key: string,
+    dimensionKey: string,
     position: {
         from: Vector3,
         angle: number
@@ -34,6 +35,7 @@ export class SolverRenderer {
     private readonly movesList: FaceRotation[];
     private readonly interval: number;
     private readonly solversMapWorker: Worker;
+    private findSolutionResolve?: (value: void) => void;
     private solutionsText?: Mesh;
     private rotatingFace: boolean;
     private terminated: boolean;
@@ -68,6 +70,9 @@ export class SolverRenderer {
                 this.movesList.push(faceRotation);
                 await this.cubeRenderer.rotateFace({ ...faceRotation, duration: Configuration.renderers.rotationDuration })
                 this.rotatingFace = false;
+                if (this.terminated) {
+                    this.findSolutionResolve!();
+                }
             }
         }, 100);
 
@@ -75,37 +80,47 @@ export class SolverRenderer {
     }
 
     public async start(): Promise<void> {
-        this.config.scene.add(this.title!);
-        await this.translate(0, 1);
-        const onMessage = async (event: MessageEvent<SolverWorkerResponse>) => {
-            if (!this.terminated) {
-                if (event.data.solution) {
-                    const solution = JSON.parse(event.data.solution!) as Solution;
-                    this.movesAnimationsQueue.push(...solution.rotations);
-                    let text = '  Total time: ' + (Math.trunc(solution.totalTime / 100.0) / 10) + 's\n\n';
-                    text += new HumanTranslator().translateRotations(solution.rotations, { lineBreak: 5 });
-                    this.solutionsText = this.createText(text, .6);
-                    this.solutionsText.position.set(this.titleCenter.x + 1.5, this.titleCenter.y - 3, this.titleCenter.z)
-                    this.config.scene.add(this.solutionsText);
-                    this.terminated = true;
-                    this.solversMapWorker.terminate();
-                } else if (event.data.faceRotation) {
-                    this.movesAnimationsQueue.push(event.data.faceRotation)
+        return new Promise(async resolve => {
+            this.findSolutionResolve = resolve;
+            this.config.scene.add(this.title!);
+            await this.translate(0, 1);
+            const onMessage = async (event: MessageEvent<SolverWorkerResponse>) => {
+                if (!this.terminated) {
+                    if (event.data.solution) {
+                        const solution = JSON.parse(event.data.solution!) as Solution;
+                        if (!solution.data.human) {
+                            this.movesAnimationsQueue.push(...solution.rotations);
+                        }
+                        let text = '  Total time: ' + (Math.trunc(solution.totalTime / 100.0) / 10) + 's\n';
+                        text += new HumanTranslator().translateRotations(solution.rotations, { lineBreak: 7 });
+                        this.solutionsText = this.createText(text, .6);
+                        this.solutionsText.position.set(this.titleCenter.x + 1.5, this.titleCenter.y - 3, this.titleCenter.z)
+                        this.config.scene.add(this.solutionsText);
+                        this.terminated = true;
+                        this.solversMapWorker.terminate();
+                    } else if (event.data.faceRotation) {
+                        this.movesAnimationsQueue.push(event.data.faceRotation)
+                    }
                 }
             }
-        }
 
-        window.addEventListener('keypress', async (event: KeyboardEvent) => {
+            window.addEventListener('keypress', async (event: KeyboardEvent) => {
+                this.solversMapWorker.postMessage({
+                    keyboardEvent: {
+                        key: event.key,
+                        shiftKey: event.shiftKey
+                    },
+                    dimension: this.config.dimensionKey,
+                    solverTag: this.config.key
+                } as SolverWorkerRequest);
+            });
             this.solversMapWorker.postMessage({
-                keyboardEvent: {
-                    key: event.key,
-                    shiftKey: event.shiftKey
-                },
-                solverTag: this.config.key
+                cube: this.config.cube.getConfiguration(),
+                solverTag: this.config.key,
+                dimension: this.config.dimensionKey,
             } as SolverWorkerRequest);
+            this.solversMapWorker.onmessage = onMessage;
         });
-        this.solversMapWorker.postMessage({ cube: this.config.cube.getConfiguration(), solverTag: this.config.key } as SolverWorkerRequest);
-        this.solversMapWorker.onmessage = onMessage;
     }
 
     private createText(text: string, size: number): Mesh {
@@ -148,11 +163,8 @@ export class SolverRenderer {
     }
 
     public async remove(): Promise<void> {
-        console.log('removing')
-        console.log(this.solutionsText)
         if (this.solutionsText) {
             this.config.scene.remove(this.solutionsText);
-            console.log('removed')
         }
         this.terminated = true;
         this.solversMapWorker.terminate();

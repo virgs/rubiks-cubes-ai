@@ -1,3 +1,4 @@
+import { Configuration } from "@/configuration";
 import type { Colors } from "@/constants/colors";
 import type { FaceRotation } from "@/engine/face-rotation";
 import { PocketCube } from "@/engine/pocket-cube";
@@ -7,6 +8,7 @@ import { PocketCubeAStar } from "./pocket-cube-a-star";
 import { PocketCubeBreadthFirstSearch } from "./pocket-cube-breadth-first-search";
 
 export type SolverWorkerRequest = {
+    dimension: string,
     solverTag: string,
     cube?: Colors[],
     keyboardEvent?: KeyboardEvent
@@ -19,26 +21,33 @@ export type SolverWorkerResponse = {
     error?: string,
 };
 
-const solverInstantiatorMap: Map<string, (cube: PocketCube) => CubeSolver> = new Map();
-solverInstantiatorMap.set(HumanSolver.getSolverTag().toLowerCase(), (cube: PocketCube) => new HumanSolver(cube));
-solverInstantiatorMap.set(PocketCubeAStar.getSolverTag().toLowerCase(), (cube: PocketCube) => new PocketCubeAStar(cube));
-solverInstantiatorMap.set(PocketCubeBreadthFirstSearch.getSolverTag().toLowerCase(), (cube: PocketCube) => new PocketCubeBreadthFirstSearch(cube));
+const solverMethodFinder = (request: SolverWorkerRequest) => {
+    for (let item of Configuration.solvers) {
+        if (item.dimension.toLowerCase() === request.dimension.toLowerCase()) {
+            for (let solver of item.methods) {
+                if (solver.key.toLowerCase() === request.solverTag.toLowerCase()) {
+                    return solver;
+                }
+            }
+            return undefined;
+        }
+    }
+}
 
-const solverMap: Map<string, CubeSolver> = new Map();
+let solver: CubeSolver;
 
 self.onmessage = async (event: MessageEvent<SolverWorkerRequest>) => {
     const tag = event.data.solverTag.toLowerCase();
-    if (solverInstantiatorMap.has(tag)) {
+    const solverMethod = solverMethodFinder(event.data);
+    if (tag && solverMethod) {
         if (event.data.cube) {
             const cube = new PocketCube({ clone: event.data.cube });
-            const solver: CubeSolver = solverInstantiatorMap.get(tag)!(cube);
-            solverMap.set(tag, solver);
+            solver = solverMethod.instantiator(cube);
             const solution: Solution = await solver.findSolution()!;
             self.postMessage({ solution: JSON.stringify(solution), solverKey: tag });
         } else if (event.data.keyboardEvent) {
-            if (solverMap.has(HumanSolver.getSolverTag().toLowerCase())) {
-                const humanSolver = solverMap.get(HumanSolver.getSolverTag().toLowerCase()) as HumanSolver
-                const faceRotation = await humanSolver.readKeys(event.data.keyboardEvent);
+            if (solver instanceof HumanSolver) {
+                const faceRotation = await (solver as HumanSolver).readKeys(event.data.keyboardEvent!);
                 if (faceRotation !== undefined) {
                     self.postMessage({ faceRotation: faceRotation, solverKey: tag });
                 }

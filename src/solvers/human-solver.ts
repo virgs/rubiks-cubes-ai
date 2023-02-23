@@ -19,10 +19,6 @@ export class HumanSolver implements CubeSolver {
         this.moves = [];
     }
 
-    public static getSolverTag(): string {
-        return "Human";
-    }
-
     public async findSolution(): Promise<Solution> {
         this.startTime = Date.now()
         return new Promise(resolve => {
@@ -64,7 +60,9 @@ export class HumanSolver implements CubeSolver {
                 this.findSolutionResolve!({
                     rotations: this.moves,
                     totalTime: Date.now() - this.startTime!,
-                    data: {}
+                    data: {
+                        human: true,
+                    }
                 })
             }
             return faceRotation;
