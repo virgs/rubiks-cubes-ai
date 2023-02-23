@@ -1,4 +1,4 @@
-import { AmbientLight, AxesHelper, Clock, Color, DirectionalLight, HemisphereLight, Object3D, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from "three";
+import { AxesHelper, Clock, Color, DirectionalLight, HemisphereLight, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from "three";
 import * as Tween from '@tweenjs/tween.js'
 import { Configuration } from "@/configuration";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
@@ -61,8 +61,8 @@ export class World {
         controls.enableDamping = true;
         controls.minDistance = 25;
         controls.maxDistance = 120;
-        controls.minAzimuthAngle = -Math.PI / 2; // radians
-        controls.maxAzimuthAngle = Math.PI / 2; // radians
+        controls.minAzimuthAngle = -3 * Math.PI / 4; // radians
+        controls.maxAzimuthAngle = 3 * Math.PI / 4; // radians
         controls.keys = {
             LEFT: 'ArrowLeft', //left arrow
             UP: 'ArrowUp', // up arrow

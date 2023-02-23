@@ -1,5 +1,5 @@
 import { PocketCubeFaceRotator } from './pocket-cube-face-rotator';
-import { Sides } from '@/constants/sides';
+import { getAllSides, Sides } from '@/constants/sides';
 import { RubiksCube, type Cubelet, type StickerMap } from './rubiks-cube';
 import type { FaceRotation } from './face-rotation';
 import type { Colors } from '@/constants/colors';
@@ -30,17 +30,26 @@ const stickerMap: StickerMap[] = [
 export class PocketCube extends RubiksCube {
     private readonly faceRotator: PocketCubeFaceRotator;
 
-    public constructor(config?: { clone?: Colors[], colorMap?: Map<Sides, Colors> }) {
+    public constructor(config?: { clone?: number[], colorMap?: Map<Sides, Colors> }) {
         super({ dimension: 2, stickersMap: stickerMap, clone: config && config.clone, colorMap: config && config?.colorMap });
         this.faceRotator = new PocketCubeFaceRotator();
     }
 
     public clone(): PocketCube {
-        return new PocketCube({ clone: this.stickers });
+        return new PocketCube({ clone: this.configuration });
+    }
+
+    public isSolved(): boolean {
+        const stickersPerSide = this.dimension * this.dimension;
+        const sides = getAllSides();
+        const stickersArray = Array.from(new Array(stickersPerSide));
+        return sides
+            .every((_, sideIndex) => stickersArray
+                .every((_, index) => this.configuration[sideIndex * stickersPerSide + index] === this.configuration[sideIndex * stickersPerSide]))
     }
 
     public rotateFace(faceRotation: FaceRotation): PocketCube {
-        const result = this.faceRotator.rotate(this.stickers, faceRotation);
+        const result = this.faceRotator.rotate(this.configuration, faceRotation);
         return new PocketCube({ clone: result });
     }
 
@@ -54,7 +63,7 @@ export class PocketCube extends RubiksCube {
     public getCubeletsByColor(...colors: Colors[]): Cubelet[] {
         const found = stickerMap
             .filter(cubelets => cubelets
-                .every(sticker => colors.includes(this.stickers[sticker.id!])));
+                .every(sticker => colors.includes(this.configuration[sticker.id!])));
         return this.getCubeletsFromStickers(found);
     }
 
@@ -72,7 +81,7 @@ export class PocketCube extends RubiksCube {
                         return {
                             side: sticker.side,
                             id: sticker.id,
-                            color: this.stickers[sticker.id],
+                            color: this.configuration[sticker.id],
                             x: x,
                             y: y
                         };

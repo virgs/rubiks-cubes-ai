@@ -5,9 +5,9 @@ import { CubeRenderer } from "./cube-renderer"
 import * as Tween from '@tweenjs/tween.js'
 import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry";
 import type { Font } from "three/examples/jsm/loaders/FontLoader";
-import SolversMapWorker from "../solvers/pocket-cube-solvers-map-worker?worker";
+import SolversMapWorker from "../solvers/solver-web-worker?worker";
 import type { Solution } from "../solvers/cube-solver";
-import type { SolverWorkerRequest, SolverWorkerResponse } from "../solvers/pocket-cube-solvers-map-worker";
+import type { SolverWorkerRequest, SolverWorkerResponse } from "../solvers/solver-web-worker";
 import { Configuration } from "@/configuration";
 import { HumanTranslator } from "@/engine/human-tranlator";
 
@@ -91,10 +91,10 @@ export class SolverRenderer {
                         if (!solution.data.human) {
                             this.movesAnimationsQueue.push(...solution.rotations);
                         }
-                        let text = '  Total time: ' + (Math.trunc(solution.totalTime / 100.0) / 10) + 's\n';
+                        let text = '     Total time: ' + (Math.trunc(solution.totalTime / 100.0) / 10) + 's\n';
                         text += new HumanTranslator().translateRotations(solution.rotations, { lineBreak: 7 });
                         this.solutionsText = this.createText(text, .6);
-                        this.solutionsText.position.set(this.titleCenter.x + 1.5, this.titleCenter.y - 3, this.titleCenter.z)
+                        this.solutionsText.position.set(this.titleCenter.x + 1.5, this.titleCenter.y, this.titleCenter.z)
                         this.config.scene.add(this.solutionsText);
                         this.terminated = true;
                         this.solversMapWorker.terminate();
@@ -148,14 +148,14 @@ export class SolverRenderer {
                     const titlePosition = titleDirection.clone().multiplyScalar(update.value);
 
                     this.cubeRenderer.getMesh().position.set(cubePosition.x, cubePosition.y, cubePosition.z);
-                    this.title!.position.set(titlePosition.x, titlePosition.y, titlePosition.z);
+                    this.title!.position.set(titlePosition.x, titlePosition.y + 2, titlePosition.z);
                 })
                 .onComplete((update: { value: number }) => {
                     const cubePosition = cubeDirection.clone().multiplyScalar(update.value);
                     const titlePosition = titleDirection.clone().multiplyScalar(update.value);
 
                     this.cubeRenderer.getMesh().position.set(cubePosition.x, cubePosition.y, cubePosition.z);
-                    this.title!.position.set(titlePosition.x, titlePosition.y, titlePosition.z);
+                    this.title!.position.set(titlePosition.x, titlePosition.y + 2, titlePosition.z);
                     resolve();
                 })
                 .start();

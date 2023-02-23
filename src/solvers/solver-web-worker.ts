@@ -4,8 +4,6 @@ import type { FaceRotation } from "@/engine/face-rotation";
 import { PocketCube } from "@/engine/pocket-cube";
 import type { CubeSolver, Solution } from "./cube-solver";
 import { HumanSolver, type KeyboardEvent } from "./human-solver";
-import { PocketCubeAStar } from "./pocket-cube-a-star";
-import { PocketCubeBreadthFirstSearch } from "./pocket-cube-breadth-first-search";
 
 export type SolverWorkerRequest = {
     dimension: string,

@@ -192,7 +192,7 @@ export default defineComponent({
           {{ solving ? 'Solving...' : 'Solve' }}
         </button>
       </div>
-      <div class="m-0 mt-2 mx-2 col-12 col-md-12" style="text-align: center">
+      <div class="m-0 mt-2 mt-md-3 mx-2 col-12 col-md-12" style="text-align: center">
         <textarea rows="2" class="shuffle-moves" readonly v-model="shuffleMoves"></textarea>
       </div>
     </div>

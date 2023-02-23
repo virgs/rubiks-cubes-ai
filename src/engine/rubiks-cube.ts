@@ -29,56 +29,43 @@ export type StickerMap = {
 
 export abstract class RubiksCube {
     private readonly hash: string;
-    protected readonly stickers: Colors[];
+    protected readonly configuration: number[];
     protected readonly dimension: number;
 
-    public constructor(config: { dimension: number, stickersMap: StickerMap[], clone?: Colors[], colorMap?: Map<Sides, Colors> }) {
+    public constructor(config: { dimension: number, stickersMap: StickerMap[], clone?: number[], colorMap?: Map<Sides, Colors> }) {
         this.dimension = config.dimension;
         if (config.clone) {
-            this.stickers = [...config.clone];
+            this.configuration = [...config.clone];
         } else {
             let colorMap = defaultColorMap;
             if (config.colorMap) {
                 colorMap = config.colorMap;
             }
-            this.stickers = [];
+            this.configuration = [];
             getAllSides()
                 .forEach(side => {
                     const stickers: Colors[] = Array
-                        .from(new Array(this.getDimension() * this.getDimension()))
+                        .from(new Array(this.dimension * this.dimension))
                         .map(() => colorMap.get(side)!);
-                    this.stickers.push(...stickers);
+                    this.configuration.push(...stickers);
                 })
         }
-        this.hash = this.stickers.join('.');
-
-    }
-
-    public getStickers(): Colors[] {
-        return [...this.stickers];
+        this.hash = this.configuration.join('.');
     }
 
     public getDimension(): number {
         return this.dimension;
     }
 
-    public getConfiguration(): Colors[] {
-        return [...this.stickers];
-    }
-
-    public isSolved(): boolean {
-        const stickersPerSide = this.dimension * this.dimension;
-        const sides = getAllSides();
-        const stickersArray = Array.from(new Array(stickersPerSide));
-        return sides
-            .every((_, sideIndex) => stickersArray
-                .every((_, index) => this.stickers[sideIndex * stickersPerSide + index] === this.stickers[sideIndex * stickersPerSide]))
+    public getConfiguration(): number[] {
+        return [...this.configuration];
     }
 
     public getHash(): string {
         return this.hash;
     }
 
+    public abstract isSolved(): boolean;
     public abstract clone(): RubiksCube;
     public abstract rotateFace(faceRotation: FaceRotation): RubiksCube;
     public abstract getAllCubelets(): Cubelet[];
