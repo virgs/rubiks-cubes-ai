@@ -10,8 +10,8 @@ import { SolverRenderer } from "./renderers/solver-renderer";
 import { Font, FontLoader } from "three/examples/jsm/loaders/FontLoader";
 import { Configuration } from "./configuration";
 
-import {PocketCubeAStar} from "@/solvers/pocket-cube-a-star";
-import {PocketCubeBreadthFirstSearch} from "@/solvers/pocket-cube-breadth-first-search";
+import { PocketCubeAStar } from "@/solvers/pocket-cube-a-star";
+import { PocketCubeBreadthFirstSearch } from "@/solvers/pocket-cube-breadth-first-search";
 import { HumanSolver } from "./solvers/human-solver";
 
 //They have to be non reactive
@@ -33,10 +33,16 @@ export default defineComponent({
           checked: true,
           name: PocketCubeAStar.getSolverTag()
         },
-],
+      ],
       shuffled: false,
+      shuffleMoves: '',
       font: undefined as Font | undefined,
       cube: new PocketCube() as PocketCube
+    }
+  },
+  watch: {
+    shuffleMoves() {
+      document.querySelector("textarea")!.scrollTop = document.querySelector("textarea")!.scrollHeight
     }
   },
   created() {
@@ -50,6 +56,12 @@ export default defineComponent({
     const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
     const container = document.getElementById('scene-container')!;
+    const navBar = document.getElementById('nav-bar')!;
+    const app = document.getElementById('app')!;
+
+    container.style.height = (app.clientHeight - navBar.clientHeight) + 'px';
+    container.style.width = navBar.clientWidth * .95 + 'px';
+
     world = new World(container);
     world.start();
     this.createCubeRenderer();
@@ -71,15 +83,14 @@ export default defineComponent({
         .map(solver => solver.remove()));
       solverRenderers = [];
 
-      console.log('Scrambling...')
       const scramblingRotations = new CubeScrambler(Configuration.world.scrambleMoves).scramble(this.cube as PocketCube);
-      console.log(new HumanTranslator().translateRotations(scramblingRotations, 5));
       this.createCubeRenderer();
+      const translator = new HumanTranslator();
       for (let rotation of scramblingRotations) {
         await cubeRenderer!.rotateFace({ ...rotation, duration: Configuration.world.scrambleRotationDuration });
+        this.shuffleMoves += translator.translateRotations([rotation])
         this.cube = this.cube.rotateFace(rotation);
       }
-      console.log(new HumanTranslator().translateCube(this.cube as PocketCube));
       this.shuffled = true;
     },
     async solve() {
@@ -109,7 +120,8 @@ export default defineComponent({
         .map(renderer => {
           renderer.start();
           return renderer;
-        })
+        });
+      this.shuffleMoves = '';
       world!.getScene().remove(cubeRenderer.getMesh());
     },
   }
@@ -119,7 +131,16 @@ export default defineComponent({
 
 <template>
   <div class="container-fluid" style="width: 100%; height: 100%;">
-    <div class="row g-4 justify-content-between">
+    <div id="nav-bar" class="row g-4 justify-content-center">
+      <div class="col-12 m-0">
+        <div class="mt-5" style="text-align: center;">
+          <img class="img-fluid py-2" height="64" width="48" style="max-width: 48px; min-width: 48px; max-height: 64px;" src="large-icon.png">
+          <h2 style="font-family: 'Courier New', Courier, monospace; font-weight: bold; color: var(--color-background);">
+            Rubiks Cube AI</h2>
+        </div>
+      </div>
+      <div class="w-100 m-0">
+      </div>
       <div class="col-12 col-md-6">
         <div class="btn-group btn-group" role="group" aria-label="Basic checkbox toggle button group"
           style="width: 100%;">
@@ -152,8 +173,11 @@ export default defineComponent({
           :disabled="!shuffled || (!humanEnabled && aiMethods.every(method => !method.checked))"
           @click="solve">Solve</button>
       </div>
+      <div class="col-12 col-md-12">
+        <textarea rows="2" class="shuffle-moves" readonly v-model="shuffleMoves"></textarea>
+      </div>
     </div>
-    <div class="row" style="min-height: 90%; max-height: -webkit-fill-available; background-color: transparent;">
+    <div class="row" style="background-color: transparent;">
       <div id="scene-container">
       </div>
     </div>
@@ -163,5 +187,27 @@ export default defineComponent({
 <style>
 .dropdown-toggle::after {
   display: none !important;
+}
+
+.shuffle-moves {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1.1rem;
+  font-weight: bold;
+  width: 100%;
+  border: none;
+  background-color: transparent;
+  resize: none;
+  color: var(--color-background);
+  outline: none;
+
+
+  /* white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden; */
+
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+
 }
 </style>

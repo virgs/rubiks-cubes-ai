@@ -24,15 +24,21 @@ export type SolverRendererConfig = {
 }
 
 export class SolverRenderer {
-    private static readonly translationDuration: number = 500;
+    private static readonly translationDuration: number = Configuration.renderers.translationDuration;
+    private readonly movesAnimationsQueue: FaceRotation[];
     private readonly cubeRenderer: CubeRenderer;
     private readonly config: SolverRendererConfig;
     private readonly cubeCenter: Vector3;
     private readonly titleCenter: Vector3;
     private readonly title: Object3D;
+    private readonly movesList: FaceRotation[];
+    private rotatingFace: boolean;
 
     public constructor(config: SolverRendererConfig) {
         this.config = config;
+        this.movesAnimationsQueue = [];
+        this.movesList = [];
+        this.rotatingFace = false;
 
         this.cubeCenter = new Vector3(Configuration.world.cubesCircleRay * Math.cos(config.position.angle),
             Configuration.world.cubesCircleRay * Math.sin(config.position.angle));
@@ -65,16 +71,23 @@ export class SolverRenderer {
         const onMessage = async (event: MessageEvent<SolverWorkerResponse>) => {
             if (event.data.solution) {
                 const solution = JSON.parse(event.data.solution!) as Solution;
+                this.movesAnimationsQueue.push(...solution.rotations)
                 // console.log(new HumanTranslator().translateRotations(solution.rotations));
-                for (let rotation of solution.rotations) {
-                    await this.cubeRenderer.rotateFace({ ...rotation, duration: Configuration.renderers.rotationDuration })
-                }
             } else if (event.data.faceRotation) {
-                await this.cubeRenderer.rotateFace({ ...event.data.faceRotation, duration: Configuration.renderers.rotationDuration })
+                this.movesAnimationsQueue.push(event.data.faceRotation)
             }
         }
+        setInterval(async () => {
+            if (this.movesAnimationsQueue.length > 0 && !this.rotatingFace) {
+                this.rotatingFace = true;
+                const faceRotation = this.movesAnimationsQueue.shift()!;
+                this.movesList.push(faceRotation);
+                await this.cubeRenderer.rotateFace({ ...faceRotation, duration: Configuration.renderers.rotationDuration })
+                this.rotatingFace = false;
+            }
+        }, Configuration.renderers.rotationDuration * .5);
         const solversMapWorker = new SolversMapWorker();
-        window.addEventListener('keypress', (event: KeyboardEvent) => {
+        window.addEventListener('keypress', async (event: KeyboardEvent) => {
             solversMapWorker.postMessage({ keyboardEvent: { key: event.key, shiftKey: event.shiftKey }, solverTag: this.config.key } as SolverWorkerRequest);
         });
         solversMapWorker.postMessage({ cube: this.config.cube.getConfiguration(), solverTag: this.config.key } as SolverWorkerRequest);

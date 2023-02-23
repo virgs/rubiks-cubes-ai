@@ -52,8 +52,8 @@ export class World {
         const controls = new OrbitControls(this.camera, this.renderer.domElement);
         controls.target.set(0, 0, 0);
         controls.enableDamping = true;
-        controls.minDistance = 30;
-        controls.maxDistance = 100;
+        controls.minDistance = 25;
+        controls.maxDistance = 120;
         controls.minAzimuthAngle = -Math.PI / 2; // radians
         controls.maxAzimuthAngle = Math.PI / 2; // radians
         controls.keys = {
@@ -76,7 +76,7 @@ export class World {
         const fov = 35; // AKA Field of View
         const aspect = container.clientWidth / container.clientHeight;
         const near = 0.1; // the near clipping plane
-        const far = 100; // the far clipping plane
+        const far = 120; // the far clipping plane
         const camera = new PerspectiveCamera(fov, aspect, near, far);
         camera.position.set(0, 10, 50);
         camera.lookAt(new Vector3(0, 0, 0));
