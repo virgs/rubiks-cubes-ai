@@ -27,7 +27,7 @@ export class HumanTranslator {
             let line = '';
             for (let x = 0; x < dimension; ++x) {
                 const sticker = stickerFinder(side, x, y)!;
-                line += Colors[sticker.color].substring(0, 1) + HumanTranslator.mapToSmallBottomLetters(`${('  ' + sticker.id).slice(-2)}  `);
+                line += Colors[sticker.color].substring(0, 1) + HumanTranslator.mapToSubscript(`${('  ' + sticker.id).slice(-2)}  `);
             }
             text.push(line);
         }
@@ -62,7 +62,7 @@ export class HumanTranslator {
         return text;
     }
 
-    public translateRotations(rotationsToPrint: FaceRotation[], lineBreak?: number): string {
+    public translateRotations(rotationsToPrint: FaceRotation[], config?: { lineBreak?: number, subscript?: boolean, showLayer?: boolean }): string {
         const rotations = [...rotationsToPrint];
         let text = '';
         let index = 0;
@@ -78,8 +78,22 @@ export class HumanTranslator {
                     prefix = '2';
                 }
             }
-            text += `${prefix}${Sides[rotation.side].substring(0, 1)}${rotation.counterClockwiseDirection ? '\'' : ' '}${this.getLayer(rotation.layer)}  `;
-            if (lineBreak !== undefined && index % lineBreak === lineBreak - 1) {
+            let layerText = '';
+            if (config) {
+                if (config.showLayer) {
+                    let layerValue = 1;
+                    if (rotation.layer !== undefined) {
+                        layerValue = rotation.layer + 1;
+                    }
+                    layerText = layerValue.toString();
+                    if (config.subscript) {
+                        layerText = HumanTranslator.mapToSubscript(layerValue.toString());
+                    }
+                }
+            }
+
+            text += `${prefix}${Sides[rotation.side].substring(0, 1)}${rotation.counterClockwiseDirection ? '\'' : ' '}${layerText}  `;
+            if (config?.lineBreak !== undefined && index % config?.lineBreak === config?.lineBreak - 1) {
                 text += '\n'
             }
             ++index;
@@ -99,20 +113,12 @@ export class HumanTranslator {
                         const color = Colors[sticker.color!];
                         const side = Sides[sticker.side].substring(0, 1);
                         const id = HumanTranslator.mapToSmallTopLetters(sticker.id.toString());
-                        const position = `${HumanTranslator.mapToSmallBottomLetters('(' + sticker.x + ',' + sticker.y + ')')}`;
+                        const position = `${HumanTranslator.mapToSubscript('(' + sticker.x + ',' + sticker.y + ')')}`;
                         text += `${color} ${side}${id}${position};  `;
                     })
                 text += '\n';
             })
         return text;
-    }
-
-    private getLayer(layer?: number): string {
-        let value = 1;
-        if (layer !== undefined) {
-            value = layer + 1;
-        }
-        return HumanTranslator.mapToSmallBottomLetters(value.toString());
     }
 
     public static mapToSmallTopLetters(text: string): string {
@@ -139,7 +145,7 @@ export class HumanTranslator {
             .join('');
     }
 
-    public static mapToSmallBottomLetters(text: string): string {
+    public static mapToSubscript(text: string): string {
         const lettersMap = new Map<string, string>();
         lettersMap.set('0', '₀');
         lettersMap.set('1', '₁');

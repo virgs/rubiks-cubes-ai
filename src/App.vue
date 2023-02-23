@@ -18,15 +18,23 @@ import { HumanSolver } from "./solvers/human-solver";
 let world: World;
 let cubeRenderer: CubeRenderer;
 let solverRenderers: SolverRenderer[] = [];
+let cube = new PocketCube()
+let font: Font;
+
+new FontLoader().load('/helvetiker_regular.typeface.json', (loaded: Font) => {
+  // new FontLoader().load('/Coolvetica Rg_Regular.json', (loaded: Font) => {
+  font = loaded;
+});
+
 
 export default defineComponent({
   name: 'App',
   data() {
     return {
-      humanEnabled: true,
+      humanEnabled: false,
       aiMethods: [
         {
-          checked: true,
+          checked: false,
           name: PocketCubeBreadthFirstSearch.getSolverTag()
         },
         {
@@ -34,21 +42,15 @@ export default defineComponent({
           name: PocketCubeAStar.getSolverTag()
         },
       ],
+      shuffling: false,
       shuffled: false,
-      shuffleMoves: '',
-      font: undefined as Font | undefined,
-      cube: new PocketCube() as PocketCube
+      shuffleMoves: ''
     }
   },
   watch: {
     shuffleMoves() {
       document.querySelector("textarea")!.scrollTop = document.querySelector("textarea")!.scrollHeight
     }
-  },
-  created() {
-    new FontLoader().load('/helvetiker_regular.typeface.json', (font: Font) => {
-      this.font = font;
-    });
   },
   async mounted() {
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
@@ -73,25 +75,39 @@ export default defineComponent({
       }
       cubeRenderer = new CubeRenderer({
         parent: world.getScene(),
-        cube: this.cube as PocketCube,
+        cube: cube as PocketCube,
         position: new Vector3(0, 0, 0),
         size: Configuration.renderers.cubeSize
       });
     },
+    async reset() {
+      await Promise.all(solverRenderers
+        .map(solver => solver.remove()));
+      solverRenderers = [];
+      cube = new PocketCube();
+      this.createCubeRenderer();
+      this.shuffled = false;
+      this.shuffleMoves = '';
+    },
     async shuffle() {
+      this.shuffling = true;
       await Promise.all(solverRenderers
         .map(solver => solver.remove()));
       solverRenderers = [];
 
-      const scramblingRotations = new CubeScrambler(Configuration.world.scrambleMoves).scramble(this.cube as PocketCube);
+      const scramblingRotations = new CubeScrambler(Configuration.world.scrambleMoves).scramble(cube as PocketCube);
       this.createCubeRenderer();
       const translator = new HumanTranslator();
+      let previousValue = this.shuffleMoves;
+      const rotations = []
       for (let rotation of scramblingRotations) {
         await cubeRenderer!.rotateFace({ ...rotation, duration: Configuration.world.scrambleRotationDuration });
-        this.shuffleMoves += translator.translateRotations([rotation])
-        this.cube = this.cube.rotateFace(rotation);
+        rotations.push(rotation)
+        this.shuffleMoves = previousValue + translator.translateRotations(rotations)
+        cube = cube.rotateFace(rotation);
       }
       this.shuffled = true;
+      this.shuffling = false;
     },
     async solve() {
       this.shuffled = false;
@@ -106,10 +122,10 @@ export default defineComponent({
         .map((key, index) => {
           const angle = index * (2 * Math.PI / solverKeys.length)
           return new SolverRenderer({
-            font: this.font!,
+            font: font!,
             scene: world!.getScene(),
             rendererSize: Configuration.renderers.cubeSize,
-            cube: this.cube as PocketCube,
+            cube: cube as PocketCube,
             position: {
               from: cubeRenderer.getMesh().position.clone(),
               angle: angle
@@ -121,7 +137,7 @@ export default defineComponent({
           renderer.start();
           return renderer;
         });
-      this.shuffleMoves = '';
+
       world!.getScene().remove(cubeRenderer.getMesh());
     },
   }
@@ -134,14 +150,15 @@ export default defineComponent({
     <div id="nav-bar" class="row g-4 justify-content-center">
       <div class="col-12 m-0">
         <div class="mt-5" style="text-align: center;">
-          <img class="img-fluid py-2" height="64" width="48" style="max-width: 48px; min-width: 48px; max-height: 64px;" src="large-icon.png">
-          <h2 style="font-family: 'Courier New', Courier, monospace; font-weight: bold; color: var(--color-background);">
+          <img class="img-fluid py-2" height="64" width="48" style="max-width: 72px; min-width: 72px; max-height: 96px;"
+            src="large-icon.png">
+          <h2 class="title">
             Rubiks Cube AI</h2>
         </div>
       </div>
-      <div class="w-100 m-0">
+      <div class="w-100 m-0 mt-3">
       </div>
-      <div class="col-12 col-md-6">
+      <div class="m-0 col-12 col-md-6 px-3 px-md-5">
         <div class="btn-group btn-group" role="group" aria-label="Basic checkbox toggle button group"
           style="width: 100%;">
           <input type="checkbox" v-model="humanEnabled" class="btn-check" id="btncheck0" autocomplete="off">
@@ -157,7 +174,7 @@ export default defineComponent({
               autocomplete="off">
             <label class="btn btn-outline-info" :for="'btncheck' + (index + 1)">{{ method.name }}</label>
           </template>
-          <button type="button" class="btn btn-outline-info dropdown-toggle" data-bs-toggle="dropdown"
+          <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown"
             aria-expanded="false" style="margin-left: 10px;">
             2x2
             <i class="fa-solid fa-caret-down" style="float: right; margin-top: 3px;"></i>
@@ -167,13 +184,15 @@ export default defineComponent({
           </ul>
         </div>
       </div>
-      <div class="col-12 col-md-6" style="text-align: right;">
-        <button type="button" class="btn btn-outline-danger mx-2 mx-md-5" @click="shuffle">Shuffle</button>
-        <button type="button" class="btn btn-success"
-          :disabled="!shuffled || (!humanEnabled && aiMethods.every(method => !method.checked))"
+      <div class="m-0 mt-3 mt-md-0 col-12 col-md-6 px-3 px-md-5" style="text-align: right;">
+        <button type="button" class="btn btn-outline-danger" @click="reset" :disabled="shuffling">Reset</button>
+        <button type="button" class="btn btn-outline-danger mx-3 mx-lg-5" @click="shuffle"
+          :disabled="shuffling">Shuffle</button>
+        <button type="button" class="btn btn-success" style="width: 40%"
+          :disabled="shuffling || !shuffled || (!humanEnabled && aiMethods.every(method => !method.checked))"
           @click="solve">Solve</button>
       </div>
-      <div class="col-12 col-md-12">
+      <div class="m-0 mt-2 mx-2 col-12 col-md-12" style="text-align: center">
         <textarea rows="2" class="shuffle-moves" readonly v-model="shuffleMoves"></textarea>
       </div>
     </div>
@@ -193,21 +212,22 @@ export default defineComponent({
   font-family: 'Courier New', Courier, monospace;
   font-size: 1.1rem;
   font-weight: bold;
-  width: 100%;
+  width: 90%;
   border: none;
   background-color: transparent;
   resize: none;
   color: var(--color-background);
   outline: none;
-
-
-  /* white-space: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden; */
-
+  overflow-y: auto;
   -webkit-box-shadow: none;
   -moz-box-shadow: none;
   box-shadow: none;
 
+}
+
+.title {
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
+  color: var(--color-background);
 }
 </style>
