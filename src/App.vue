@@ -146,7 +146,7 @@ export default defineComponent({
         <div class="mt-5" style="text-align: center;">
           <GithubCorner></GithubCorner>
           <img class="img-fluid py-2" height="64" width="48" style="max-width: 72px; min-width: 72px; max-height: 96px;"
-            src="large-icon.png">
+            src="/large-icon.png">
           <h2 class="title">
             Rubiks Cube AI</h2>
         </div>
