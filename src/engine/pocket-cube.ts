@@ -1,6 +1,6 @@
 import { PocketCubeFaceRotator } from './pocket-cube-face-rotator';
 import { getAllSides, Sides } from '@/constants/sides';
-import { RubiksCube, type Cubelet, type StickerMap } from './rubiks-cube';
+import { defaultColorMap, type Cubelet, type RubiksCube, type StickerMap } from './rubiks-cube';
 import type { FaceRotation } from './face-rotation';
 import type { Colors } from '@/constants/colors';
 
@@ -15,6 +15,17 @@ import type { Colors } from '@/constants/colors';
 //       20 21
 //       23 22
 
+// Since every sticker can assume 6 colors and we have a total of 24 stickers. We can have 6 (64bit) numbers to represent it, being each number one color and each bit one index.
+// However, since we only care about 24 bits out of 64 available, we can represent two colors (2 x 24 bits) and still have 16 more unused bits per Byte, so 3 Bytes are enough.
+//
+// So, let's say we have a solved cube (up: yellow, left: orange, front: blue, right: red, back: green, down: white), it would be represented like this:
+//
+// 11110000 00000000 00000000 (<- 24, Yellow) 00001111 00000000 00000000 (<- 24, Orange) -------- -------- (<- 16, unused)
+// 00000000 11110000 00000000 (<- 24, Blue)   00000000 00001111 00000000 (<- 24, Red)    -------- -------- (<- 16, unused)
+// 00000000 00000000 11110000 (<- 24, Green)  00000000 00000000 00001111 (<- 24, White)  -------- -------- (<- 16, unused)
+//
+// It makes the rotation operations quicker and the hash is these numbers concatenated
+
 const stickerMap: StickerMap[] = [
     [{ side: Sides.FRONT, id: 8 }, { side: Sides.LEFT, id: 5 }, { side: Sides.UP, id: 3 }],
     [{ side: Sides.FRONT, id: 9 }, { side: Sides.RIGHT, id: 12 }, { side: Sides.UP, id: 2 }],
@@ -27,16 +38,45 @@ const stickerMap: StickerMap[] = [
     [{ side: Sides.BACK, id: 18 }, { side: Sides.LEFT, id: 7 }, { side: Sides.DOWN, id: 23 }],
 ];
 
-export class PocketCube extends RubiksCube {
+export class PocketCube implements RubiksCube {
+    private readonly hash: string;
+    private readonly configuration: number[];
+    private readonly dimension: number;
     private readonly faceRotator: PocketCubeFaceRotator;
 
     public constructor(config?: { clone?: number[], colorMap?: Map<Sides, Colors> }) {
-        super({ dimension: 2, stickersMap: stickerMap, clone: config && config.clone, colorMap: config && config?.colorMap });
         this.faceRotator = new PocketCubeFaceRotator();
+        this.dimension = 2;
+        if (config?.clone) {
+            this.configuration = [...config.clone];
+        } else {
+            let colorMap = config?.colorMap || defaultColorMap;
+            this.configuration = [];
+            getAllSides()
+                .forEach(side => {
+                    const stickers: Colors[] = Array
+                        .from(new Array(this.dimension * this.dimension))
+                        .map(() => colorMap.get(side)!);
+                    this.configuration.push(...stickers);
+                })
+        }
+        this.hash = this.configuration.join('.');
     }
 
     public clone(): PocketCube {
         return new PocketCube({ clone: this.configuration });
+    }
+
+    public getDimension(): number {
+        return this.dimension;
+    }
+
+    public getConfiguration(): number[] {
+        return [...this.configuration];
+    }
+
+    public getHash(): string {
+        return this.hash;
     }
 
     public isSolved(): boolean {

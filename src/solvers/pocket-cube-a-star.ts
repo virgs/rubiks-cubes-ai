@@ -136,7 +136,7 @@ export class PocketCubeAStar implements CubeSolver {
                 colorMap.set(sticker.side, sticker.color);
                 colorMap.set(getOppositeSide(sticker.side), getOppositeColor(sticker.color));
             });
-        return new PocketCube({ colorMap });
+        return new PocketCube({ colorMap: colorMap });
     }
 
 }
