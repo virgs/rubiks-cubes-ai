@@ -10,7 +10,7 @@ import { SolverRenderer } from "./renderers/solver-renderer";
 import { Font, FontLoader } from "three/examples/jsm/loaders/FontLoader";
 import { Configuration } from "./configuration";
 import GithubCorner from "./components/GithubCorner.vue";
-// import * as fontUrl from '/Coolvetica Rg_Regular.json';//'../public/helvetiker_regular.typeface.json'; //Coolvetica Rg_Regular.json'
+import fontUrl from '/helvetiker_regular.typeface.json?url';
 
 //They have to be non reactive
 let world: World;
@@ -20,9 +20,8 @@ let cube = new PocketCube()
 let font: Font;
 
 async function loadFont() {
-  const file = await fetch('/helvetiker_regular.typeface.json');
-  // console.log(await file.text)
-  new FontLoader().load('/helvetiker_regular.typeface.json', (loaded: Font) => {
+  console.log('agora vai')
+  new FontLoader().load(fontUrl, (loaded: Font) => {
     font = loaded;
   });
 }
