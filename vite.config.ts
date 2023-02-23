@@ -7,7 +7,7 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [vue()],
   base: "/rubiks-cubes-ai",
-  assetsInclude: ["**/*.m4a", "**/*/json"],
+  assetsInclude: ["**/*.m4a", "**/*.json"],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
