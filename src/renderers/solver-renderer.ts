@@ -99,7 +99,7 @@ export class SolverRenderer {
                 if (!this.terminated) {
                     if (event.data.solution) {
                         const solution = JSON.parse(event.data.solution!) as Solution;
-                        console.log(solution)
+                        console.log(this.config.dimensionKey, this.config.key, solution)
                         if (!solution.data.human) {
                             this.movesAnimationsQueue.push(...solution.rotations);
                         }

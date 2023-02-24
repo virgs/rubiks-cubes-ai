@@ -2,7 +2,7 @@ import { AxesHelper, Clock, Color, DirectionalLight, HemisphereLight, Perspectiv
 import * as Tween from '@tweenjs/tween.js'
 import { Configuration } from "@/configuration";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import  Stats  from "three/examples/jsm/libs/stats.module";
+import Stats from "three/examples/jsm/libs/stats.module";
 
 
 
@@ -44,7 +44,7 @@ export class World {
         if (Configuration.world.debug) {
             this.scene.add(new AxesHelper(50));
             this.stats = Stats();
-            document.body.appendChild(this.stats.dom)            ;
+            document.body.appendChild(this.stats.dom);
         }
 
         this.controls = this.createControls(container);
@@ -63,19 +63,20 @@ export class World {
 
     private createControls(container: HTMLElement): OrbitControls {
         const controls = new OrbitControls(this.camera, this.renderer.domElement);
-        controls.target.set(0, 0, 0);
         controls.enableDamping = true;
         controls.minDistance = 25;
         controls.maxDistance = 120;
         controls.minAzimuthAngle = -3 * Math.PI / 4; // radians
         controls.maxAzimuthAngle = 3 * Math.PI / 4; // radians
-        // controls.keys = {
-        //     LEFT: 'ArrowLeft', //left arrow
-        //     UP: 'ArrowUp', // up arrow
-        //     RIGHT: 'ArrowRight', // right arrow
-        //     BOTTOM: 'ArrowDown' // down arrow
-        // };
-        controls.addEventListener('change', () => this.render());
+        controls.keys = {
+            LEFT: 'ArrowLeft', //left arrow
+            UP: 'ArrowUp', // up arrow
+            RIGHT: 'ArrowRight', // right arrow
+            BOTTOM: 'ArrowDown' // down arrow
+        };
+        controls.enabled = true;
+        controls.enablePan = true;
+        controls.keyPanSpeed = 7
         return controls;
     }
 
@@ -86,7 +87,6 @@ export class World {
         const far = 150; // the far clipping plane
         const camera = new PerspectiveCamera(fov, aspect, near, far);
         camera.position.set(-10, -10, 50);
-        camera.lookAt(new Vector3(0, 0, 0));
         return camera;
     }
 

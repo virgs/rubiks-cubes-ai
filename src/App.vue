@@ -102,6 +102,7 @@ export default defineComponent({
       if (this.shuffling) {
         return;
       }
+      this.shuffleMovesText = "";
       this.shuffleMoves = [];
       this.solving = false;
       await Promise.all(solverRenderers
@@ -110,7 +111,6 @@ export default defineComponent({
       cube = new PocketCube();
       this.createCubeRenderer();
       this.shuffled = false;
-      this.shuffleMovesText = "";
     },
     async shuffle() {
       if (this.shuffling) {

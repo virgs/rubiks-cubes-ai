@@ -46,8 +46,9 @@ export class PocketCubeAStar implements CubeSolver {
         };
         this.candidates.push(current);
         this.actions = [];
-        this.goalState = this.buildSolvedPocketCubeFromCornerCubelet(cube.getCubeletsBySides(Sides.BACK, Sides.LEFT, Sides.DOWN)[0]);
-        [Sides.FRONT, Sides.UP, Sides.RIGHT]
+        const fixedCubelet = cube.getCubeletsBySides(Sides.BACK, Sides.LEFT, Sides.DOWN)[0];
+        this.goalState = this.buildSolvedPocketCubeFromCornerCubelet(fixedCubelet);
+        [Sides.FRONT, Sides.UP, Sides.RIGHT] //So the fixed cubelet doesn't move
             .map(side => [true, false]
                 .map(direction => {
                     this.actions.push({ side: side, counterClockwiseDirection: direction, layer: 0 });

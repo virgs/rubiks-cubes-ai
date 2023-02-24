@@ -20,9 +20,9 @@ export class PocketCubeFaceRotator {
         configuration
             .forEach((_, i, config) => {
                 if (i === color) {
-                    config[i] |= 1 << index
+                    config[i] |= 1 << index; // sets color bit to 1
                 } else {
-                    config[i] &= -1 ^ (1 << index)
+                    config[i] &= -1 ^ (1 << index); //sets bit of every other color to 0
                 }
             })
     }
