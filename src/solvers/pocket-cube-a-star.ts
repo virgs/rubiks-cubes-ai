@@ -6,9 +6,8 @@ import { ProcedureMeasurer } from "./procedure-measurer";
 import type { FaceRotation } from "@/engine/face-rotation";
 import { type Colors, getOppositeColor } from "@/constants/colors";
 import type { Cubelet } from "@/engine/rubiks-cube";
-import { HumanTranslator } from '@/engine/human-tranlator';
 
-export enum Metrics {
+enum Metrics {
     ADD_CANDIDATE,
     POP_CANDIDATE,
     CHECK_SOLUTION,

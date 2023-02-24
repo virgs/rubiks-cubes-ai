@@ -62,13 +62,19 @@ export class HumanTranslator {
         return text;
     }
 
-    public translateRotations(rotationsToPrint: FaceRotation[], config?: { showNumberOfMoves?: boolean, lineBreak?: number, subscript?: boolean, showLayer?: boolean }): string {
+    public translateRotations(rotationsToPrint: FaceRotation[], config?: {
+        showNumberOfMoves?: boolean,
+        lineBreak?: number,
+        subscript?: boolean,
+        showLayer?: boolean
+    }): string {
         const rotations = [...rotationsToPrint];
+        let index = 0;
         let text = '';
         if (config?.showNumberOfMoves) {
+            index++;
             text += (`     ${rotationsToPrint.length}: `).slice(-6);
         }
-        let index = 0;
         let rotation = rotations.shift();
         while (rotation) {
             const nextRotation = rotations[0];

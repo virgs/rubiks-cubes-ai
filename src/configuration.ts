@@ -1,5 +1,6 @@
 import { PocketCube } from "./engine/pocket-cube";
 import { HumanSolver } from "./solvers/human-solver";
+import { NeuroEvolutionary } from "./solvers/neuro-evolutionary/pocket-cube-neuro-evolutionary";
 import { PocketCubeAStar } from "./solvers/pocket-cube-a-star";
 import { PocketCubeBreadthFirstSearch } from "./solvers/pocket-cube-breadth-first-search";
 
@@ -32,7 +33,22 @@ export const Configuration = {
             {
                 key: 'A*',
                 instantiator: (configuration: number[]) => new PocketCubeAStar(new PocketCube({ clone: configuration })),
-                checked: true
+                checked: false
+            },
+            {
+                key: 'NeuroEvolutionary',
+                instantiator: (configuration: number[]) => new NeuroEvolutionary(new PocketCube({ clone: configuration })),
+                checked: true,
+                geneticData: {
+                    mutationRate: 0.05,
+                    populationPerGeneration: 100,
+                    survivalPerGeneration: 0.05
+                },
+                neuralNetworkData: {
+                    hiddenNeurons: 10,
+                    iterations: 20
+                }
+
             }]
         },
         {
