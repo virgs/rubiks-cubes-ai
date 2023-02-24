@@ -69,9 +69,10 @@ export default defineComponent({
     this.createCubeRenderer();
 
     window.addEventListener('keypress', async (event: KeyboardEvent) => {
-      solverRenderers.forEach(solverRenderer => solverRenderer.keyInput(event));
-      if (!this.solving && !this.shuffling) {
-        const faceRotation = keyboardInterpreter.readKeys(event)
+      solverRenderers
+        .forEach(solverRenderer => solverRenderer.keyInput(event));
+      if (!this.solving && !this.shuffling && solverRenderers.length <= 0) {
+        const faceRotation = keyboardInterpreter.readKeys(event);
         if (faceRotation !== undefined) {
           this.shuffleMoves.push(faceRotation);
           this.shuffling = true;
