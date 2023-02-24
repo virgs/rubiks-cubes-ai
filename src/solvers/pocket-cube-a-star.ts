@@ -113,11 +113,11 @@ export class PocketCubeAStar implements CubeSolver {
 
     //Calcs how many sides the cubelet corner shares with the corner where it's supposed to be
     private calculateDistanceToFinalState(cube: PocketCube): number {
-        const numberOfCubeletsMovedInOneTwist: number = 4.0;
+        const numberOfCubeletsMovedInOneRotation: number = 4.0;
         return cube.getAllCubelets()
             .reduce((acc, cubelet) => {
                 const cubeletFinalPosition = this.goalState.getCubeletsByColor(...cubelet.stickers
-                    .map(sticker => sticker.color))[0];
+                    .map(sticker => sticker.color))[0]; // since it's a pocket cube, there will be one, and only one, sticker
                 return acc + cubelet.stickers
                     .reduce((sum, sticker) => {
                         if (cubeletFinalPosition.stickers
@@ -125,8 +125,8 @@ export class PocketCubeAStar implements CubeSolver {
                             return sum - 1;
                         }
                         return sum;
-                    }, cubelet.stickers.length)
-            }, 0) / numberOfCubeletsMovedInOneTwist;
+                    }, cubelet.stickers.length); // 3, each cubelet has 3 stickers
+            }, 0) / numberOfCubeletsMovedInOneRotation;
     }
 
     public buildSolvedPocketCubeFromCornerCubelet(cubelet: Cubelet): PocketCube {

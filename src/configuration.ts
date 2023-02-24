@@ -6,7 +6,7 @@ import { PocketCubeBreadthFirstSearch } from "./solvers/pocket-cube-breadth-firs
 export const Configuration = {
     world: {
         debug: false,
-        scrambleMoves: 30,
+        scrambleMoves: 10,
         scrambleRotationDuration: 100,
         cubesCircleRay: 5
     },

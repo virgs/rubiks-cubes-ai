@@ -15,18 +15,21 @@ import type { Colors } from '@/constants/colors';
 //       20 21
 //       23 22
 
-// Since every sticker can assume 6 colors and we have a total of 24 stickers. We can have 6 (64bit) numbers to represent it, being each number one color and each bit one index.
+// Since every sticker can assume 6 colors and we have a total of 24 stickers. We can have an array of 6 elements to represent it, being each color an item and each bit one index.
 // I could represent 2 colors in every byte, since we only care about 24 bits out of 64 available.
 // However, javascript uses 32 bits bitwise operations.
 //
 // So, let's say we have a solved cube (up: yellow, left: orange, front: blue, right: red, back: green, down: white), it would be represented like this:
 //
-// 11110000 00000000 00000000 (<- Yellow)
-// 00001111 00000000 00000000 (<- Orange)
-// 00000000 11110000 00000000 (<- Blue)
-// 00000000 00001111 00000000 (<- Red)
-// 00000000 00000000 11110000 (<- Green)
-// 00000000 00000000 00001111 (<- White)
+// Up    Left  Front Right Back  Down
+// 1111  0000  0000  0000  0000  0000 (<- Yellow)
+// 0000  1111  0000  0000  0000  0000 (<- Orange)
+// 0000  0000  1111  0000  0000  0000 (<- Blue)
+// 0000  0000  0000  1111  0000  0000 (<- Red)
+// 0000  0000  0000  0000  1111  0000 (<- Green)
+// 0000  0000  0000  0000  0000  1111 (<- White)
+//
+//
 //
 // It makes the rotation operations quicker and the hash is these numbers concatenated
 

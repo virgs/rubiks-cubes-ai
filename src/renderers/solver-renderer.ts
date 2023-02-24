@@ -79,6 +79,17 @@ export class SolverRenderer {
         this.solversMapWorker = new SolversMapWorker();
     }
 
+    public keyInput(event: KeyboardEvent): void {
+        this.solversMapWorker.postMessage({
+            keyboardEvent: {
+                key: event.key,
+                shiftKey: event.shiftKey
+            },
+            dimension: this.config.dimensionKey,
+            solverTag: this.config.key
+        } as SolverWorkerRequest);
+    }
+
     public async start(): Promise<void> {
         return new Promise(async resolve => {
             this.findSolutionResolve = resolve;
@@ -88,11 +99,12 @@ export class SolverRenderer {
                 if (!this.terminated) {
                     if (event.data.solution) {
                         const solution = JSON.parse(event.data.solution!) as Solution;
+                        console.log(solution)
                         if (!solution.data.human) {
                             this.movesAnimationsQueue.push(...solution.rotations);
                         }
                         let text = '     Total time: ' + (Math.trunc(solution.totalTime / 100.0) / 10) + 's\n';
-                        text += new HumanTranslator().translateRotations(solution.rotations, { lineBreak: 7 });
+                        text += new HumanTranslator().translateRotations(solution.rotations, { lineBreak: 7, showNumberOfMoves: true });
                         this.solutionsText = this.createText(text, .6);
                         this.solutionsText.position.set(this.titleCenter.x + .5, this.titleCenter.y, this.titleCenter.z + Configuration.renderers.cubeSize)
                         this.config.scene.add(this.solutionsText);
@@ -104,16 +116,6 @@ export class SolverRenderer {
                 }
             }
 
-            window.addEventListener('keypress', async (event: KeyboardEvent) => {
-                this.solversMapWorker.postMessage({
-                    keyboardEvent: {
-                        key: event.key,
-                        shiftKey: event.shiftKey
-                    },
-                    dimension: this.config.dimensionKey,
-                    solverTag: this.config.key
-                } as SolverWorkerRequest);
-            });
             this.solversMapWorker.postMessage({
                 cube: this.config.cube.getConfiguration(),
                 solverTag: this.config.key,

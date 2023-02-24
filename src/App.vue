@@ -11,8 +11,12 @@ import { Font, FontLoader } from "three/examples/jsm/loaders/FontLoader";
 import { Configuration } from "./configuration";
 import GithubCorner from "./components/GithubCorner.vue";
 import fontUrl from '/Courier New_Regular.json?url' // '/helvetiker_regular.typeface.json?url';
+import type { FaceRotation } from "./engine/face-rotation";
+import { KeyboardInterpreter } from "./keyboard-interpreter";
 
 //They have to be non reactive
+const keyboardInterpreter = new KeyboardInterpreter();
+const translator = new HumanTranslator();
 let world: World;
 let cubeRenderer: CubeRenderer;
 let solverRenderers: SolverRenderer[] = [];
@@ -34,19 +38,19 @@ export default defineComponent({
       availableDimensions: availableDimensions,
       shuffling: false,
       shuffled: false,
-      shuffleMoves: "",
+      shuffleMoves: [] as FaceRotation[],
+      shuffleMovesText: '',
       solving: false,
       aiMethods: Configuration.solvers
         .find(solver => solver.dimension === availableDimensions[0])!.methods
     };
   },
-  computed: {},
   watch: {
     selectedDimensionIndex() {
       this.aiMethods = Configuration.solvers
         .find(solver => solver.dimension === this.availableDimensions[this.selectedDimensionIndex])!.methods;
     },
-    shuffleMoves() {
+    shuffleMovesText() {
       document.querySelector("textarea")!.scrollTop = document.querySelector("textarea")!.scrollHeight;
     }
   },
@@ -63,6 +67,23 @@ export default defineComponent({
     world = new World(container);
     world.start();
     this.createCubeRenderer();
+
+    window.addEventListener('keypress', async (event: KeyboardEvent) => {
+      solverRenderers.forEach(solverRenderer => solverRenderer.keyInput(event));
+      if (!this.solving && !this.shuffling) {
+        const faceRotation = keyboardInterpreter.readKeys(event)
+        if (faceRotation !== undefined) {
+          this.shuffleMoves.push(faceRotation);
+          this.shuffling = true;
+          cube = cube.rotateFace(faceRotation);
+          await cubeRenderer.rotateFace(faceRotation);
+          this.shuffleMovesText = translator.translateRotations(this.shuffleMoves, { showNumberOfMoves: true });
+          this.shuffled = !cube.isSolved();
+          this.shuffling = false;
+        }
+      }
+    });
+
   },
   methods: {
     createCubeRenderer() {
@@ -77,6 +98,10 @@ export default defineComponent({
       });
     },
     async reset() {
+      if (this.shuffling) {
+        return;
+      }
+      this.shuffleMoves = [];
       this.solving = false;
       await Promise.all(solverRenderers
         .map(solver => solver.remove()));
@@ -84,9 +109,12 @@ export default defineComponent({
       cube = new PocketCube();
       this.createCubeRenderer();
       this.shuffled = false;
-      this.shuffleMoves = "";
+      this.shuffleMovesText = "";
     },
     async shuffle() {
+      if (this.shuffling) {
+        return;
+      }
       this.solving = false;
       this.shuffling = true;
       await Promise.all(solverRenderers
@@ -94,16 +122,13 @@ export default defineComponent({
       solverRenderers = [];
       const scramblingRotations = new CubeScrambler(Configuration.world.scrambleMoves).scramble(cube as PocketCube);
       this.createCubeRenderer();
-      const translator = new HumanTranslator();
-      let previousValue = this.shuffleMoves;
-      const rotations = [];
       for (let rotation of scramblingRotations) {
         await cubeRenderer!.rotateFace({ ...rotation, duration: Configuration.world.scrambleRotationDuration });
-        rotations.push(rotation);
-        this.shuffleMoves = previousValue + translator.translateRotations(rotations);
+        this.shuffleMoves.push(rotation);
         cube = cube.rotateFace(rotation);
+        this.shuffleMovesText = translator.translateRotations(this.shuffleMoves, { showNumberOfMoves: true });
       }
-      this.shuffled = true;
+      this.shuffled = !cube.isSolved();
       this.shuffling = false;
     },
     async solve() {
@@ -189,8 +214,7 @@ export default defineComponent({
           </div>
           <div class="col-4">
             <button type="button" class="btn btn-success w-100"
-              :disabled="shuffling || !shuffled || aiMethods.every(method => !method.checked)"
-               @click="solve">
+              :disabled="shuffling || !shuffled || aiMethods.every(method => !method.checked)" @click="solve">
               <span v-if="solving" class="spinner-grow spinner-grow-sm mr-2" style="margin-right: 10px;" role="status"
                 aria-hidden="true"></span>
               {{ solving ? 'Solving...' : 'Solve' }}
@@ -199,7 +223,7 @@ export default defineComponent({
         </div>
       </div>
       <div class="m-0 mt-2 mt-md-3 mx-2 col-12 col-md-12" style="text-align: center">
-        <textarea rows="2" class="shuffle-moves" readonly v-model="shuffleMoves"></textarea>
+        <textarea rows="2" class="shuffle-moves" readonly v-model="shuffleMovesText"></textarea>
       </div>
     </div>
     <div class="row" style="background-color: transparent;">

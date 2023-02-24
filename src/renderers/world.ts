@@ -2,6 +2,9 @@ import { AxesHelper, Clock, Color, DirectionalLight, HemisphereLight, Perspectiv
 import * as Tween from '@tweenjs/tween.js'
 import { Configuration } from "@/configuration";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import  Stats  from "three/examples/jsm/libs/stats.module";
+
+
 
 export type AnimationFunction = (delta: number) => void
 
@@ -12,6 +15,7 @@ export class World {
     private readonly animations: AnimationFunction[];
     private readonly clock: Clock;
     private readonly controls: OrbitControls;
+    private readonly stats?: Stats;
 
     public constructor(container: HTMLElement) {
         this.clock = new Clock();
@@ -39,9 +43,11 @@ export class World {
 
         if (Configuration.world.debug) {
             this.scene.add(new AxesHelper(50));
+            this.stats = Stats();
+            document.body.appendChild(this.stats.dom)            ;
         }
 
-        this.controls = this.createControls();
+        this.controls = this.createControls(container);
 
         this.adjustSize(container);
         container.append(this.renderer.domElement);
@@ -55,7 +61,7 @@ export class World {
         this.renderer.setPixelRatio(window.devicePixelRatio);
     }
 
-    private createControls(): OrbitControls {
+    private createControls(container: HTMLElement): OrbitControls {
         const controls = new OrbitControls(this.camera, this.renderer.domElement);
         controls.target.set(0, 0, 0);
         controls.enableDamping = true;
@@ -63,12 +69,13 @@ export class World {
         controls.maxDistance = 120;
         controls.minAzimuthAngle = -3 * Math.PI / 4; // radians
         controls.maxAzimuthAngle = 3 * Math.PI / 4; // radians
-        controls.keys = {
-            LEFT: 'ArrowLeft', //left arrow
-            UP: 'ArrowUp', // up arrow
-            RIGHT: 'ArrowRight', // right arrow
-            BOTTOM: 'ArrowDown' // down arrow
-        };
+        // controls.keys = {
+        //     LEFT: 'ArrowLeft', //left arrow
+        //     UP: 'ArrowUp', // up arrow
+        //     RIGHT: 'ArrowRight', // right arrow
+        //     BOTTOM: 'ArrowDown' // down arrow
+        // };
+        controls.addEventListener('change', () => this.render());
         return controls;
     }
 
@@ -88,6 +95,7 @@ export class World {
             Tween.update();
             this.controls.update();
             const delta = this.clock.getDelta();
+            this.stats?.update()
             this.animations
                 .forEach(animation => animation(delta));
             this.render();

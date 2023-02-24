@@ -6,6 +6,8 @@
 1. bitwise old times fun stuff
 1. Have fun 
 
+https://en.wikipedia.org/wiki/A*_search_algorithm
+
 Show average time table. Tell the distinctions of each method. Show gifs.
 Explain they compete for CPU resources
 

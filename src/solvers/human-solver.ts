@@ -1,6 +1,6 @@
-import { Sides } from "@/constants/sides";
 import type { FaceRotation } from "@/engine/face-rotation";
 import type { RubiksCube } from "@/engine/rubiks-cube";
+import { KeyboardInterpreter } from "@/keyboard-interpreter";
 import type { CubeSolver, Solution } from "./cube-solver";
 
 export type KeyboardEvent = {
@@ -13,10 +13,12 @@ export class HumanSolver implements CubeSolver {
     private cube: RubiksCube;
     private findSolutionResolve?: (value: Solution) => any;
     private startTime?: number;
+    private keyboardInterpreter: KeyboardInterpreter;
 
     public constructor(cube: RubiksCube) {
         this.cube = cube;
         this.moves = [];
+        this.keyboardInterpreter = new KeyboardInterpreter();
     }
 
     public async findSolution(): Promise<Solution> {
@@ -31,29 +33,8 @@ export class HumanSolver implements CubeSolver {
             return;
         }
 
-        let side: Sides | undefined;
-        switch (event.key.toLowerCase()) {
-            case 'w':
-                side = Sides.UP;
-                break;
-            case 'a':
-                side = Sides.LEFT;
-                break;
-            case 's':
-                side = Sides.FRONT;
-                break;
-            case 'd':
-                side = Sides.RIGHT;
-                break;
-            case 'f':
-                side = Sides.BACK;
-                break;
-            case 'x':
-                side = Sides.DOWN;
-                break;
-        }
-        if (side !== undefined) {
-            const faceRotation = { side: side, counterClockwiseDirection: event.shiftKey };
+        const faceRotation = this.keyboardInterpreter.readKeys(event);
+        if (faceRotation !== undefined) {
             this.moves.push(faceRotation);
             this.cube = this.cube.rotateFace(faceRotation);
             if (this.cube.isSolved()) {
