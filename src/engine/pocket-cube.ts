@@ -16,13 +16,17 @@ import type { Colors } from '@/constants/colors';
 //       23 22
 
 // Since every sticker can assume 6 colors and we have a total of 24 stickers. We can have 6 (64bit) numbers to represent it, being each number one color and each bit one index.
-// However, since we only care about 24 bits out of 64 available, we can represent two colors (2 x 24 bits) and still have 16 more unused bits per Byte, so 3 Bytes are enough.
+// I could represent 2 colors in every byte, since we only care about 24 bits out of 64 available.
+// However, javascript uses 32 bits bitwise operations.
 //
 // So, let's say we have a solved cube (up: yellow, left: orange, front: blue, right: red, back: green, down: white), it would be represented like this:
 //
-// 11110000 00000000 00000000 (<- 24, Yellow) 00001111 00000000 00000000 (<- 24, Orange) -------- -------- (<- 16, unused)
-// 00000000 11110000 00000000 (<- 24, Blue)   00000000 00001111 00000000 (<- 24, Red)    -------- -------- (<- 16, unused)
-// 00000000 00000000 11110000 (<- 24, Green)  00000000 00000000 00001111 (<- 24, White)  -------- -------- (<- 16, unused)
+// 11110000 00000000 00000000 (<- Yellow)
+// 00001111 00000000 00000000 (<- Orange)
+// 00000000 11110000 00000000 (<- Blue)
+// 00000000 00001111 00000000 (<- Red)
+// 00000000 00000000 11110000 (<- Green)
+// 00000000 00000000 00001111 (<- White)
 //
 // It makes the rotation operations quicker and the hash is these numbers concatenated
 
@@ -50,15 +54,12 @@ export class PocketCube implements RubiksCube {
         if (config?.clone) {
             this.configuration = [...config.clone];
         } else {
-            let colorMap = config?.colorMap || defaultColorMap;
-            this.configuration = [];
-            getAllSides()
-                .forEach(side => {
-                    const stickers: Colors[] = Array
-                        .from(new Array(this.dimension * this.dimension))
-                        .map(() => colorMap.get(side)!);
-                    this.configuration.push(...stickers);
-                })
+            const colorMap = config?.colorMap || defaultColorMap;
+            this.configuration = getAllSides()
+                .map(side => {
+                    const color = colorMap.get(side)!
+                    return (15 << (color * 4)); // 15 = 1111 in binary
+                });
         }
         this.hash = this.configuration.join('.');
     }
@@ -79,13 +80,23 @@ export class PocketCube implements RubiksCube {
         return this.hash;
     }
 
+    private getColorOfIndex(index: number): Colors | undefined {
+        let counter = 0;
+        for (let color of this.configuration) {
+            if (color & (1 << index)) {
+                return counter;
+            }
+            ++counter;
+        }
+    }
+
     public isSolved(): boolean {
         const stickersPerSide = this.dimension * this.dimension;
         const sides = getAllSides();
         const stickersArray = Array.from(new Array(stickersPerSide));
         return sides
             .every((_, sideIndex) => stickersArray
-                .every((_, index) => this.configuration[sideIndex * stickersPerSide + index] === this.configuration[sideIndex * stickersPerSide]))
+                .every((_, index) => this.getColorOfIndex(sideIndex * stickersPerSide + index) === this.getColorOfIndex(sideIndex * stickersPerSide)))
     }
 
     public rotateFace(faceRotation: FaceRotation): PocketCube {
@@ -103,7 +114,7 @@ export class PocketCube implements RubiksCube {
     public getCubeletsByColor(...colors: Colors[]): Cubelet[] {
         const found = stickerMap
             .filter(cubelets => cubelets
-                .every(sticker => colors.includes(this.configuration[sticker.id!])));
+                .every(sticker => colors.includes(this.getColorOfIndex(sticker.id)!)));
         return this.getCubeletsFromStickers(found);
     }
 
@@ -121,7 +132,7 @@ export class PocketCube implements RubiksCube {
                         return {
                             side: sticker.side,
                             id: sticker.id,
-                            color: this.configuration[sticker.id],
+                            color: this.getColorOfIndex(sticker.id)!,
                             x: x,
                             y: y
                         };

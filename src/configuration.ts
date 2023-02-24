@@ -1,4 +1,4 @@
-import type { PocketCube } from "./engine/pocket-cube";
+import { PocketCube } from "./engine/pocket-cube";
 import { HumanSolver } from "./solvers/human-solver";
 import { PocketCubeAStar } from "./solvers/pocket-cube-a-star";
 import { PocketCubeBreadthFirstSearch } from "./solvers/pocket-cube-breadth-first-search";
@@ -6,7 +6,7 @@ import { PocketCubeBreadthFirstSearch } from "./solvers/pocket-cube-breadth-firs
 export const Configuration = {
     world: {
         debug: false,
-        scrambleMoves: 20,
+        scrambleMoves: 30,
         scrambleRotationDuration: 100,
         cubesCircleRay: 5
     },
@@ -21,17 +21,17 @@ export const Configuration = {
             dimension: '2x2',
             methods: [{
                 key: 'Human',
-                instantiator: (cube: PocketCube) => new HumanSolver(cube),
+                instantiator: (configuration: number[]) => new HumanSolver(new PocketCube({ clone: configuration })),
                 checked: false,
                 info: 'Use keys WASDFX combined with shift to rotate cube faces'
             }, {
                 key: 'BFS',
-                instantiator: (cube: PocketCube) => new PocketCubeBreadthFirstSearch(cube),
+                instantiator: (configuration: number[]) => new PocketCubeBreadthFirstSearch(new PocketCube({ clone: configuration })),
                 checked: false
             },
             {
                 key: 'A*',
-                instantiator: (cube: PocketCube) => new PocketCubeAStar(cube),
+                instantiator: (configuration: number[]) => new PocketCubeAStar(new PocketCube({ clone: configuration })),
                 checked: true
             }]
         },

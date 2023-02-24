@@ -16,17 +16,40 @@ export class PocketCubeFaceRotator {
         }
     }
 
-    public rotate(currentConfiguration: Colors[], faceRotation: FaceRotation): Colors[] {
-        const result = [...currentConfiguration];
+    private static setColorOfIndex(configuration: number[], index: number, color: number): void {
+        configuration
+            .forEach((_, i, config) => {
+                if (i === color) {
+                    config[i] |= 1 << index
+                } else {
+                    config[i] &= -1 ^ (1 << index)
+                }
+            })
+    }
+
+    private static getColorOfIndex(configuration: number[], index: number): Colors | undefined {
+        let counter = 0;
+        for (let color of configuration) {
+            if (color & (1 << index)) {
+                return counter;
+            }
+            ++counter;
+        }
+    }
+
+    public rotate(original: Colors[], faceRotation: FaceRotation): Colors[] {
+        const clone = [...original];
         PocketCubeFaceRotator.faceRotatorMap.get(faceRotation.side)!
             .forEach(item => {
                 if (faceRotation.counterClockwiseDirection) {
-                    result[item.source] = currentConfiguration[item.destination];
+                    PocketCubeFaceRotator.setColorOfIndex(clone, item.source, 
+                        PocketCubeFaceRotator.getColorOfIndex(original, item.destination)!);
                 } else {
-                    result[item.destination] = currentConfiguration[item.source];
+                    PocketCubeFaceRotator.setColorOfIndex(clone, item.destination, 
+                        PocketCubeFaceRotator.getColorOfIndex(original, item.source)!);
                 }
             })
-        return result;
+        return clone;
     }
 
     private initializeMap() {

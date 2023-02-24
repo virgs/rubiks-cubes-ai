@@ -16,7 +16,7 @@ import fontUrl from '/Courier New_Regular.json?url' // '/helvetiker_regular.type
 let world: World;
 let cubeRenderer: CubeRenderer;
 let solverRenderers: SolverRenderer[] = [];
-let cube = new PocketCube()
+let cube = new PocketCube();
 let font: Font;
 
 new FontLoader().load(fontUrl, (loaded: Font) => {
@@ -189,19 +189,14 @@ export default defineComponent({
           </div>
           <div class="col-4">
             <button type="button" class="btn btn-success w-100"
-              :disabled="shuffling || !shuffled || aiMethods.every(method => !method.checked)" @click="solve">
+              :disabled="shuffling || !shuffled || aiMethods.every(method => !method.checked)"
+               @click="solve">
               <span v-if="solving" class="spinner-grow spinner-grow-sm mr-2" style="margin-right: 10px;" role="status"
                 aria-hidden="true"></span>
               {{ solving ? 'Solving...' : 'Solve' }}
             </button>
           </div>
-
         </div>
-
-
-
-
-
       </div>
       <div class="m-0 mt-2 mt-md-3 mx-2 col-12 col-md-12" style="text-align: center">
         <textarea rows="2" class="shuffle-moves" readonly v-model="shuffleMoves"></textarea>

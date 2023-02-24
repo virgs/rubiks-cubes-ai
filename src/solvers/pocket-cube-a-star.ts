@@ -6,6 +6,7 @@ import { ProcedureMeasurer } from "./procedure-measurer";
 import type { FaceRotation } from "@/engine/face-rotation";
 import { type Colors, getOppositeColor } from "@/constants/colors";
 import type { Cubelet } from "@/engine/rubiks-cube";
+import { HumanTranslator } from '@/engine/human-tranlator';
 
 export enum Metrics {
     ADD_CANDIDATE,
@@ -36,7 +37,6 @@ export class PocketCubeAStar implements CubeSolver {
     public constructor(cube: PocketCube) {
         this.measurer = new ProcedureMeasurer();
         this.candidates = new Heap((a: Candidate, b: Candidate) => a.cost - b.cost);
-
         this.visitedChecklist = new Map();
         const current: Candidate = {
             cost: 0,

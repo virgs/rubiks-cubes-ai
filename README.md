@@ -3,6 +3,7 @@
 1. Study 3D
 1. AI
     - Neuro evolutionary algorithms
+1. bitwise old times fun stuff
 1. Have fun 
 
 Show average time table. Tell the distinctions of each method. Show gifs.

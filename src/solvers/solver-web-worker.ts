@@ -1,14 +1,12 @@
 import { Configuration } from "@/configuration";
-import type { Colors } from "@/constants/colors";
 import type { FaceRotation } from "@/engine/face-rotation";
-import { PocketCube } from "@/engine/pocket-cube";
 import type { CubeSolver, Solution } from "./cube-solver";
 import { HumanSolver, type KeyboardEvent } from "./human-solver";
 
 export type SolverWorkerRequest = {
     dimension: string,
     solverTag: string,
-    cube?: Colors[],
+    cube?: number[],
     keyboardEvent?: KeyboardEvent
 };
 
@@ -39,8 +37,7 @@ self.onmessage = async (event: MessageEvent<SolverWorkerRequest>) => {
     const solverMethod = solverMethodFinder(event.data);
     if (tag && solverMethod) {
         if (event.data.cube) {
-            const cube = new PocketCube({ clone: event.data.cube });
-            solver = solverMethod.instantiator(cube);
+            solver = solverMethod.instantiator(event.data.cube);
             const solution: Solution = await solver.findSolution()!;
             self.postMessage({ solution: JSON.stringify(solution), solverKey: tag });
         } else if (event.data.keyboardEvent) {
