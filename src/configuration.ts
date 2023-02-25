@@ -8,8 +8,7 @@ export const NeuroEvolutionaryConfig = {
     geneticData: {
         mutationRate: 0.05,
         populationPerGeneration: 100,
-        survivalPerGeneration: 0.05,
-        armageddonThreshold: 1000
+        armageddonThreshold: 500
     },
     neuralNetworkData: {
         hiddenNeurons: 10,

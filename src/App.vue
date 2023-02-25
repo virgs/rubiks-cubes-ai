@@ -197,15 +197,15 @@ export default defineComponent({
           <img class="img-fluid py-2" height="64" width="48" style="max-width: 72px; min-width: 72px; max-height: 96px;"
             src="/large-icon.png">
           <h2 class="title">
-            Rubiks Cube AI</h2>
+            Rubiks Cubes AI</h2>
         </div>
       </div>
       <div class="w-100 m-0 mt-3">
       </div>
       <div class="m-0 col-12 col-md-6 px-3 px-md-5">
-        <div class="btn-group btn-group" role="group" aria-label="Basic checkbox toggle button group"
+        <div class="btn-group btn-group-sm" role="group" aria-label="Basic checkbox toggle button group"
           style="width: 100%;">
-          <div class="btn-group" role="group">
+          <div class="btn-group btn-group-sm" role="group">
 
             <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
               <i class="fa-solid fa-caret-down"></i>
@@ -230,15 +230,16 @@ export default defineComponent({
       </div>
       <div class="col-12 col-md-6 m-0 mt-3 mt-md-0 px-3 px-md-5">
         <div class="row justify-content-between">
-          <div class="col-auto offset-lg-3">
-            <button type="button" class="btn btn-outline-danger w-100" @click="reset" :disabled="shuffling">Reset</button>
+          <div class="col offset-lg-4">
+            <button type="button" class="btn btn-sm btn-outline-danger w-100" @click="reset"
+              :disabled="shuffling">Reset</button>
           </div>
-          <div class="col-auto">
-            <button type="button" class="btn btn-outline-danger w-100" @click="shuffle"
+          <div class="col">
+            <button type="button" class="btn btn-sm btn-outline-danger w-100" @click="shuffle"
               :disabled="shuffling">Shuffle</button>
           </div>
           <div class="col-4">
-            <button type="button" class="btn btn-success w-100" :disabled="!mainActionButtonEnabled"
+            <button type="button" class="btn btn-sm btn-success w-100" :disabled="!mainActionButtonEnabled"
               @click="mainActionButtonClick">
               <span v-if="solving" class="spinner-grow spinner-grow-sm mr-2" style="margin-right: 10px;" role="status"
                 aria-hidden="true"></span>
@@ -252,7 +253,7 @@ export default defineComponent({
       </div>
     </div>
     <div class="row" style="background-color: transparent;">
-      <div id="scene-container" style="cursor: pointer;">
+      <div id="scene-container" style="cursor: move;">
       </div>
     </div>
   </div>

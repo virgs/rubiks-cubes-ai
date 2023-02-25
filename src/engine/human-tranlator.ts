@@ -1,6 +1,6 @@
 import { Sides } from "@/constants/sides";
 import { Colors } from "../constants/colors";
-import type { FaceRotation } from "./face-rotation";
+import { rotationsAreEqual, type FaceRotation } from "./face-rotation";
 import type { Cubelet, RubiksCube, Sticker } from "./rubiks-cube";
 
 export class HumanTranslator {
@@ -80,9 +80,7 @@ export class HumanTranslator {
             const nextRotation = rotations[0];
             let prefix = ' ';
             if (nextRotation) {
-                if (nextRotation.layer === rotation.layer &&
-                    nextRotation.side === rotation.side &&
-                    nextRotation.counterClockwiseDirection === rotation.counterClockwiseDirection) {
+                if (rotationsAreEqual(nextRotation, rotation)) {
                     rotations.shift();
                     prefix = '2';
                 }

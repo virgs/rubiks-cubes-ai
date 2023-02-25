@@ -1,6 +1,7 @@
+
+import { Sides } from "../constants/sides";
 import LinkedList from "double-linked-list";
 import type { PocketCube } from "../engine/pocket-cube";
-import { Sides } from "../constants/sides";
 import { ProcedureMeasurer } from "./procedure-measurer";
 import type { CubeSolver, Solution } from "./cube-solver";
 import type { FaceRotation } from "@/engine/face-rotation";
@@ -100,7 +101,7 @@ export class PocketCubeBreadthFirstSearch implements CubeSolver {
                 metrics: this.measurer.getData(Metrics[Metrics.NOT_MEASURED]),
                 iterations: iterations
             }
-        }
+        };
     }
 
     private applyRotations(current: Candidate): void {
@@ -117,6 +118,6 @@ export class PocketCubeBreadthFirstSearch implements CubeSolver {
 
                     })
                 }
-            })
+            });
     }
 }

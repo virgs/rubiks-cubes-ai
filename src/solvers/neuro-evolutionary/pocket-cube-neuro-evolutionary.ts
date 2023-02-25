@@ -1,16 +1,19 @@
-import { Configuration, NeuroEvolutionaryConfig } from "@/configuration";
+import { NeuroEvolutionaryConfig } from "@/configuration";
 import { type Colors, getOppositeColor } from "@/constants/colors";
 import { Sides, getOppositeSide } from "@/constants/sides";
-import type { FaceRotation } from "@/engine/face-rotation";
+import { getOppositeRotation, rotationsAreEqual, rotationsCancel, type FaceRotation } from "@/engine/face-rotation";
 import { PocketCube } from "@/engine/pocket-cube";
 import type { Cubelet, RubiksCube } from "@/engine/rubiks-cube";
 import type { CubeSolver, Solution } from "../cube-solver";
 import { ProcedureMeasurer } from "../procedure-measurer";
-import { GeneticAlgorithm } from "./genetic-algorithm";
+import { NeuroGeneticAlgorithm } from "./neuro-genetic-algorithm";
 import { NeuralNetwork } from "./neural-network";
 
 enum Metrics {
-    NOT_MEASURED
+    NOT_MEASURED,
+    RUN_NEURAL_NETWORK,
+    CALCULATE_CITIZEN_SCORE,
+    ROTATIONS_TUNING
 }
 type Citizen = {
     genes: number[],
@@ -19,15 +22,16 @@ type Citizen = {
     moves: FaceRotation[],
 }
 
-const count1s = (n: number) => n.toString(2).replace(/0/g, "").length;
+const countBitsOn = (n: number) => n.toString(2).replace(/0/g, "").length;
 
+//https://robertovaccari.com/blog/2020_07_07_genetic_rubik/
 export class NeuroEvolutionary implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
     private readonly goalState: number[];
     private readonly inputs: number;
     private readonly initialState: PocketCube;
     private actions: FaceRotation[];
-    private geneticAlgorithm: GeneticAlgorithm;
+    private neuroGeneticAlgorithm: NeuroGeneticAlgorithm;
     private citizens: Citizen[];
     private aborted: boolean;
     private armageddonCounter: number;
@@ -37,9 +41,8 @@ export class NeuroEvolutionary implements CubeSolver {
         this.measurer = new ProcedureMeasurer();
         this.armageddonCounter = 0;
 
-        this.geneticAlgorithm = new GeneticAlgorithm(NeuroEvolutionaryConfig.geneticData.mutationRate!,
-            NeuroEvolutionaryConfig.geneticData!.populationPerGeneration!,
-            NeuroEvolutionaryConfig.geneticData!.survivalPerGeneration);
+        this.neuroGeneticAlgorithm = new NeuroGeneticAlgorithm(NeuroEvolutionaryConfig.geneticData.mutationRate!,
+            NeuroEvolutionaryConfig.geneticData!.populationPerGeneration!);
         this.initialState = cube.clone();
 
         this.inputs = cube.getConfiguration().length
@@ -47,7 +50,7 @@ export class NeuroEvolutionary implements CubeSolver {
         const fixedCubelet = cube.getCubeletsBySides(Sides.BACK, Sides.LEFT, Sides.DOWN)[0];
         this.goalState = this.buildSolvedPocketCubeFromCornerCubelet(fixedCubelet).getConfiguration();
         this.actions = [];
-        [Sides.FRONT, Sides.UP, Sides.RIGHT]
+        [Sides.FRONT, Sides.UP, Sides.RIGHT] //Important to be the opposite side of fixedCubelet so we can calculate the fitness function correctly
             .map((side: Sides) => [true, false]
                 .map(direction => {
                     this.actions.push({ side: side, counterClockwiseDirection: direction, layer: 0 });
@@ -68,9 +71,8 @@ export class NeuroEvolutionary implements CubeSolver {
                         return resolve(this.createSolution(citizen));
                     }
                 }
-                if (this.geneticAlgorithm.getGenerationsCounter() > NeuroEvolutionaryConfig.geneticData.armageddonThreshold) {
+                if (this.neuroGeneticAlgorithm.getGenerationsCounter() > NeuroEvolutionaryConfig.geneticData.armageddonThreshold) {
                     ++this.armageddonCounter;
-                    console.log(`Armageddon. This population was useless. The best score was of the last generation was: ${this.geneticAlgorithm.getLastGenerationsBestCitizen()}`);
                     this.citizens = this.createNewPopulationFromScratch();
                 } else {
                     this.citizens = this.createNewPopulationFromPreviousOne();
@@ -85,9 +87,8 @@ export class NeuroEvolutionary implements CubeSolver {
 
 
     private createNewPopulationFromScratch(): Citizen[] {
-        this.geneticAlgorithm = new GeneticAlgorithm(NeuroEvolutionaryConfig.geneticData.mutationRate!,
-            NeuroEvolutionaryConfig.geneticData!.populationPerGeneration!,
-            NeuroEvolutionaryConfig.geneticData!.survivalPerGeneration);
+        this.neuroGeneticAlgorithm = new NeuroGeneticAlgorithm(NeuroEvolutionaryConfig.geneticData.mutationRate!,
+            NeuroEvolutionaryConfig.geneticData!.populationPerGeneration!);
         this.actions
             .sort(() => Math.random() * 2 - 1);
         return Array.from(new Array(NeuroEvolutionaryConfig.geneticData!.populationPerGeneration!))
@@ -107,7 +108,7 @@ export class NeuroEvolutionary implements CubeSolver {
     }
 
     private createNewPopulationFromPreviousOne(): Citizen[] {
-        return this.geneticAlgorithm.createNextGeneration(this.citizens
+        return this.neuroGeneticAlgorithm.createNextGeneration(this.citizens
             .map(citizen => ({
                 genes: citizen.genes,
                 score: this.calculateCitizenScore(citizen)
@@ -130,19 +131,22 @@ export class NeuroEvolutionary implements CubeSolver {
         return Array.from(new Array(NeuroEvolutionaryConfig.neuralNetworkData.iterations))
             .reduce((solved) => {
                 if (!solved) {
-                    if (citizen.cube.isSolved()) {
-                        return true;
-                    }
-                    citizen.neuralNetwork.doTheMagic(citizen.cube.getConfiguration())
-                        .find((output, index) => {
+                    return this.measurer.add(Metrics[Metrics.RUN_NEURAL_NETWORK], () => {
+                        const outputs = citizen.neuralNetwork.doTheMagic(citizen.cube.getConfiguration());
+                        let index = 0;
+                        for (let output of outputs) {
                             if (output > .75) {
                                 const action = this.actions[index];
                                 citizen.cube = citizen.cube.rotateFace(action);
                                 citizen.moves.push(action);
+                                if (citizen.cube.isSolved()) {
+                                    return true;
+                                }
                             }
-                            return false
-                        });
-                    return false;
+                            ++index;
+                        }
+                        return false;
+                    });
                 }
                 return solved;
             }, false);
@@ -150,21 +154,55 @@ export class NeuroEvolutionary implements CubeSolver {
     }
 
     private calculateCitizenScore(citizen: Citizen): number {
-        return citizen.cube.getConfiguration()
-            .reduce((sum, item, index) => sum + count1s(item & this.goalState[index]), 0);
+        return this.measurer.add(Metrics[Metrics.CALCULATE_CITIZEN_SCORE], () => citizen.cube.getConfiguration()
+            .reduce((sum, item, index) => sum + countBitsOn(item & this.goalState[index]), 0));
+    }
+
+    private tuneRotations(rotations: FaceRotation[]): FaceRotation[] {
+        const result: FaceRotation[] = [];
+        let lastRotation: FaceRotation | undefined;
+        let modifiedFlag = false;
+        let consecutiveEqualsRotations: number = 0;
+        for (let rotation of rotations) {
+            if (lastRotation && //avoids most of the unnecessary rotations
+                rotationsCancel(rotation, lastRotation)) {
+                result.pop();
+                modifiedFlag = true;
+                consecutiveEqualsRotations = 0;
+            } else {
+                if (lastRotation && rotationsAreEqual(lastRotation, rotation)) {
+                    ++consecutiveEqualsRotations;
+                    if (consecutiveEqualsRotations === 3) {
+                        result.pop();
+                        result.pop();
+                        result.push(getOppositeRotation(rotation));
+                        consecutiveEqualsRotations = 0;
+                        modifiedFlag = true;
+                        continue;
+                    }
+                }
+                result.push(rotation);
+            }
+            lastRotation = rotation;
+        }
+        if (modifiedFlag) {
+            return this.tuneRotations(result);
+        }
+        return result;
     }
 
     private createSolution(solver: Citizen): Solution {
+        const rotations = this.measurer.add(Metrics[Metrics.ROTATIONS_TUNING], () => this.tuneRotations(solver.moves));
         this.measurer.finish();
         return {
-            rotations: solver.moves,
+            rotations: rotations,
             totalTime: this.measurer.getTotalTime()!,
             data: {
                 armageddonCounter: this.armageddonCounter,
                 genes: solver.genes,
                 neuralNetwork: solver.neuralNetwork,
                 metrics: this.measurer.getData(Metrics[Metrics.NOT_MEASURED]),
-                generations: this.geneticAlgorithm.getGenerationsCounter()
+                generations: this.neuroGeneticAlgorithm.getGenerationsCounter()
             }
         }
     }
