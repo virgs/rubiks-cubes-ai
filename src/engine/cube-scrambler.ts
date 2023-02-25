@@ -1,6 +1,5 @@
-import { getAllSides } from "../constants/sides";
+import { getAllSides, Sides } from "../constants/sides";
 import type { FaceRotation } from "./face-rotation";
-import type { Side } from "three";
 import type { RubiksCube } from "./rubiks-cube";
 
 export class CubeScrambler {
@@ -10,23 +9,24 @@ export class CubeScrambler {
         this.moves = moves;
     }
 
-    public scramble(cube: RubiksCube): FaceRotation[] {
-        let lastRotatedSide: Side | undefined = undefined;
+    public scramble(cube: RubiksCube, sidesToAvoid?: Sides[]): FaceRotation[] {
+        let lastRotation: FaceRotation | undefined = undefined;
         const layers = Math.floor(cube.getDimension() / 2); //If it's a 5x5, for example, rotating the first two layers of each face is enough 
         const allSides = getAllSides();
         const rotations: FaceRotation[] = [];
         Array.from(new Array(this.moves))
             .forEach(() => {
-                let side = Math.floor(Math.random() * allSides.length);
-                while (lastRotatedSide !== undefined && side === lastRotatedSide) {
-                    side = Math.floor(Math.random() * allSides.length);
-                }
-                lastRotatedSide = side
                 const duplicated = Math.floor(Math.random() * 6) === 0; // 1/6 is an arbitrary chance to make this rotation a duplicated one
                 const direction = Math.floor(Math.random() * 2) === 0; //
                 const layer = Math.floor(Math.random() * layers);
 
-                const rotation = { side: side, counterClockwiseDirection: direction, layer: layer } as FaceRotation;
+                let side = Math.floor(Math.random() * allSides.length);
+                let rotation = { side: side, counterClockwiseDirection: direction, layer: layer } as FaceRotation;
+                while (sidesToAvoid?.includes(side) || (lastRotation !== undefined && (lastRotation.side === rotation.side && lastRotation.layer === rotation.layer))) {
+                    side = Math.floor(Math.random() * allSides.length);
+                    rotation = { side: side, counterClockwiseDirection: direction, layer: layer } as FaceRotation;
+                }
+                lastRotation = rotation;
                 if (duplicated) {
                     rotation.counterClockwiseDirection = false; //It is the same, but looks nicer
                     rotations.push(rotation);

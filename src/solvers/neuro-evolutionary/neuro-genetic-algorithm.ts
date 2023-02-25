@@ -52,7 +52,7 @@ export class NeuroGeneticAlgorithm {
         return { genes: genes, score: NaN }; //new borns don't have score yet
     }
 
-    //The ones that have best fitness value (normalized) have more probability to be chosen
+    //No elitism. Everyone is valid <3. The ones that have best fitness value (normalized) have more probability to be chosen
     private pickOne(citizens: Chromosome[]): Chromosome {
         let index = 0;
         let controller = Math.random();

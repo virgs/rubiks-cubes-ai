@@ -76,7 +76,7 @@ export default defineComponent({
     const tooltipTriggerList = document.querySelectorAll("[data-bs-toggle=\"tooltip\"]");
     const tooltipList = [...tooltipTriggerList]
       //@ts-expect-error
-      .map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl, { delay: { show: 0, hide: 1500 } }));
+      .map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl, { delay: { show: 0, hide: 1000 } }));
     const container = document.getElementById("scene-container")!;
     const navBar = document.getElementById("nav-bar")!;
     const app = document.getElementById("app")!;
@@ -220,10 +220,8 @@ export default defineComponent({
           </div>
           <template v-for="method, index in aiMethods">
             <input type="checkbox" v-model="method.checked" class="btn-check" :id="'btncheck' + index" autocomplete="off">
-            <label class="btn btn-outline-info" :for="'btncheck' + index">{{ method.key }}
-              <i v-if="method.info" class="fa-solid fa-circle-info" data-bs-toggle="tooltip" data-bs-placement="bottom"
-                data-bs-custom-class="custom-tooltip" :data-bs-title="method.info">
-              </i>
+            <label class="btn btn-outline-info fa-solid" :for="'btncheck' + index" data-bs-toggle="tooltip"
+              data-bs-placement="bottom" :data-bs-title="method.info">{{ method.key }}
             </label>
           </template>
         </div>

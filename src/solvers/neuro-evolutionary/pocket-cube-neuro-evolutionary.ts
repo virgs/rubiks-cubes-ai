@@ -8,6 +8,7 @@ import type { CubeSolver, Solution } from "../cube-solver";
 import { ProcedureMeasurer } from "../procedure-measurer";
 import { NeuroGeneticAlgorithm } from "./neuro-genetic-algorithm";
 import { NeuralNetwork } from "./neural-network";
+import { RotationsTuner } from "@/engine/rotations-tuner";
 
 enum Metrics {
     NOT_MEASURED,
@@ -25,7 +26,7 @@ type Citizen = {
 const countBitsOn = (n: number) => n.toString(2).replace(/0/g, "").length;
 
 //https://robertovaccari.com/blog/2020_07_07_genetic_rubik/
-export class NeuroEvolutionary implements CubeSolver {
+export class PocketCubeNeuroEvolutionary implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
     private readonly goalState: number[];
     private readonly inputs: number;
@@ -121,7 +122,7 @@ export class NeuroEvolutionary implements CubeSolver {
                 return {
                     genes: chromosome.genes,
                     neuralNetwork: nn,
-                    cube: this.initialState,
+                    cube: this.initialState.clone(),
                     moves: []
                 }
             });
@@ -158,41 +159,8 @@ export class NeuroEvolutionary implements CubeSolver {
             .reduce((sum, item, index) => sum + countBitsOn(item & this.goalState[index]), 0));
     }
 
-    private tuneRotations(rotations: FaceRotation[]): FaceRotation[] {
-        const result: FaceRotation[] = [];
-        let lastRotation: FaceRotation | undefined;
-        let modifiedFlag = false;
-        let consecutiveEqualsRotations: number = 0;
-        for (let rotation of rotations) {
-            if (lastRotation && //avoids most of the unnecessary rotations
-                rotationsCancel(rotation, lastRotation)) {
-                result.pop();
-                modifiedFlag = true;
-                consecutiveEqualsRotations = 0;
-            } else {
-                if (lastRotation && rotationsAreEqual(lastRotation, rotation)) {
-                    ++consecutiveEqualsRotations;
-                    if (consecutiveEqualsRotations === 3) {
-                        result.pop();
-                        result.pop();
-                        result.push(getOppositeRotation(rotation));
-                        consecutiveEqualsRotations = 0;
-                        modifiedFlag = true;
-                        continue;
-                    }
-                }
-                result.push(rotation);
-            }
-            lastRotation = rotation;
-        }
-        if (modifiedFlag) {
-            return this.tuneRotations(result);
-        }
-        return result;
-    }
-
     private createSolution(solver: Citizen): Solution {
-        const rotations = this.measurer.add(Metrics[Metrics.ROTATIONS_TUNING], () => this.tuneRotations(solver.moves));
+        const rotations = this.measurer.add(Metrics[Metrics.ROTATIONS_TUNING], () => new RotationsTuner().tune(solver.moves));
         this.measurer.finish();
         return {
             rotations: rotations,

@@ -69,7 +69,14 @@ export class SolverRenderer {
                 this.rotatingFace = true;
                 const faceRotation = this.movesAnimationsQueue.shift()!;
                 this.movesList.push(faceRotation);
-                await this.cubeRenderer.rotateFace({ ...faceRotation, duration: Configuration.renderers.rotationDuration })
+                let duration = Configuration.renderers.rotationDuration;
+                if (this.movesAnimationsQueue.length > 25) {
+                    duration /= 2;
+                    if (this.movesAnimationsQueue.length > 50) {
+                        duration /= 5;
+                    }
+                }
+                await this.cubeRenderer.rotateFace({ ...faceRotation, duration: duration })
                 this.rotatingFace = false;
                 if (this.terminated) {
                     this.findSolutionResolve!();

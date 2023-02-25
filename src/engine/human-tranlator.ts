@@ -62,6 +62,39 @@ export class HumanTranslator {
         return text;
     }
 
+    public convertStringToFaceRotations(...string: String[]): FaceRotation[] {
+        return string
+            .reduce((acc, current) => {
+                const [_, duplicated, side, layer, prime] = current.match(/(2?)(\w)(\d?)('?)/)!;
+                const rotation: FaceRotation = {
+                    side: Sides.UP,
+                    counterClockwiseDirection: prime?.length > 0,
+                    layer: Number(layer?.length > 0)
+                };
+                switch (side.toLowerCase()) {
+                    case 'u': rotation.side = Sides.UP;
+                        break;
+                    case 'l': rotation.side = Sides.LEFT;
+                        break;
+                    case 'f': rotation.side = Sides.FRONT;
+                        break;
+                    case 'r': rotation.side = Sides.RIGHT;
+                        break;
+                    case 'b': rotation.side = Sides.BACK;
+                        break;
+                    case 'd': rotation.side = Sides.DOWN;
+                        break;
+                    default:
+                        return acc;
+                }
+                if (duplicated?.length > 0) {
+                    acc.push(rotation);
+                }
+                acc.push(rotation);
+                return acc;
+            }, [] as FaceRotation[]);
+    }
+
     public translateRotations(rotationsToPrint: FaceRotation[], config?: {
         showNumberOfMoves?: boolean,
         lineBreak?: number,

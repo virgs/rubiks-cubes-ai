@@ -1,6 +1,7 @@
 import { PocketCube } from "./engine/pocket-cube";
+import { PocketCubeGeneticAlgorithm } from "./solvers/genetic-algorithm/pocket-cube-genetic-algorithm";
 import { HumanSolver } from "./solvers/human-solver";
-import { NeuroEvolutionary } from "./solvers/neuro-evolutionary/pocket-cube-neuro-evolutionary";
+import { PocketCubeNeuroEvolutionary } from "./solvers/neuro-evolutionary/pocket-cube-neuro-evolutionary";
 import { PocketCubeAStar } from "./solvers/pocket-cube-a-star";
 import { PocketCubeBreadthFirstSearch } from "./solvers/pocket-cube-breadth-first-search";
 
@@ -14,6 +15,13 @@ export const NeuroEvolutionaryConfig = {
         hiddenNeurons: 10,
         iterations: 20
     }
+}
+
+export const GeneticAlgorithmConfig = {
+    mutationRate: 0.05,
+    populationPerGeneration: 100,
+    elitism: 10,
+    armageddonThreshold: 500
 }
 
 export const Configuration = {
@@ -49,9 +57,15 @@ export const Configuration = {
             },
             {
                 key: 'NE',
-                instantiator: (configuration: number[]) => new NeuroEvolutionary(new PocketCube({ clone: configuration })),
+                instantiator: (configuration: number[]) => new PocketCubeNeuroEvolutionary(new PocketCube({ clone: configuration })),
                 checked: true,
                 info: `Neuro Evolutionary. Hidden neurons: ${NeuroEvolutionaryConfig.neuralNetworkData.hiddenNeurons}. Population: ${NeuroEvolutionaryConfig.geneticData.populationPerGeneration}`
+            },
+            {
+                key: 'GA',
+                instantiator: (configuration: number[]) => new PocketCubeGeneticAlgorithm(new PocketCube({ clone: configuration })),
+                checked: true,
+                info: `Human guided genetic algorithm. Population: ${GeneticAlgorithmConfig.populationPerGeneration}. Elitism ${GeneticAlgorithmConfig.elitism}`
             }]
         },
         {
