@@ -4,16 +4,28 @@ import { NeuroEvolutionary } from "./solvers/neuro-evolutionary/pocket-cube-neur
 import { PocketCubeAStar } from "./solvers/pocket-cube-a-star";
 import { PocketCubeBreadthFirstSearch } from "./solvers/pocket-cube-breadth-first-search";
 
+export const NeuroEvolutionaryConfig = {
+    geneticData: {
+        mutationRate: 0.05,
+        populationPerGeneration: 100,
+        survivalPerGeneration: 0.05
+    },
+    neuralNetworkData: {
+        hiddenNeurons: 10,
+        iterations: 20
+    }
+}
+
 export const Configuration = {
     world: {
         debug: false,
-        scrambleMoves: 20,
-        scrambleRotationDuration: 100,
+        scrambleMoves: 10,
+        scrambleRotationDuration: 50,
         cubesCircleRay: 5
     },
     renderers: {
         translationDuration: 500,
-        rotationDuration: 300,
+        rotationDuration: 250,
         titleDistance: 8.5,
         cubeSize: 2.5
     },
@@ -24,7 +36,7 @@ export const Configuration = {
                 key: 'Human',
                 instantiator: (configuration: number[]) => new HumanSolver(new PocketCube({ clone: configuration })),
                 checked: false,
-                info: 'Use keys WASDFX combined with shift to rotate cube faces'
+                info: 'Use keys \'WASDFX\' combined with \'shift\' to rotate cube faces'
             }, {
                 key: 'BFS',
                 instantiator: (configuration: number[]) => new PocketCubeBreadthFirstSearch(new PocketCube({ clone: configuration })),
@@ -39,16 +51,7 @@ export const Configuration = {
                 key: 'NeuroEvolutionary',
                 instantiator: (configuration: number[]) => new NeuroEvolutionary(new PocketCube({ clone: configuration })),
                 checked: true,
-                geneticData: {
-                    mutationRate: 0.05,
-                    populationPerGeneration: 100,
-                    survivalPerGeneration: 0.05
-                },
-                neuralNetworkData: {
-                    hiddenNeurons: 10,
-                    iterations: 20
-                }
-
+                info: `Hidden neurons: ${NeuroEvolutionaryConfig.neuralNetworkData.hiddenNeurons}. Population: ${NeuroEvolutionaryConfig.geneticData.populationPerGeneration}`
             }]
         },
         {

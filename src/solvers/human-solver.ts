@@ -10,8 +10,9 @@ export type KeyboardEvent = {
 
 export class HumanSolver implements CubeSolver {
     private readonly moves: FaceRotation[];
+    private findSolutionResolve?: (value: Solution | PromiseLike<Solution>) => void;
+    private findSolutionReject?: (reason?: any) => void;
     private cube: RubiksCube;
-    private findSolutionResolve?: (value: Solution) => any;
     private startTime?: number;
     private keyboardInterpreter: KeyboardInterpreter;
 
@@ -23,9 +24,14 @@ export class HumanSolver implements CubeSolver {
 
     public async findSolution(): Promise<Solution> {
         this.startTime = Date.now()
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             this.findSolutionResolve = resolve;
+            this.findSolutionReject = reject
         });
+    }
+
+    public abort(): void {
+        this.findSolutionReject!();
     }
 
     public async readKeys(event: KeyboardEvent): Promise<FaceRotation | undefined> {

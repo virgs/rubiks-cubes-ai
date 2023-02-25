@@ -36,6 +36,7 @@ export class SolverRenderer {
     private readonly interval: number;
     private readonly solversMapWorker: Worker;
     private findSolutionResolve?: (value: void) => void;
+    private findSolutionReject?: (reason?: any) => void;
     private solutionsText?: Mesh;
     private rotatingFace: boolean;
     private terminated: boolean;
@@ -91,8 +92,9 @@ export class SolverRenderer {
     }
 
     public async start(): Promise<void> {
-        return new Promise(async resolve => {
+        return new Promise(async (resolve, reject) => {
             this.findSolutionResolve = resolve;
+            this.findSolutionReject = reject;
             this.config.scene.add(this.title!);
             await this.translate(0, 1);
             const onMessage = async (event: MessageEvent<SolverWorkerResponse>) => {
@@ -150,14 +152,18 @@ export class SolverRenderer {
                     const titlePosition = titleDirection.clone().multiplyScalar(update.value);
 
                     this.cubeRenderer.getMesh().position.set(cubePosition.x, cubePosition.y, cubePosition.z);
-                    this.title!.position.set(titlePosition.x, titlePosition.y + 2, titlePosition.z + Configuration.renderers.cubeSize);
+                    this.title!.position.set(titlePosition.x - Configuration.renderers.cubeSize,
+                        titlePosition.y + 2,
+                        titlePosition.z + Configuration.renderers.cubeSize);
                 })
                 .onComplete((update: { value: number }) => {
                     const cubePosition = cubeDirection.clone().multiplyScalar(update.value);
                     const titlePosition = titleDirection.clone().multiplyScalar(update.value);
 
                     this.cubeRenderer.getMesh().position.set(cubePosition.x, cubePosition.y, cubePosition.z);
-                    this.title!.position.set(titlePosition.x, titlePosition.y + 2, titlePosition.z + Configuration.renderers.cubeSize);
+                    this.title!.position.set(titlePosition.x - Configuration.renderers.cubeSize,
+                        titlePosition.y + 2,
+                        titlePosition.z + Configuration.renderers.cubeSize);
                     resolve();
                 })
                 .start();
@@ -169,11 +175,16 @@ export class SolverRenderer {
             this.config.scene.remove(this.solutionsText);
         }
         this.terminated = true;
+        this.solversMapWorker.postMessage({
+            abort: true
+        } as SolverWorkerRequest);
+
         this.solversMapWorker.terminate();
         clearInterval(this.interval);
         await this.translate(1, 0);
         this.config.scene.remove(this.cubeRenderer.getMesh());
         this.config.scene.remove(this.title);
+        this.findSolutionReject!();
     }
 
 }

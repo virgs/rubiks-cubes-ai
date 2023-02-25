@@ -8,4 +8,5 @@ export type Solution = {
 
 export interface CubeSolver {
     findSolution(): Promise<Solution>;
+    abort(): void;
 }

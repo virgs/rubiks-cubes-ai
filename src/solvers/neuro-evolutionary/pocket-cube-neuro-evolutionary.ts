@@ -1,4 +1,4 @@
-import { Configuration } from "@/configuration";
+import { Configuration, NeuroEvolutionaryConfig } from "@/configuration";
 import { type Colors, getOppositeColor } from "@/constants/colors";
 import { Sides, getOppositeSide } from "@/constants/sides";
 import type { FaceRotation } from "@/engine/face-rotation";
@@ -12,20 +12,6 @@ import { NeuralNetwork } from "./neural-network";
 enum Metrics {
     NOT_MEASURED
 }
-
-type Config = {
-    key: string;
-    geneticData: {
-        mutationRate: number;
-        populationPerGeneration: number;
-        survivalPerGeneration: number;
-    };
-    neuralNetworkData: {
-        hiddenNeurons: number;
-        iterations: number;
-    };
-}
-
 type Citizen = {
     genes: number[],
     neuralNetwork: NeuralNetwork,
@@ -33,21 +19,23 @@ type Citizen = {
     moves: FaceRotation[],
 }
 
+const count1s = (n: number) => n.toString(2).replace(/0/g, "").length;
+
 export class NeuroEvolutionary implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
-    private readonly goalState: PocketCube;
+    private readonly goalState: number[];
     private readonly geneticAlgorithm: GeneticAlgorithm;
     private readonly actions: FaceRotation[];
-    private readonly config: Config;
+    private readonly config: any;
     private readonly inputs: number;
     private readonly initialState: PocketCube;
     private citizens: Citizen[];
+    private aborted: boolean;
 
     public constructor(cube: PocketCube) {
+        this.aborted = false;
         this.measurer = new ProcedureMeasurer();
-        this.config = Configuration.solvers
-            .find(solver => solver.dimension === '2x2')!
-            .methods.find(method => method.key === 'NeuroEvolutionary')! as Config;
+        this.config = NeuroEvolutionaryConfig
 
         this.geneticAlgorithm = new GeneticAlgorithm(this.config.geneticData!.mutationRate!,
             this.config.geneticData!.populationPerGeneration!,
@@ -57,7 +45,7 @@ export class NeuroEvolutionary implements CubeSolver {
         this.inputs = cube.getConfiguration().length
         this.actions = [];
         const fixedCubelet = cube.getCubeletsBySides(Sides.BACK, Sides.LEFT, Sides.DOWN)[0];
-        this.goalState = this.buildSolvedPocketCubeFromCornerCubelet(fixedCubelet);
+        this.goalState = this.buildSolvedPocketCubeFromCornerCubelet(fixedCubelet).getConfiguration();
         [Sides.FRONT, Sides.UP, Sides.RIGHT] //So the fixed cubelet doesn't move
             .map(side => [true, false]
                 .map(direction => {
@@ -81,20 +69,19 @@ export class NeuroEvolutionary implements CubeSolver {
     }
 
     public async findSolution(): Promise<Solution> {
-        return new Promise(resolve => {
-            this.measurer.start();
+        this.measurer.start();
+        return new Promise((resolve, reject) => {
             let generations = 0;
             while (true) {
                 ++generations;
+                if (this.aborted) {
+                    return reject();
+                }
                 for (let citizen of this.citizens) {
                     if (this.runCitizen(citizen)) {
                         return resolve(this.createSolution(citizen, generations));
                     }
                 }
-                if (generations % 10 === 0) {
-                    console.log(generations, this.citizens[0])
-                }
-
                 this.citizens = this.geneticAlgorithm.createNextGeneration(this.citizens
                     .map(citizen => ({
                         genes: citizen.genes,
@@ -114,6 +101,10 @@ export class NeuroEvolutionary implements CubeSolver {
                     });
             }
         })
+    }
+
+    public abort(): void {
+        this.aborted = true;
     }
 
     private runCitizen(citizen: Citizen): boolean {
@@ -140,25 +131,12 @@ export class NeuroEvolutionary implements CubeSolver {
     }
 
     private calculateCitizenScore(citizen: Citizen): number {
-        // return Math.random() * 10;
-        //Calcs how many sides the cubelet corner shares with the corner where it's supposed to be
-        const numberOfCubeletsMovedInOneRotation: number = 4.0;
-        return citizen.cube.getAllCubelets()
-            .reduce((acc, cubelet) => {
-                const cubeletFinalPosition = this.goalState.getCubeletsByColor(...cubelet.stickers
-                    .map(sticker => sticker.color))[0]; // since it's a pocket cube, there will be one, and only one, sticker
-                return acc + cubelet.stickers
-                    .reduce((sum, sticker) => {
-                        if (cubeletFinalPosition.stickers
-                            .some(finalPositionSticker => finalPositionSticker.side === sticker.side)) {
-                            return sum - 1;
-                        }
-                        return sum;
-                    }, cubelet.stickers.length); // 3, each cubelet has 3 stickers
-            }, 0) / numberOfCubeletsMovedInOneRotation;
+        return citizen.cube.getConfiguration()
+            .reduce((sum, item, index) => sum + count1s(item & this.goalState[index]), 0);
     }
 
     private createSolution(solver: Citizen, iterations: number): Solution {
+        this.measurer.finish();
         return {
             rotations: solver.moves,
             totalTime: this.measurer.getTotalTime()!,

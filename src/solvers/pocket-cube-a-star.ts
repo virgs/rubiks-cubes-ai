@@ -32,8 +32,10 @@ export class PocketCubeAStar implements CubeSolver {
     private readonly goalState: PocketCube;
     private readonly visitedChecklist: Map<string, boolean>;
     private readonly actions: FaceRotation[];
+    private aborted: boolean;
 
     public constructor(cube: PocketCube) {
+        this.aborted = false;
         this.measurer = new ProcedureMeasurer();
         this.candidates = new Heap((a: Candidate, b: Candidate) => a.cost - b.cost);
         this.visitedChecklist = new Map();
@@ -55,11 +57,14 @@ export class PocketCubeAStar implements CubeSolver {
     }
 
     public async findSolution(): Promise<Solution> {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             this.measurer.start();
             let current: Candidate | undefined;
             let iterations = 0;
             while (this.candidates.size() > 0) {
+                if (this.aborted) {
+                    return reject();
+                }                
                 ++iterations;
                 current = this.measurer.add(Metrics[Metrics.POP_CANDIDATE], () => this.candidates.pop());
                 if (this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.visitedChecklist.has(current!.cube.getHash()))) {
@@ -76,6 +81,11 @@ export class PocketCubeAStar implements CubeSolver {
             }
         })
     }
+
+    public abort(): void {
+        this.aborted = true;
+    }
+
     private createSolution(candidate: Candidate, iterations: number): Solution {
         const rotations: FaceRotation[] = [];
         let current: Candidate | undefined = candidate;

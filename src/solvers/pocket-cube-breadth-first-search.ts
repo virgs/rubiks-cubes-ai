@@ -28,31 +28,35 @@ export class PocketCubeBreadthFirstSearch implements CubeSolver {
     private readonly candidates: LinkedList;
     private readonly visitedChecklist: Map<string, boolean>;
     private readonly actions: FaceRotation[];
+    private aborted: boolean;
 
     public constructor(cube: PocketCube) {
         this.measurer = new ProcedureMeasurer();
         this.visitedChecklist = new Map();
         this.candidates = new LinkedList();
+        this.aborted = false;
         const current: Candidate = {
             cube: cube,
             rotation: undefined,
             parent: undefined,
         };
         this.candidates.push(current);
-        this.actions = [];
-        [Sides.FRONT, Sides.UP, Sides.RIGHT]
-            .map(side => [true, false]
-                .map(direction => {
-                    this.actions.push({ side: side, counterClockwiseDirection: direction, layer: 0 });
-                }));
+        this.actions = this.createActions();
+    }
+
+    public abort(): void {
+        this.aborted = true;
     }
 
     public async findSolution(): Promise<Solution> {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             this.measurer.start();
             let current: Candidate | undefined;
             let iterations = 0;
             while (this.candidates.length > 0) {
+                if (this.aborted) {
+                    return reject();
+                }
                 ++iterations;
                 current = this.measurer.add(Metrics[Metrics.POP_CANDIDATE], () => this.candidates.shift());
                 if (this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.visitedChecklist.has(current!.cube.getHash()))) {
@@ -68,6 +72,20 @@ export class PocketCubeBreadthFirstSearch implements CubeSolver {
             }
         });
     }
+
+    private createActions(): FaceRotation[] {
+        const result: FaceRotation[] = [];
+        const xIndex = [Sides.RIGHT, Sides.LEFT][Math.floor(Math.random() * 2)];
+        const yIndex = [Sides.UP, Sides.DOWN][Math.floor(Math.random() * 2)];
+        const zIndex = [Sides.FRONT, Sides.BACK][Math.floor(Math.random() * 2)];
+        [xIndex, yIndex, zIndex]
+            .map(side => [true, false]
+                .map(direction => {
+                    result.push({ side: side, counterClockwiseDirection: direction, layer: 0 });
+                }));
+        return result;
+    }
+
     private createSolution(candidate: Candidate, iterations: number): Solution {
         const rotations: FaceRotation[] = [];
         let current: Candidate | undefined = candidate;

@@ -36,6 +36,7 @@ export default defineComponent({
     return {
       selectedDimensionIndex: 0,
       availableDimensions: availableDimensions,
+      solved: false,
       shuffling: false,
       shuffled: false,
       shuffleMoves: [] as FaceRotation[],
@@ -44,6 +45,17 @@ export default defineComponent({
       aiMethods: Configuration.solvers
         .find(solver => solver.dimension === availableDimensions[0])!.methods
     };
+  },
+  computed: {
+    mainActionButtonEnabled() {
+      if (this.shuffled) {
+        return true;
+      }
+      if (this.solved) {
+        return true;
+      }
+      return this.shuffling || this.aiMethods.every(method => !method.checked);
+    }
   },
   watch: {
     selectedDimensionIndex() {
@@ -98,31 +110,27 @@ export default defineComponent({
         size: Configuration.renderers.cubeSize
       });
     },
-    async reset() {
-      if (this.shuffling) {
-        return;
-      }
-      this.shuffleMovesText = "";
-      this.shuffleMoves = [];
+    async returnCubesToStage() {
+      this.solved = false;
       this.solving = false;
       await Promise.all(solverRenderers
         .map(solver => solver.remove()));
       solverRenderers = [];
-      cube = new PocketCube();
       this.createCubeRenderer();
+      this.shuffled = !cube.isSolved();
+    },
+    async reset() {
+      await this.returnCubesToStage();
+      this.shuffleMovesText = "";
+      this.shuffleMoves = [];
+      cube = new PocketCube();
       this.shuffled = false;
     },
     async shuffle() {
-      if (this.shuffling) {
-        return;
-      }
-      this.solving = false;
+      await this.returnCubesToStage();
+
       this.shuffling = true;
-      await Promise.all(solverRenderers
-        .map(solver => solver.remove()));
-      solverRenderers = [];
       const scramblingRotations = new CubeScrambler(Configuration.world.scrambleMoves).scramble(cube as PocketCube);
-      this.createCubeRenderer();
       for (let rotation of scramblingRotations) {
         await cubeRenderer!.rotateFace({ ...rotation, duration: Configuration.world.scrambleRotationDuration });
         this.shuffleMoves.push(rotation);
@@ -132,14 +140,18 @@ export default defineComponent({
       this.shuffled = !cube.isSolved();
       this.shuffling = false;
     },
-    async solve() {
-      this.shuffled = false;
+    async mainActionButtonClick() {
+      if (this.solving || this.solved) {
+        this.returnCubesToStage();
+        this.solving = false;
+        return;
+      }
       const solverKeys: string[] = this.aiMethods
         .filter(method => method.checked)
         .map(method => method.key);
       solverRenderers = solverKeys
         .map((key, index) => {
-          const angle = index * (2 * Math.PI / solverKeys.length);
+          const angle = Math.PI * .25 + index * (2 * Math.PI / solverKeys.length);
           return new SolverRenderer({
             font: font!,
             scene: world!.getScene(),
@@ -155,9 +167,15 @@ export default defineComponent({
         });
       world!.getScene().remove(cubeRenderer.getMesh());
       this.solving = true;
-      await Promise.all(solverRenderers
-        .map(solver => solver.start()));
-      this.solving = false;
+      try {
+        await Promise.all(solverRenderers
+          .map(solver => solver.start()));
+        this.shuffled = false;
+        this.solving = false;
+        this.solved = true;
+      } catch (e) {
+        console.log(e)
+      }
     },
   },
 })
@@ -214,11 +232,11 @@ export default defineComponent({
               :disabled="shuffling">Shuffle</button>
           </div>
           <div class="col-4">
-            <button type="button" class="btn btn-success w-100"
-              :disabled="shuffling || !shuffled || aiMethods.every(method => !method.checked)" @click="solve">
+            <button type="button" class="btn btn-success w-100" :disabled="!mainActionButtonEnabled"
+              @click="mainActionButtonClick">
               <span v-if="solving" class="spinner-grow spinner-grow-sm mr-2" style="margin-right: 10px;" role="status"
                 aria-hidden="true"></span>
-              {{ solving ? 'Solving...' : 'Solve' }}
+              {{ solved ? 'Return' : (solving ? 'Solving' : 'Solve') }}
             </button>
           </div>
         </div>

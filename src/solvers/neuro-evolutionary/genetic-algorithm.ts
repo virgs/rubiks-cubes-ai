@@ -16,8 +16,10 @@ export class GeneticAlgorithm {
     }
 
     public createNextGeneration(oldGenerationResults: Chromosome[]): Chromosome[] {
-        const bestCitizens = oldGenerationResults
-            .sort((a, b) => b.score - a.score)
+        const sorted = oldGenerationResults
+            .sort((a, b) => b.score - a.score);
+        console.log(sorted[0].score, sorted[sorted.length - 1].score)
+        const bestCitizens = sorted
             .filter((_, index) => index <= this.selectedPopulationPerGeneration);
         return Array.from(Array(this.populationPerGeneration))
             .map(() => this.createNewCitizen(bestCitizens));
