@@ -9,7 +9,7 @@ export class CubeScrambler {
         this.moves = moves;
     }
 
-    public scramble(cube: RubiksCube, sidesToAvoid?: Sides[]): FaceRotation[] {
+    public scramble(cube: RubiksCube): FaceRotation[] {
         let lastRotation: FaceRotation | undefined = undefined;
         const layers = Math.floor(cube.getDimension() / 2); //If it's a 5x5, for example, rotating the first two layers of each face is enough 
         const allSides = getAllSides();
@@ -22,7 +22,7 @@ export class CubeScrambler {
 
                 let side = Math.floor(Math.random() * allSides.length);
                 let rotation = { side: side, counterClockwiseDirection: direction, layer: layer } as FaceRotation;
-                while (sidesToAvoid?.includes(side) || (lastRotation !== undefined && (lastRotation.side === rotation.side && lastRotation.layer === rotation.layer))) {
+                while (lastRotation !== undefined && (lastRotation.side === rotation.side && lastRotation.layer === rotation.layer)) {
                     side = Math.floor(Math.random() * allSides.length);
                     rotation = { side: side, counterClockwiseDirection: direction, layer: layer } as FaceRotation;
                 }

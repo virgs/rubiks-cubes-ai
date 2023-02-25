@@ -30,7 +30,7 @@ export class KeyboardInterpreter {
                 break;
         }
         if (side !== undefined) {
-            return { side: side, counterClockwiseDirection: event.shiftKey };
+            return { side: side, counterClockwiseDirection: event.shiftKey, layer: 0 };
         }
     }
 }

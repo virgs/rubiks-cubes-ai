@@ -18,13 +18,11 @@ enum Metrics {
     ROTATIONS_TUNING
 }
 
-
 const countBitsOn = (n: number) => n.toString(2).replace(/0/g, "").length;
 
 //https://robertovaccari.com/blog/2020_07_07_genetic_rubik/
 export class PocketCubeGeneticAlgorithm implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
-    private readonly goalState: number[];
     private readonly initialState: PocketCube;
     private geneticAlgorithm: GeneticAlgorithm;
     private citizens: Chromosome[];
@@ -36,8 +34,6 @@ export class PocketCubeGeneticAlgorithm implements CubeSolver {
         this.armageddonCounter = 0;
         this.measurer = new ProcedureMeasurer();
         this.initialState = cube.clone();
-        const fixedCubelet = cube.getCubeletsBySides(Sides.BACK, Sides.LEFT, Sides.DOWN)[0];
-        this.goalState = this.buildSolvedPocketCubeFromCornerCubelet(fixedCubelet).getConfiguration();
         this.citizens = this.createNewPopulationFromScratch();
 
         const translator = new HumanTranslator();
@@ -72,13 +68,12 @@ export class PocketCubeGeneticAlgorithm implements CubeSolver {
                 }
                 for (let citizen of this.citizens) {
                     if (this.runCitizen(citizen)) {
-                        console.log(citizen.cube.isSolved())
                         return resolve(this.createSolution(citizen));
                     }
                 }
                 if (this.geneticAlgorithm.getGenerationsCounter() > GeneticAlgorithmConfig.armageddonThreshold) {
                     ++this.armageddonCounter;
-                    this.citizens = this.createNewPopulationFromScratch();
+                    // this.citizens = this.createNewPopulationFromScratch();
                 } else {
                     this.citizens = this.createNewPopulationFromPreviousOne();
                 }
@@ -93,11 +88,22 @@ export class PocketCubeGeneticAlgorithm implements CubeSolver {
     private createNewPopulationFromScratch(): Chromosome[] {
         return Array.from(new Array(GeneticAlgorithmConfig.populationPerGeneration!))
             .map(() => {
-                const rotations = new CubeScrambler(10).scramble(this.initialState.clone(), [Sides.BACK, Sides.LEFT, Sides.DOWN]); //Fixed cubelet position
+                // Arbitrary numbers to make initial configuration spread
+                const rotations: FaceRotation[] = [];// new CubeScrambler(10).scramble(this.initialState.clone())
+                // .filter(() => Math.random() > .5);
+                const cube = this.initialState.clone();//rotations
+                //.reduce((cube, rotation) => cube.rotateFace(rotation), this.initialState.clone());
+                const fixedCubelets = cube.getCubeletsBySides(Sides.BACK, Sides.LEFT, Sides.DOWN);
+                console.log(new HumanTranslator().translateCube(cube))
+                console.log(new HumanTranslator().translateCubelets(fixedCubelets))
+                const goalState = this.buildSolvedPocketCubeFromCornerCubelet(fixedCubelets[0]).getConfiguration();
+                console.log(new HumanTranslator().translateCube(new PocketCube({ clone: goalState })))
                 return {
-                    cube: this.initialState.clone(),
-                    genes: rotations, //well scrambled
-                    score: NaN
+                    cube: cube,
+                    genes: rotations,
+                    goalState: goalState,
+                    score: NaN,
+                    newGenes: []
                 }
             });
     }
@@ -107,21 +113,22 @@ export class PocketCubeGeneticAlgorithm implements CubeSolver {
             .map(citizen => ({
                 cube: citizen.cube,
                 genes: citizen.genes,
-                score: this.calculateCitizenScore(citizen)
+                newGenes: [],
+                score: this.calculateCitizenScore(citizen),
+                goalState: citizen.goalState
             })));
     }
 
     private runCitizen(citizen: Chromosome): boolean {
-        const solution: FaceRotation[] = [];
-        for (let rotation of citizen.genes) {
+        for (let rotation of citizen.newGenes) {
             if (this.measurer.add(Metrics[Metrics.RUN_CITIZEN_ROTATIONS], () => {
-                solution.push(rotation);
+                citizen.genes.push(rotation);
                 citizen.cube = citizen.cube.rotateFace(rotation);
                 if (citizen.cube.isSolved()) {
                     return true;
                 }
+                return false;
             })) {
-                citizen.genes = solution;
                 return true;
             }
         }
@@ -129,14 +136,12 @@ export class PocketCubeGeneticAlgorithm implements CubeSolver {
     }
 
     private calculateCitizenScore(citizen: Chromosome): number {
-        // return Math.random() * 10;
         return this.measurer.add(Metrics[Metrics.CALCULATE_CITIZEN_SCORE], () => citizen.cube.getConfiguration()
-            .reduce((sum, item, index) => sum + countBitsOn(item & this.goalState[index]), 0));
+            .reduce((sum, item, index) => sum + countBitsOn(item & citizen.goalState[index]), 0));
     }
 
-
-    private createSolution(solver: Chromosome): Solution {
-        const rotations = this.measurer.add(Metrics[Metrics.ROTATIONS_TUNING], () => new RotationsTuner().tune(solver.genes));
+    private createSolution(solution: Chromosome): Solution {
+        const rotations = this.measurer.add(Metrics[Metrics.ROTATIONS_TUNING], () => new RotationsTuner().tune(solution.genes));
         this.measurer.finish();
         return {
             rotations: rotations,

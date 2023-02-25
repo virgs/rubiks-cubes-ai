@@ -19,8 +19,8 @@ export const NeuroEvolutionaryConfig = {
 
 export const GeneticAlgorithmConfig = {
     mutationRate: 0.05,
-    populationPerGeneration: 100,
-    elitism: 10,
+    populationPerGeneration: 1,
+    elitism: 1,
     armageddonThreshold: 500
 }
 
@@ -48,24 +48,26 @@ export const Configuration = {
             }, {
                 key: 'BFS',
                 instantiator: (configuration: number[]) => new PocketCubeBreadthFirstSearch(new PocketCube({ clone: configuration })),
-                checked: false
+                checked: false,
+                info: `Breadth-first-search. Brute force`
             },
             {
                 key: 'A*',
                 instantiator: (configuration: number[]) => new PocketCubeAStar(new PocketCube({ clone: configuration })),
-                checked: false
+                checked: false,
+                info: `Astar. Uses number of cubies misplaced as heuristic`
             },
             {
                 key: 'NE',
                 instantiator: (configuration: number[]) => new PocketCubeNeuroEvolutionary(new PocketCube({ clone: configuration })),
                 checked: true,
-                info: `Neuro Evolutionary. Hidden neurons: ${NeuroEvolutionaryConfig.neuralNetworkData.hiddenNeurons}. Population: ${NeuroEvolutionaryConfig.geneticData.populationPerGeneration}`
+                info: `Neuro Evolutionary. Uses number of misplaced stickers as fitness function. Hidden neurons: ${NeuroEvolutionaryConfig.neuralNetworkData.hiddenNeurons}. Population: ${NeuroEvolutionaryConfig.geneticData.populationPerGeneration}`
             },
             {
                 key: 'GA',
                 instantiator: (configuration: number[]) => new PocketCubeGeneticAlgorithm(new PocketCube({ clone: configuration })),
                 checked: true,
-                info: `Human guided genetic algorithm. Population: ${GeneticAlgorithmConfig.populationPerGeneration}. Elitism ${GeneticAlgorithmConfig.elitism}`
+                info: `Human guided genetic algorithm. Uses number of misplaced stickers as fitness function. Population: ${GeneticAlgorithmConfig.populationPerGeneration}. Elitism ${GeneticAlgorithmConfig.elitism}`
             }]
         },
         {

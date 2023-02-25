@@ -13,15 +13,18 @@ import GithubCorner from "./components/GithubCorner.vue";
 import fontUrl from '/Courier New_Regular.json?url' // '/helvetiker_regular.typeface.json?url';
 import type { FaceRotation } from "./engine/face-rotation";
 import { KeyboardInterpreter } from "./keyboard-interpreter";
+import { RotationsTuner } from "./engine/rotations-tuner";
 
 //They have to be non reactive
 const keyboardInterpreter = new KeyboardInterpreter();
 const translator = new HumanTranslator();
+const tuner = new RotationsTuner();
 let world: World;
 let cubeRenderer: CubeRenderer;
 let solverRenderers: SolverRenderer[] = [];
 let cube = new PocketCube();
 let font: Font;
+let shuffleMoves: FaceRotation[] = [];
 
 new FontLoader().load(fontUrl, (loaded: Font) => {
   font = loaded;
@@ -39,7 +42,6 @@ export default defineComponent({
       solved: false,
       shuffling: false,
       shuffled: false,
-      shuffleMoves: [] as FaceRotation[],
       shuffleMovesText: '',
       solving: false,
       aiMethods: Configuration.solvers
@@ -52,12 +54,13 @@ export default defineComponent({
         return false;
       }
       if (this.shuffled) {
-        return true;
+        return this.aiMethods
+          .some(method => method.checked);;
       }
       if (this.solved) {
         return true;
       }
-      return this.aiMethods.every(method => !method.checked);
+      return false;
     }
   },
   watch: {
@@ -76,7 +79,7 @@ export default defineComponent({
     const tooltipTriggerList = document.querySelectorAll("[data-bs-toggle=\"tooltip\"]");
     const tooltipList = [...tooltipTriggerList]
       //@ts-expect-error
-      .map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl, { delay: { show: 0, hide: 1000 } }));
+      .map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl, { delay: { show: 500, hide: 500 } }));
     const container = document.getElementById("scene-container")!;
     const navBar = document.getElementById("nav-bar")!;
     const app = document.getElementById("app")!;
@@ -92,11 +95,11 @@ export default defineComponent({
       if (!this.solving && !this.shuffling && solverRenderers.length <= 0) {
         const faceRotation = keyboardInterpreter.readKeys(event);
         if (faceRotation !== undefined) {
-          this.shuffleMoves.push(faceRotation);
+          shuffleMoves = tuner.tune(shuffleMoves.concat(faceRotation));
           this.shuffling = true;
           cube = cube.rotateFace(faceRotation);
           await cubeRenderer.rotateFace(faceRotation);
-          this.shuffleMovesText = translator.translateRotations(this.shuffleMoves, { showNumberOfMoves: true });
+          this.shuffleMovesText = translator.translateRotations(shuffleMoves, { showNumberOfMoves: true });
           this.shuffled = !cube.isSolved();
           this.shuffling = false;
         }
@@ -129,7 +132,7 @@ export default defineComponent({
       cube = new PocketCube();
       await this.returnCubesToStage();
       this.shuffleMovesText = "";
-      this.shuffleMoves = [];
+      shuffleMoves = [];
       this.shuffled = false;
     },
     async shuffle() {
@@ -139,9 +142,9 @@ export default defineComponent({
       const scramblingRotations = new CubeScrambler(Configuration.world.scrambleMoves).scramble(cube as PocketCube);
       for (let rotation of scramblingRotations) {
         await cubeRenderer!.rotateFace({ ...rotation, duration: Configuration.world.scrambleRotationDuration });
-        this.shuffleMoves.push(rotation);
+        shuffleMoves = tuner.tune(shuffleMoves.concat(rotation))
         cube = cube.rotateFace(rotation);
-        this.shuffleMovesText = translator.translateRotations(this.shuffleMoves, { showNumberOfMoves: true });
+        this.shuffleMovesText = translator.translateRotations(shuffleMoves, { showNumberOfMoves: true });
       }
       this.shuffled = !cube.isSolved();
       this.shuffling = false;

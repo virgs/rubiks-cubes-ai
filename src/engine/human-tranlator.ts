@@ -143,22 +143,22 @@ export class HumanTranslator {
     }
 
     public translateCubelets(cubelets: Cubelet[]): string {
-        let text = ''
+        let result = ''
         cubelets
             .map(cubelet => {
-                let text = ' ';
                 cubelet
                     .stickers
                     .map(sticker => {
                         const color = Colors[sticker.color!];
-                        const side = Sides[sticker.side].substring(0, 1);
+                        const side = Sides[sticker.side];
                         const id = HumanTranslator.mapToSmallTopLetters(sticker.id.toString());
                         const position = `${HumanTranslator.mapToSubscript('(' + sticker.x + ',' + sticker.y + ')')}`;
-                        text += `${color} ${side}${id}${position};  `;
+                        result += `${color.substring(0, 1).toUpperCase()
+                            .concat(color.substring(1).toLowerCase())}: ${side}${id}${position};  `;
                     })
-                text += '\n';
-            })
-        return text;
+                result += '\n';
+            });
+        return result;
     }
 
     public static mapToSmallTopLetters(text: string): string {

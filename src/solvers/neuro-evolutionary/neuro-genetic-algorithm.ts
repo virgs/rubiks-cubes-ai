@@ -27,9 +27,7 @@ export class NeuroGeneticAlgorithm {
                 }
             });
         return Array.from(Array(this.populationPerGeneration))
-            .map(() => {
-                return this.createNewCitizen(this.pickOne(scoreNormalizedCitizen), this.pickOne(scoreNormalizedCitizen));
-            });
+            .map(() => this.createNewCitizen(this.pickOne(scoreNormalizedCitizen), this.pickOne(scoreNormalizedCitizen)));
     }
 
     public getGenerationsCounter(): number {

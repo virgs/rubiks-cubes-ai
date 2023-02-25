@@ -7,9 +7,8 @@ export class RotationsTuner {
         let lastRotation: FaceRotation | undefined;
         let modifiedFlag = false;
         let consecutiveEqualsRotations: number = 0;
-        console.log(rotations)
         for (let rotation of rotations) {
-            if (lastRotation && //avoids most of the unnecessary rotations
+            if (lastRotation &&
                 rotationsCancel(rotation, lastRotation)) {
                 result.pop();
                 modifiedFlag = true;
@@ -33,7 +32,6 @@ export class RotationsTuner {
         if (modifiedFlag) {
             return this.tune(result);
         }
-        console.log(result)
         return result;
     }
 }

@@ -5,7 +5,9 @@ import type { PocketCube } from "@/engine/pocket-cube";
 export type Chromosome = {
     genes: FaceRotation[],
     cube: PocketCube,
-    score: number
+    score: number,
+    newGenes: FaceRotation[],
+    goalState: number[];
 }
 
 export class GeneticAlgorithm {
@@ -19,13 +21,12 @@ export class GeneticAlgorithm {
 
     public createNextGeneration(oldGenerationResults: Chromosome[]): Chromosome[] {
         ++this.generationsCounter;
-        const elite = oldGenerationResults
-            .sort((first, second) => first.score - second.score)
+        const sorted = oldGenerationResults
+            .sort((first, second) => second.score - first.score)
+        const elite = sorted
             .filter((_, index) => index < GeneticAlgorithmConfig.elitism);
         return Array.from(Array(GeneticAlgorithmConfig.populationPerGeneration))
-            .map(() => {
-                return this.createNewCitizen(elite);
-            });
+            .map(() => this.createNewCitizen(elite));
     }
 
     public getGenerationsCounter(): number {
@@ -34,10 +35,12 @@ export class GeneticAlgorithm {
 
     private createNewCitizen(elite: Chromosome[]): Chromosome {
         // const crossOverCutIndex = Math.floor(Math.random() * first.genes.length); // No crossovers
-        const citizen = elite[Math.floor(Math.random() * elite.length)];
+        const singleParent = elite[Math.floor(Math.random() * elite.length)];
         return {
-            cube: citizen.cube.clone(),
-            genes: citizen.genes.concat(this.mutationList[Math.floor(Math.random() * this.mutationList.length)]),
+            cube: singleParent.cube.clone(),
+            genes: singleParent.genes,
+            goalState: singleParent.goalState,
+            newGenes: this.mutationList[Math.floor(Math.random() * this.mutationList.length)],
             score: NaN //new borns don't have score yet
         };
     }
