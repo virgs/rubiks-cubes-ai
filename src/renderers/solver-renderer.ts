@@ -105,10 +105,12 @@ export class SolverRenderer {
                         if (!solution.data.human) {
                             this.movesAnimationsQueue.push(...solution.rotations);
                         }
-                        let text = '     Total time: ' + (Math.trunc(solution.totalTime / 100.0) / 10) + 's\n';
+                        let text = '     Total time: ' + (Math.trunc(solution.totalTime / 10.0) / 100) + 's\n';
                         text += new HumanTranslator().translateRotations(solution.rotations, { lineBreak: 7, showNumberOfMoves: true });
                         this.solutionsText = this.createText(text, .6);
-                        this.solutionsText.position.set(this.titleCenter.x + .5, this.titleCenter.y, this.titleCenter.z + Configuration.renderers.cubeSize)
+                        this.solutionsText.position.set(this.titleCenter.x - Configuration.renderers.cubeSize,
+                            this.titleCenter.y,
+                            this.titleCenter.z + Configuration.renderers.cubeSize);
                         this.config.scene.add(this.solutionsText);
                         this.terminated = true;
                         this.solversMapWorker.terminate();
@@ -184,7 +186,7 @@ export class SolverRenderer {
         await this.translate(1, 0);
         this.config.scene.remove(this.cubeRenderer.getMesh());
         this.config.scene.remove(this.title);
-        this.findSolutionReject!();
+        this.findSolutionReject!(Error(`Abort solver '${this.config.key}' rendering`));
     }
 
 }

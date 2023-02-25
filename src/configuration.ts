@@ -8,7 +8,8 @@ export const NeuroEvolutionaryConfig = {
     geneticData: {
         mutationRate: 0.05,
         populationPerGeneration: 100,
-        survivalPerGeneration: 0.05
+        survivalPerGeneration: 0.05,
+        armageddonThreshold: 1000
     },
     neuralNetworkData: {
         hiddenNeurons: 10,
@@ -48,10 +49,10 @@ export const Configuration = {
                 checked: false
             },
             {
-                key: 'NeuroEvolutionary',
+                key: 'NE',
                 instantiator: (configuration: number[]) => new NeuroEvolutionary(new PocketCube({ clone: configuration })),
                 checked: true,
-                info: `Hidden neurons: ${NeuroEvolutionaryConfig.neuralNetworkData.hiddenNeurons}. Population: ${NeuroEvolutionaryConfig.geneticData.populationPerGeneration}`
+                info: `Neuro Evolutionary. Hidden neurons: ${NeuroEvolutionaryConfig.neuralNetworkData.hiddenNeurons}. Population: ${NeuroEvolutionaryConfig.geneticData.populationPerGeneration}`
             }]
         },
         {

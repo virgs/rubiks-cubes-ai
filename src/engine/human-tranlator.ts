@@ -73,7 +73,7 @@ export class HumanTranslator {
         let text = '';
         if (config?.showNumberOfMoves) {
             index++;
-            text += (`     ${rotationsToPrint.length}: `).slice(-4);
+            text += (`${rotationsToPrint.length}:      `).substring(0, 4);
         }
         let rotation = rotations.shift();
         while (rotation) {

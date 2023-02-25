@@ -24,81 +24,57 @@ const count1s = (n: number) => n.toString(2).replace(/0/g, "").length;
 export class NeuroEvolutionary implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
     private readonly goalState: number[];
-    private readonly geneticAlgorithm: GeneticAlgorithm;
-    private readonly actions: FaceRotation[];
-    private readonly config: any;
     private readonly inputs: number;
     private readonly initialState: PocketCube;
+    private actions: FaceRotation[];
+    private geneticAlgorithm: GeneticAlgorithm;
     private citizens: Citizen[];
     private aborted: boolean;
+    private armageddonCounter: number;
 
     public constructor(cube: PocketCube) {
         this.aborted = false;
         this.measurer = new ProcedureMeasurer();
-        this.config = NeuroEvolutionaryConfig
+        this.armageddonCounter = 0;
 
-        this.geneticAlgorithm = new GeneticAlgorithm(this.config.geneticData!.mutationRate!,
-            this.config.geneticData!.populationPerGeneration!,
-            this.config.geneticData!.survivalPerGeneration);
+        this.geneticAlgorithm = new GeneticAlgorithm(NeuroEvolutionaryConfig.geneticData.mutationRate!,
+            NeuroEvolutionaryConfig.geneticData!.populationPerGeneration!,
+            NeuroEvolutionaryConfig.geneticData!.survivalPerGeneration);
         this.initialState = cube.clone();
 
         this.inputs = cube.getConfiguration().length
         this.actions = [];
         const fixedCubelet = cube.getCubeletsBySides(Sides.BACK, Sides.LEFT, Sides.DOWN)[0];
         this.goalState = this.buildSolvedPocketCubeFromCornerCubelet(fixedCubelet).getConfiguration();
-        [Sides.FRONT, Sides.UP, Sides.RIGHT] //So the fixed cubelet doesn't move
-            .map(side => [true, false]
+        this.actions = [];
+        [Sides.FRONT, Sides.UP, Sides.RIGHT]
+            .map((side: Sides) => [true, false]
                 .map(direction => {
                     this.actions.push({ side: side, counterClockwiseDirection: direction, layer: 0 });
                 }));
 
-        this.citizens = Array.from(new Array(this.config.geneticData!.populationPerGeneration!))
-            .map(() => {
-                const nn = new NeuralNetwork({
-                    inputs: this.inputs,
-                    hiddenNeurons: this.config.neuralNetworkData!.hiddenNeurons,
-                    outputs: this.actions.length
-                });
-                return {
-                    genes: nn.getWeights(), //randomly selected at first
-                    neuralNetwork: nn,
-                    cube: cube.clone(),
-                    moves: [],
-                }
-            })
+        this.citizens = this.createNewPopulationFromScratch();
     }
 
     public async findSolution(): Promise<Solution> {
         this.measurer.start();
         return new Promise((resolve, reject) => {
-            let generations = 0;
             while (true) {
-                ++generations;
                 if (this.aborted) {
                     return reject();
                 }
                 for (let citizen of this.citizens) {
                     if (this.runCitizen(citizen)) {
-                        return resolve(this.createSolution(citizen, generations));
+                        return resolve(this.createSolution(citizen));
                     }
                 }
-                this.citizens = this.geneticAlgorithm.createNextGeneration(this.citizens
-                    .map(citizen => ({
-                        genes: citizen.genes,
-                        score: this.calculateCitizenScore(citizen)
-                    }))).map(chromosome => {
-                        const nn = new NeuralNetwork({
-                            inputs: this.inputs,
-                            hiddenNeurons: this.config.neuralNetworkData!.hiddenNeurons,
-                            outputs: this.actions.length
-                        }, chromosome.genes);
-                        return {
-                            genes: chromosome.genes,
-                            neuralNetwork: nn,
-                            cube: this.initialState,
-                            moves: []
-                        }
-                    });
+                if (this.geneticAlgorithm.getGenerationsCounter() > NeuroEvolutionaryConfig.geneticData.armageddonThreshold) {
+                    ++this.armageddonCounter;
+                    console.log(`Armageddon. This population was useless. The best score was of the last generation was: ${this.geneticAlgorithm.getLastGenerationsBestCitizen()}`);
+                    this.citizens = this.createNewPopulationFromScratch();
+                } else {
+                    this.citizens = this.createNewPopulationFromPreviousOne();
+                }
             }
         })
     }
@@ -107,8 +83,51 @@ export class NeuroEvolutionary implements CubeSolver {
         this.aborted = true;
     }
 
+
+    private createNewPopulationFromScratch(): Citizen[] {
+        this.geneticAlgorithm = new GeneticAlgorithm(NeuroEvolutionaryConfig.geneticData.mutationRate!,
+            NeuroEvolutionaryConfig.geneticData!.populationPerGeneration!,
+            NeuroEvolutionaryConfig.geneticData!.survivalPerGeneration);
+        this.actions
+            .sort(() => Math.random() * 2 - 1);
+        return Array.from(new Array(NeuroEvolutionaryConfig.geneticData!.populationPerGeneration!))
+            .map(() => {
+                const nn = new NeuralNetwork({
+                    inputs: this.inputs,
+                    hiddenNeurons: NeuroEvolutionaryConfig.neuralNetworkData!.hiddenNeurons,
+                    outputs: this.actions.length
+                });
+                return {
+                    genes: nn.getWeights(), //randomly selected at first
+                    neuralNetwork: nn,
+                    cube: this.initialState.clone(),
+                    moves: [],
+                }
+            });
+    }
+
+    private createNewPopulationFromPreviousOne(): Citizen[] {
+        return this.geneticAlgorithm.createNextGeneration(this.citizens
+            .map(citizen => ({
+                genes: citizen.genes,
+                score: this.calculateCitizenScore(citizen)
+            }))).map(chromosome => {
+                const nn = new NeuralNetwork({
+                    inputs: this.inputs,
+                    hiddenNeurons: NeuroEvolutionaryConfig.neuralNetworkData!.hiddenNeurons,
+                    outputs: this.actions.length
+                }, chromosome.genes);
+                return {
+                    genes: chromosome.genes,
+                    neuralNetwork: nn,
+                    cube: this.initialState,
+                    moves: []
+                }
+            });
+    }
+
     private runCitizen(citizen: Citizen): boolean {
-        return Array.from(new Array(this.config.neuralNetworkData.iterations))
+        return Array.from(new Array(NeuroEvolutionaryConfig.neuralNetworkData.iterations))
             .reduce((solved) => {
                 if (!solved) {
                     if (citizen.cube.isSolved()) {
@@ -116,11 +135,10 @@ export class NeuroEvolutionary implements CubeSolver {
                     }
                     citizen.neuralNetwork.doTheMagic(citizen.cube.getConfiguration())
                         .find((output, index) => {
-                            if (output > .5) {
+                            if (output > .75) {
                                 const action = this.actions[index];
                                 citizen.cube = citizen.cube.rotateFace(action);
                                 citizen.moves.push(action);
-                                // return true
                             }
                             return false
                         });
@@ -128,6 +146,7 @@ export class NeuroEvolutionary implements CubeSolver {
                 }
                 return solved;
             }, false);
+
     }
 
     private calculateCitizenScore(citizen: Citizen): number {
@@ -135,16 +154,17 @@ export class NeuroEvolutionary implements CubeSolver {
             .reduce((sum, item, index) => sum + count1s(item & this.goalState[index]), 0);
     }
 
-    private createSolution(solver: Citizen, iterations: number): Solution {
+    private createSolution(solver: Citizen): Solution {
         this.measurer.finish();
         return {
             rotations: solver.moves,
             totalTime: this.measurer.getTotalTime()!,
             data: {
+                armageddonCounter: this.armageddonCounter,
                 genes: solver.genes,
                 neuralNetwork: solver.neuralNetwork,
                 metrics: this.measurer.getData(Metrics[Metrics.NOT_MEASURED]),
-                iterations: iterations
+                generations: this.geneticAlgorithm.getGenerationsCounter()
             }
         }
     }

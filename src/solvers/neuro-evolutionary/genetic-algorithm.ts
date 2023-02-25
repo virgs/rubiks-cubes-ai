@@ -8,21 +8,33 @@ export class GeneticAlgorithm {
     private readonly mutationRate: number;
     private readonly populationPerGeneration: number;
     private readonly selectedPopulationPerGeneration: number;
+    private lastGenerationsBestCitizenScore?: number;
+    private generationsCounter: number;
 
     constructor(mutationRate: number, populationPerGeneration: number, selectedPopulationPerGeneration: number) {
+        this.generationsCounter = 0;
         this.mutationRate = mutationRate;
         this.populationPerGeneration = populationPerGeneration;
         this.selectedPopulationPerGeneration = selectedPopulationPerGeneration;
     }
 
     public createNextGeneration(oldGenerationResults: Chromosome[]): Chromosome[] {
+        ++this.generationsCounter;
         const sorted = oldGenerationResults
             .sort((a, b) => b.score - a.score);
-        console.log(sorted[0].score, sorted[sorted.length - 1].score)
         const bestCitizens = sorted
             .filter((_, index) => index <= this.selectedPopulationPerGeneration);
+        this.lastGenerationsBestCitizenScore = bestCitizens[0].score;
         return Array.from(Array(this.populationPerGeneration))
             .map(() => this.createNewCitizen(bestCitizens));
+    }
+
+    public getLastGenerationsBestCitizen(): number | undefined {
+        return this.lastGenerationsBestCitizenScore;
+    }
+
+    public getGenerationsCounter(): number {
+        return this.generationsCounter;
     }
 
     private createNewCitizen(parents: Chromosome[]): Chromosome {

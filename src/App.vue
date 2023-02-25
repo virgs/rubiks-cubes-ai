@@ -48,13 +48,16 @@ export default defineComponent({
   },
   computed: {
     mainActionButtonEnabled() {
+      if (this.shuffling) {
+        return false;
+      }
       if (this.shuffled) {
         return true;
       }
       if (this.solved) {
         return true;
       }
-      return this.shuffling || this.aiMethods.every(method => !method.checked);
+      return this.aiMethods.every(method => !method.checked);
     }
   },
   watch: {
@@ -65,6 +68,9 @@ export default defineComponent({
     shuffleMovesText() {
       document.querySelector("textarea")!.scrollTop = document.querySelector("textarea")!.scrollHeight;
     }
+  },
+  async unmounted() {
+    await this.returnCubesToStage();
   },
   async mounted() {
     const tooltipTriggerList = document.querySelectorAll("[data-bs-toggle=\"tooltip\"]");
@@ -120,10 +126,10 @@ export default defineComponent({
       this.shuffled = !cube.isSolved();
     },
     async reset() {
+      cube = new PocketCube();
       await this.returnCubesToStage();
       this.shuffleMovesText = "";
       this.shuffleMoves = [];
-      cube = new PocketCube();
       this.shuffled = false;
     },
     async shuffle() {
@@ -236,7 +242,7 @@ export default defineComponent({
               @click="mainActionButtonClick">
               <span v-if="solving" class="spinner-grow spinner-grow-sm mr-2" style="margin-right: 10px;" role="status"
                 aria-hidden="true"></span>
-              {{ solved ? 'Return' : (solving ? 'Solving' : 'Solve') }}
+              {{ solved ? 'Return' : (solving ? 'Abort' : 'Solve') }}
             </button>
           </div>
         </div>
@@ -246,7 +252,7 @@ export default defineComponent({
       </div>
     </div>
     <div class="row" style="background-color: transparent;">
-      <div id="scene-container">
+      <div id="scene-container" style="cursor: pointer;">
       </div>
     </div>
   </div>
