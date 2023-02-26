@@ -139,10 +139,13 @@ export default defineComponent({
       await this.returnCubesToStage();
 
       this.shuffling = true;
-      const scramblingRotations = new CubeScrambler(Configuration.world.scrambleMoves).scramble(cube as PocketCube);
+      const newRotations = new CubeScrambler(Configuration.world.scrambleMoves * 2)
+        .scramble(cube as PocketCube)
+      const scramblingRotations = tuner.tune(newRotations)
+        .filter((_, index) => index < Configuration.world.scrambleMoves);
       for (let rotation of scramblingRotations) {
         await cubeRenderer!.rotateFace({ ...rotation, duration: Configuration.world.scrambleRotationDuration });
-        shuffleMoves = tuner.tune(shuffleMoves.concat(rotation))
+        shuffleMoves.push(rotation);
         cube = cube.rotateFace(rotation);
         this.shuffleMovesText = translator.translateRotations(shuffleMoves, { showNumberOfMoves: true });
       }
@@ -231,7 +234,7 @@ export default defineComponent({
       </div>
       <div class="col-12 col-md-6 m-0 mt-3 mt-md-0 px-3 px-md-5">
         <div class="row justify-content-between">
-          <div class="col offset-lg-4">
+          <div class="col offset-xl-4">
             <button type="button" class="btn btn-sm btn-outline-danger w-100" @click="reset"
               :disabled="shuffling">Reset</button>
           </div>
@@ -242,7 +245,7 @@ export default defineComponent({
           <div class="col-4">
             <button type="button" class="btn btn-sm btn-success w-100" :disabled="!mainActionButtonEnabled"
               @click="mainActionButtonClick">
-              <span v-if="solving" class="spinner-grow spinner-grow-sm mr-2" style="margin-right: 10px;" role="status"
+              <span v-if="solving" class="spinner-grow spinner-grow-sm" style="margin-right: 10px; top: 2px" role="status"
                 aria-hidden="true"></span>
               {{ solved ? 'Return' : (solving ? 'Abort' : 'Solve') }}
             </button>

@@ -64,7 +64,7 @@ export class PocketCubeAStar implements CubeSolver {
             while (this.candidates.size() > 0) {
                 if (this.aborted) {
                     return reject();
-                }                
+                }
                 ++iterations;
                 current = this.measurer.add(Metrics[Metrics.POP_CANDIDATE], () => this.candidates.pop());
                 if (this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.visitedChecklist.has(current!.cube.getHash()))) {
@@ -140,11 +140,11 @@ export class PocketCubeAStar implements CubeSolver {
     }
 
     public buildSolvedPocketCubeFromCornerCubelet(cubelet: Cubelet): PocketCube {
-        const colorMap: Map<Sides, Colors> = new Map();
+        const colorMap: Map<Colors, Sides> = new Map();
         cubelet.stickers
             .forEach(sticker => {
-                colorMap.set(sticker.side, sticker.color);
-                colorMap.set(getOppositeSide(sticker.side), getOppositeColor(sticker.color));
+                colorMap.set(sticker.color, sticker.side);
+                colorMap.set(getOppositeColor(sticker.color), getOppositeSide(sticker.side));
             });
         return new PocketCube({ colorMap: colorMap });
     }

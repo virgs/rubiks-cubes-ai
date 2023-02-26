@@ -1,14 +1,14 @@
 import { Colors } from '../constants/colors';
-import { getAllSides, Sides } from '@/constants/sides';
+import { Sides } from '@/constants/sides';
 import type { FaceRotation } from './face-rotation';
 
-export const defaultColorMap: Map<Sides, Colors> = new Map();
-defaultColorMap.set(Sides.FRONT, Colors.BLUE);
-defaultColorMap.set(Sides.UP, Colors.YELLOW);
-defaultColorMap.set(Sides.RIGHT, Colors.RED);
-defaultColorMap.set(Sides.LEFT, Colors.ORANGE);
-defaultColorMap.set(Sides.BACK, Colors.GREEN);
-defaultColorMap.set(Sides.DOWN, Colors.WHITE);
+export const defaultColorMap: Map<Colors, Sides> = new Map();
+defaultColorMap.set(Colors.BLUE, Sides.FRONT);
+defaultColorMap.set(Colors.YELLOW, Sides.UP);
+defaultColorMap.set(Colors.RED, Sides.RIGHT);
+defaultColorMap.set(Colors.ORANGE, Sides.LEFT);
+defaultColorMap.set(Colors.GREEN, Sides.BACK);
+defaultColorMap.set(Colors.WHITE, Sides.DOWN);
 
 export type Sticker = {
     side: Sides,

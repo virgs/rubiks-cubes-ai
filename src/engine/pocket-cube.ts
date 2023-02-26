@@ -2,7 +2,7 @@ import { PocketCubeFaceRotator } from './pocket-cube-face-rotator';
 import { getAllSides, Sides } from '@/constants/sides';
 import { defaultColorMap, type Cubelet, type RubiksCube, type StickerMap } from './rubiks-cube';
 import type { FaceRotation } from './face-rotation';
-import type { Colors } from '@/constants/colors';
+import { getAllColors, type Colors } from '@/constants/colors';
 
 // Initial configuration
 //       UP
@@ -51,17 +51,17 @@ export class PocketCube implements RubiksCube {
     private readonly dimension: number;
     private readonly faceRotator: PocketCubeFaceRotator;
 
-    public constructor(config?: { clone?: number[], colorMap?: Map<Sides, Colors> }) {
+    public constructor(config?: { clone?: number[], colorMap?: Map<Colors, Sides> }) {
         this.faceRotator = new PocketCubeFaceRotator();
         this.dimension = 2;
         if (config?.clone) {
             this.configuration = [...config.clone];
         } else {
             const colorMap = config?.colorMap || defaultColorMap;
-            this.configuration = getAllSides()
-                .map(side => {
-                    const color = colorMap.get(side)!
-                    return (15 << (color * 4)); // 15 = 1111 in binary
+            this.configuration = getAllColors()
+                .map(color => {
+                    const side = colorMap.get(color)!
+                    return (15 << (side * 4)); // 15 = 1111 in binary
                 });
         }
         this.hash = this.configuration.join('.');

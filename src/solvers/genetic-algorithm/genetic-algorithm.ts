@@ -34,13 +34,13 @@ export class GeneticAlgorithm {
     }
 
     private createNewCitizen(elite: Chromosome[]): Chromosome {
-        // const crossOverCutIndex = Math.floor(Math.random() * first.genes.length); // No crossovers
         const singleParent = elite[Math.floor(Math.random() * elite.length)];
+        const pickNewMutation = () => this.mutationList[Math.floor(Math.random() * this.mutationList.length)]
         return {
             cube: singleParent.cube.clone(),
             genes: singleParent.genes,
-            goalState: singleParent.goalState,
-            newGenes: this.mutationList[Math.floor(Math.random() * this.mutationList.length)],
+            goalState: [...singleParent.goalState],
+            newGenes: pickNewMutation().concat(pickNewMutation().concat(pickNewMutation())),
             score: NaN //new borns don't have score yet
         };
     }

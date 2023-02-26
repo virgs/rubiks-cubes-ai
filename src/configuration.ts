@@ -18,10 +18,9 @@ export const NeuroEvolutionaryConfig = {
 }
 
 export const GeneticAlgorithmConfig = {
-    mutationRate: 0.05,
-    populationPerGeneration: 1,
-    elitism: 1,
-    armageddonThreshold: 500
+    populationPerGeneration: 100,
+    elitism: 10,
+    armageddonThreshold: 50
 }
 
 export const Configuration = {
@@ -60,7 +59,7 @@ export const Configuration = {
             {
                 key: 'NE',
                 instantiator: (configuration: number[]) => new PocketCubeNeuroEvolutionary(new PocketCube({ clone: configuration })),
-                checked: true,
+                checked: false,
                 info: `Neuro Evolutionary. Uses number of misplaced stickers as fitness function. Hidden neurons: ${NeuroEvolutionaryConfig.neuralNetworkData.hiddenNeurons}. Population: ${NeuroEvolutionaryConfig.geneticData.populationPerGeneration}`
             },
             {

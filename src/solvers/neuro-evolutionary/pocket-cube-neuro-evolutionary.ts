@@ -176,11 +176,11 @@ export class PocketCubeNeuroEvolutionary implements CubeSolver {
     }
 
     public buildSolvedPocketCubeFromCornerCubelet(cubelet: Cubelet): PocketCube {
-        const colorMap: Map<Sides, Colors> = new Map();
+        const colorMap: Map<Colors, Sides> = new Map();
         cubelet.stickers
             .forEach(sticker => {
-                colorMap.set(sticker.side, sticker.color);
-                colorMap.set(getOppositeSide(sticker.side), getOppositeColor(sticker.color));
+                colorMap.set(sticker.color, sticker.side);
+                colorMap.set(getOppositeColor(sticker.color), getOppositeSide(sticker.side));
             });
         return new PocketCube({ colorMap: colorMap });
     }

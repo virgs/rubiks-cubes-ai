@@ -30,10 +30,10 @@ export class PocketCubeGeneticAlgorithm implements CubeSolver {
     private armageddonCounter: number;
 
     public constructor(cube: PocketCube) {
-        this.aborted = false;
-        this.armageddonCounter = 0;
         this.measurer = new ProcedureMeasurer();
         this.initialState = cube.clone();
+        this.aborted = false;
+        this.armageddonCounter = 0;
         this.citizens = this.createNewPopulationFromScratch();
 
         const translator = new HumanTranslator();
@@ -45,17 +45,17 @@ export class PocketCubeGeneticAlgorithm implements CubeSolver {
             translator.convertStringToFaceRotations('U\''),
             translator.convertStringToFaceRotations('R'),
             translator.convertStringToFaceRotations('R\''),
-            translator.convertStringToFaceRotations('B\'', 'U', 'B\''),
+            translator.convertStringToFaceRotations('B', 'U', 'B\''),
             translator.convertStringToFaceRotations('U', 'R', 'U\''),
             translator.convertStringToFaceRotations('F', 'U\'', 'F\''),
             translator.convertStringToFaceRotations('D', 'B', 'D\''),
-            translator.convertStringToFaceRotations('R\'', 'U\'', 'R', 'U\'', 'R\'', '2U', 'R'),
+            translator.convertStringToFaceRotations('R', 'U', 'R\'', 'U', 'R', '2U', 'R\''),
             translator.convertStringToFaceRotations('U', 'R\'', 'U\'', 'R', 'U\'', 'R\'', '2U', 'R'),
             translator.convertStringToFaceRotations('U\'', 'R\'', 'U\'', 'R', 'U\'', 'R\'', '2U', 'R'),
-            translator.convertStringToFaceRotations('2U', 'R\'', 'U\'', 'R', 'U\'', 'R\'', '2U', 'R'),
-            translator.convertStringToFaceRotations('L\'', 'U', 'R\'', '2D', 'R', 'U\'', 'R\'', '2D', '2R'),
-            translator.convertStringToFaceRotations('2R', 'L\'', 'U', 'R\'', '2D', 'R', 'U\'', 'R\'', '2D'),
-            translator.convertStringToFaceRotations('2F', 'L\'', 'U', 'R\'', '2D', 'R', 'U\'', 'R\'', '2D', '2R', '2F\''),
+            // translator.convertStringToFaceRotations('2U', 'R\'', 'U\'', 'R', 'U\'', 'R\'', '2U', 'R'),
+            // translator.convertStringToFaceRotations('L\'', 'U', 'R\'', '2D', 'R', 'U\'', 'R\'', '2D', '2R'),
+            // translator.convertStringToFaceRotations('2R', 'L\'', 'U', 'R\'', '2D', 'R', 'U\'', 'R\'', '2D'),
+            // translator.convertStringToFaceRotations('2F', 'L\'', 'U', 'R\'', '2D', 'R', 'U\'', 'R\'', '2D', '2R', '2F\''),
         ]);
     }
 
@@ -73,7 +73,7 @@ export class PocketCubeGeneticAlgorithm implements CubeSolver {
                 }
                 if (this.geneticAlgorithm.getGenerationsCounter() > GeneticAlgorithmConfig.armageddonThreshold) {
                     ++this.armageddonCounter;
-                    // this.citizens = this.createNewPopulationFromScratch();
+                    this.citizens = this.createNewPopulationFromScratch();
                 } else {
                     this.citizens = this.createNewPopulationFromPreviousOne();
                 }
@@ -89,19 +89,16 @@ export class PocketCubeGeneticAlgorithm implements CubeSolver {
         return Array.from(new Array(GeneticAlgorithmConfig.populationPerGeneration!))
             .map(() => {
                 // Arbitrary numbers to make initial configuration spread
-                const rotations: FaceRotation[] = [];// new CubeScrambler(10).scramble(this.initialState.clone())
-                // .filter(() => Math.random() > .5);
-                const cube = this.initialState.clone();//rotations
-                //.reduce((cube, rotation) => cube.rotateFace(rotation), this.initialState.clone());
-                const fixedCubelets = cube.getCubeletsBySides(Sides.BACK, Sides.LEFT, Sides.DOWN);
-                console.log(new HumanTranslator().translateCube(cube))
-                console.log(new HumanTranslator().translateCubelets(fixedCubelets))
-                const goalState = this.buildSolvedPocketCubeFromCornerCubelet(fixedCubelets[0]).getConfiguration();
-                console.log(new HumanTranslator().translateCube(new PocketCube({ clone: goalState })))
+                const rotations: FaceRotation[] = new CubeScrambler(1).scramble(this.initialState.clone())
+                // console.log(new HumanTranslator().translateRotations(rotations))
+                const cube = rotations
+                    .reduce((cube, rotation) => cube.rotateFace(rotation), this.initialState.clone());
+                const fixedCubelets = cube.getCubeletsBySides(Sides.BACK, Sides.LEFT, Sides.DOWN)[0];
+                const goalState = this.buildSolvedPocketCubeFromCornerCubelet(fixedCubelets).getConfiguration();
                 return {
-                    cube: cube,
-                    genes: rotations,
-                    goalState: goalState,
+                    cube: cube.clone(),
+                    genes: [...rotations],
+                    goalState: [...goalState],
                     score: NaN,
                     newGenes: []
                 }
@@ -111,8 +108,8 @@ export class PocketCubeGeneticAlgorithm implements CubeSolver {
     private createNewPopulationFromPreviousOne(): Chromosome[] {
         return this.geneticAlgorithm.createNextGeneration(this.citizens
             .map(citizen => ({
-                cube: citizen.cube,
-                genes: citizen.genes,
+                cube: citizen.cube.clone(),
+                genes: [...citizen.genes],
                 newGenes: [],
                 score: this.calculateCitizenScore(citizen),
                 goalState: citizen.goalState
@@ -120,11 +117,23 @@ export class PocketCubeGeneticAlgorithm implements CubeSolver {
     }
 
     private runCitizen(citizen: Chromosome): boolean {
-        for (let rotation of citizen.newGenes) {
+        citizen.genes = citizen.genes.concat(citizen.newGenes);
+        const currentRotations: FaceRotation[] = [];
+        let currentCube = this.initialState.clone();
+        for (let rotation of citizen.genes) {
             if (this.measurer.add(Metrics[Metrics.RUN_CITIZEN_ROTATIONS], () => {
-                citizen.genes.push(rotation);
-                citizen.cube = citizen.cube.rotateFace(rotation);
-                if (citizen.cube.isSolved()) {
+                currentRotations.push(rotation)
+                currentCube = currentCube.rotateFace(rotation)
+                // citizen.genes.push(rotation);
+                // citizen.cube = citizen.cube.rotateFace(rotation);
+                // if (citizen.cube.getConfiguration().toString() === citizen.goalState.toString()) {
+                if (currentCube.isSolved()) {
+                    const proof = currentRotations.reduce((cube, rotation) => cube.rotateFace(rotation), this.initialState.clone())
+                    console.log('proof', citizen.genes)
+                    console.log(currentRotations)
+                    console.log(new HumanTranslator().translateCube(proof));
+                    console.log(new HumanTranslator().translateCube(currentCube));
+                    citizen.genes = currentRotations;
                     return true;
                 }
                 return false;
@@ -141,8 +150,11 @@ export class PocketCubeGeneticAlgorithm implements CubeSolver {
     }
 
     private createSolution(solution: Chromosome): Solution {
-        const rotations = this.measurer.add(Metrics[Metrics.ROTATIONS_TUNING], () => new RotationsTuner().tune(solution.genes));
+        // const rotations = this.measurer.add(Metrics[Metrics.ROTATIONS_TUNING], () => new RotationsTuner().tune(solution.genes));
+        const rotations = this.measurer.add(Metrics[Metrics.ROTATIONS_TUNING], () => solution.genes);
         this.measurer.finish();
+        console.log(new HumanTranslator().translateCube(solution.cube))
+        // console.log(new HumanTranslator().translateCube(new PocketCube({ clone: solution.goalState })))
         return {
             rotations: rotations,
             totalTime: this.measurer.getTotalTime()!,
@@ -155,11 +167,11 @@ export class PocketCubeGeneticAlgorithm implements CubeSolver {
     }
 
     public buildSolvedPocketCubeFromCornerCubelet(cubelet: Cubelet): PocketCube {
-        const colorMap: Map<Sides, Colors> = new Map();
+        const colorMap: Map<Colors, Sides> = new Map();
         cubelet.stickers
             .forEach(sticker => {
-                colorMap.set(sticker.side, sticker.color);
-                colorMap.set(getOppositeSide(sticker.side), getOppositeColor(sticker.color));
+                colorMap.set(sticker.color, sticker.side);
+                colorMap.set(getOppositeColor(sticker.color), getOppositeSide(sticker.side));
             });
         return new PocketCube({ colorMap: colorMap });
     }
