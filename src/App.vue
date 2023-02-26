@@ -1,5 +1,5 @@
 <script lang="ts">
-import { PocketCube } from "@/engine/pocket-cube";
+import type { RubiksCube } from "@/engine/rubiks-cube";
 import { defineComponent } from 'vue';
 import { CubeScrambler } from "./engine/cube-scrambler";
 import { World } from "./renderers/world";
@@ -14,6 +14,7 @@ import fontUrl from '/Courier New_Regular.json?url' // '/helvetiker_regular.type
 import type { FaceRotation } from "./engine/face-rotation";
 import { KeyboardInterpreter } from "./keyboard-interpreter";
 import { RotationsTuner } from "./engine/rotations-tuner";
+import { getAllSides, getOppositeSide, Sides } from "./constants/sides";
 
 //They have to be non reactive
 const keyboardInterpreter = new KeyboardInterpreter();
@@ -22,7 +23,7 @@ const tuner = new RotationsTuner();
 let world: World;
 let cubeRenderer: CubeRenderer;
 let solverRenderers: SolverRenderer[] = [];
-let cube = new PocketCube();
+let cube: RubiksCube | undefined;
 let font: Font;
 let shuffleMoves: FaceRotation[] = [];
 
@@ -44,6 +45,8 @@ export default defineComponent({
       shuffled: false,
       shuffleMovesText: '',
       solving: false,
+      solver: Configuration.solvers
+        .find(solver => solver.dimension === availableDimensions[0]),
       aiMethods: Configuration.solvers
         .find(solver => solver.dimension === availableDimensions[0])!.methods
     };
@@ -65,8 +68,7 @@ export default defineComponent({
   },
   watch: {
     selectedDimensionIndex() {
-      this.aiMethods = Configuration.solvers
-        .find(solver => solver.dimension === this.availableDimensions[this.selectedDimensionIndex])!.methods;
+      this.aiMethods = this.solver!.methods;
     },
     shuffleMovesText() {
       document.querySelector("textarea")!.scrollTop = document.querySelector("textarea")!.scrollHeight;
@@ -87,17 +89,26 @@ export default defineComponent({
     container.style.width = navBar.clientWidth * 0.95 + "px";
     world = new World(container);
     world.start();
-    this.createCubeRenderer();
+    await this.reset();
 
     window.addEventListener('keypress', async (event: KeyboardEvent) => {
       solverRenderers
         .forEach(solverRenderer => solverRenderer.keyInput(event));
+      switch (event.key.toLowerCase()) {
+        case 'enter': this.mainActionButtonEnabled && this.mainActionButtonClick()
+          break;
+        case 'delete': !this.shuffling && this.reset()
+          break;
+        case 'r': !this.shuffling && this.shuffle()
+          break;
+      }
       if (!this.solving && !this.shuffling && solverRenderers.length <= 0) {
         const faceRotation = keyboardInterpreter.readKeys(event);
         if (faceRotation !== undefined) {
           shuffleMoves = tuner.tune(shuffleMoves.concat(faceRotation));
           this.shuffling = true;
-          cube = cube.rotateFace(faceRotation);
+          this.solver!.type!
+          cube = cube!.rotateFace(faceRotation);
           await cubeRenderer.rotateFace(faceRotation);
           this.shuffleMovesText = translator.translateRotations(shuffleMoves, { showNumberOfMoves: true });
           this.shuffled = !cube.isSolved();
@@ -105,19 +116,28 @@ export default defineComponent({
         }
       }
     });
-
   },
   methods: {
-    createCubeRenderer() {
+    async createCubeRenderer() {
       if (cubeRenderer) {
         world.getScene().remove(cubeRenderer.getMesh());
       }
       cubeRenderer = new CubeRenderer({
         parent: world.getScene(),
-        cube: cube as PocketCube,
+        cube: cube!,
         position: new Vector3(0, 0, 0),
         size: Configuration.renderers.cubeSize
       });
+      const sides = getAllSides();
+      const sideToRotateFourTimes = Math.floor(Math.random() * sides.length);
+      const oppositeSideToRotateFourTimes = getOppositeSide(sideToRotateFourTimes)
+      //cool animation effetct
+      for (let i = 0; i < 4; ++i) {
+        await Promise.all([
+          cubeRenderer.rotateFace({ side: sideToRotateFourTimes, duration: Configuration.renderers.rotationDuration / 2 }),
+          await cubeRenderer.rotateFace({ side: oppositeSideToRotateFourTimes, duration: Configuration.renderers.rotationDuration / 2, counterClockwiseDirection: true })
+        ])
+      }
     },
     async returnCubesToStage() {
       this.solved = false;
@@ -125,11 +145,11 @@ export default defineComponent({
       await Promise.all(solverRenderers
         .map(solver => solver.remove()));
       solverRenderers = [];
-      this.createCubeRenderer();
-      this.shuffled = !cube.isSolved();
+      await this.createCubeRenderer();
+      this.shuffled = !cube!.isSolved();
     },
     async reset() {
-      cube = new PocketCube();
+      cube = this.solver!.instantiator!();
       await this.returnCubesToStage();
       this.shuffleMovesText = "";
       shuffleMoves = [];
@@ -140,16 +160,16 @@ export default defineComponent({
 
       this.shuffling = true;
       const newRotations = new CubeScrambler(Configuration.world.scrambleMoves * 2)
-        .scramble(cube as PocketCube)
+        .scramble(cube!)
       const scramblingRotations = tuner.tune(newRotations)
         .filter((_, index) => index < Configuration.world.scrambleMoves);
       for (let rotation of scramblingRotations) {
         await cubeRenderer!.rotateFace({ ...rotation, duration: Configuration.world.scrambleRotationDuration });
         shuffleMoves.push(rotation);
-        cube = cube.rotateFace(rotation);
+        cube = cube!.rotateFace(rotation);
         this.shuffleMovesText = translator.translateRotations(shuffleMoves, { showNumberOfMoves: true });
       }
-      this.shuffled = !cube.isSolved();
+      this.shuffled = !cube!.isSolved();
       this.shuffling = false;
     },
     async mainActionButtonClick() {
@@ -168,7 +188,7 @@ export default defineComponent({
             font: font!,
             scene: world!.getScene(),
             rendererSize: Configuration.renderers.cubeSize,
-            cube: cube as PocketCube,
+            cube: cube!,
             position: {
               from: cubeRenderer.getMesh().position.clone(),
               angle: angle

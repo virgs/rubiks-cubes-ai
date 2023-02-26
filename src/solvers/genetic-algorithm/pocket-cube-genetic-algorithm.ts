@@ -91,8 +91,9 @@ export class PocketCubeGeneticAlgorithm implements CubeSolver {
                 // Arbitrary numbers to make initial configuration spread
                 const rotations: FaceRotation[] = new CubeScrambler(1).scramble(this.initialState.clone())
                 // console.log(new HumanTranslator().translateRotations(rotations))
-                const cube = rotations
-                    .reduce((cube, rotation) => cube.rotateFace(rotation), this.initialState.clone());
+                const cube = this.initialState.clone()
+                // rotations
+                    // .reduce((cube, rotation) => cube.rotateFace(rotation), this.initialState.clone());
                 const fixedCubelets = cube.getCubeletsBySides(Sides.BACK, Sides.LEFT, Sides.DOWN)[0];
                 const goalState = this.buildSolvedPocketCubeFromCornerCubelet(fixedCubelets).getConfiguration();
                 return {

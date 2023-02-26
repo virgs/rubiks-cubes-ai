@@ -1,5 +1,5 @@
 import {
-    Mesh, MeshStandardMaterial, Material, Vector3
+    Mesh, MeshStandardMaterial, Material, Vector3, DoubleSide
 } from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry";
 import { Sides } from "@/constants/sides";
@@ -38,8 +38,9 @@ export class CubeletRenderer {
                     .find(sticker => sticker.side === side);
                 const material = new MeshStandardMaterial({
                     color: sticker ? mapColorsToHex(sticker.color) : CubeletRenderer.stickerlessColor,
-                    // roughness: 10,
-                    // flatShading: true,
+                    // metalness: .51,
+                    roughness: .5,
+                    flatShading: true,
                     // transparent: true,
                     // side: DoubleSide,
                 });

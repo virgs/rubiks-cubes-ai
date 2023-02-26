@@ -1,8 +1,8 @@
 import Heap from 'heap';
-import { PocketCube } from "../engine/pocket-cube";
-import { getOppositeSide, Sides } from "../constants/sides";
-import type { CubeSolver, Solution } from "./cube-solver";
-import { ProcedureMeasurer } from "./procedure-measurer";
+import { PocketCube } from "../../engine/pocket-cube";
+import { getOppositeSide, Sides } from "../../constants/sides";
+import type { CubeSolver, Solution } from "../cube-solver";
+import { ProcedureMeasurer } from "../procedure-measurer";
 import type { FaceRotation } from "@/engine/face-rotation";
 import { type Colors, getOppositeColor } from "@/constants/colors";
 import type { Cubelet } from "@/engine/rubiks-cube";

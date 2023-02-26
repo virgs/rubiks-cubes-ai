@@ -2,8 +2,8 @@ import { PocketCube } from "./engine/pocket-cube";
 import { PocketCubeGeneticAlgorithm } from "./solvers/genetic-algorithm/pocket-cube-genetic-algorithm";
 import { HumanSolver } from "./solvers/human-solver";
 import { PocketCubeNeuroEvolutionary } from "./solvers/neuro-evolutionary/pocket-cube-neuro-evolutionary";
-import { PocketCubeAStar } from "./solvers/pocket-cube-a-star";
-import { PocketCubeBreadthFirstSearch } from "./solvers/pocket-cube-breadth-first-search";
+import { PocketCubeAStar } from "./solvers/pocket/pocket-cube-a-star";
+import { PocketCubeBreadthFirstSearch } from "./solvers/pocket/pocket-cube-breadth-first-search";
 
 export const NeuroEvolutionaryConfig = {
     geneticData: {
@@ -20,7 +20,7 @@ export const NeuroEvolutionaryConfig = {
 export const GeneticAlgorithmConfig = {
     populationPerGeneration: 100,
     elitism: 10,
-    armageddonThreshold: 50
+    armageddonThreshold: 10
 }
 
 export const Configuration = {
@@ -39,6 +39,8 @@ export const Configuration = {
     solvers: [
         {
             dimension: '2x2',
+            type: PocketCube,
+            instantiator: () => new PocketCube(),
             methods: [{
                 key: 'Human',
                 instantiator: (configuration: number[]) => new HumanSolver(new PocketCube({ clone: configuration })),
@@ -60,13 +62,13 @@ export const Configuration = {
                 key: 'NE',
                 instantiator: (configuration: number[]) => new PocketCubeNeuroEvolutionary(new PocketCube({ clone: configuration })),
                 checked: false,
-                info: `Neuro Evolutionary. Uses number of misplaced stickers as fitness function. Hidden neurons: ${NeuroEvolutionaryConfig.neuralNetworkData.hiddenNeurons}. Population: ${NeuroEvolutionaryConfig.geneticData.populationPerGeneration}`
+                info: `Neuro Evolutionary. Uses number of misplaced stickers as fitness function. Internal neurons: ${NeuroEvolutionaryConfig.neuralNetworkData.hiddenNeurons}. Population: ${NeuroEvolutionaryConfig.geneticData.populationPerGeneration}. No elitism`
             },
             {
                 key: 'GA',
                 instantiator: (configuration: number[]) => new PocketCubeGeneticAlgorithm(new PocketCube({ clone: configuration })),
                 checked: true,
-                info: `Human guided genetic algorithm. Uses number of misplaced stickers as fitness function. Population: ${GeneticAlgorithmConfig.populationPerGeneration}. Elitism ${GeneticAlgorithmConfig.elitism}`
+                info: `Predefined macro movements combined with genetic algorithm. Uses number of misplaced stickers as fitness function. Population: ${GeneticAlgorithmConfig.populationPerGeneration}. Elitism ${GeneticAlgorithmConfig.elitism}. Asexual reproduction`
             }]
         },
         {
