@@ -4,7 +4,7 @@ import {
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry";
 import { Sides } from "@/constants/sides";
 import { mapColorsToHex } from "@/constants/colors";
-import type { Cubelet } from "@/engine/rubiks-cube";
+import type { Cubelet } from "@/engine/cube";
 
 type Config = {
     sideSize: number;
@@ -63,7 +63,7 @@ export class CubeletRenderer {
         let x = 0;
         let y = 0;
         let z = 0;
-        const sticker = config.cubelet.stickers[2];
+        const sticker = config.cubelet.stickers[0];
         switch (sticker.side) {
             case Sides.UP:
                 y = config.cubeDimension - 1;

@@ -1,6 +1,6 @@
 import { PocketCubeFaceRotator } from './pocket-cube-face-rotator';
 import { getAllSides, Sides } from '@/constants/sides';
-import { defaultColorMap, type Cubelet, type RubiksCube, type StickerMap } from './rubiks-cube';
+import { defaultColorMap, type Cubelet, type Cube, type StickerMap } from './cube';
 import type { FaceRotation } from './face-rotation';
 import { getAllColors, type Colors } from '@/constants/colors';
 
@@ -45,13 +45,13 @@ const stickerMap: StickerMap[] = [
     [{ side: Sides.BACK, id: 18 }, { side: Sides.LEFT, id: 7 }, { side: Sides.DOWN, id: 23 }],
 ];
 
-export class PocketCube implements RubiksCube {
+export class PocketCube implements Cube {
     private readonly hash: string;
-    private readonly configuration: number[];
+    private readonly configuration: bigint[];
     private readonly dimension: number;
     private readonly faceRotator: PocketCubeFaceRotator;
 
-    public constructor(config?: { clone?: number[], colorMap?: Map<Colors, Sides> }) {
+    public constructor(config?: { clone?: bigint[], colorMap?: Map<Colors, Sides> }) {
         this.faceRotator = new PocketCubeFaceRotator();
         this.dimension = 2;
         if (config?.clone) {
@@ -61,7 +61,7 @@ export class PocketCube implements RubiksCube {
             this.configuration = getAllColors()
                 .map(color => {
                     const side = colorMap.get(color)!
-                    return (15 << (side * 4)); // 15 = 1111 in binary
+                    return BigInt(15 << (side * 4)); // 15 = 1111 in binary
                 });
         }
         this.hash = this.configuration.join('.');
@@ -75,7 +75,7 @@ export class PocketCube implements RubiksCube {
         return this.dimension;
     }
 
-    public getConfiguration(): number[] {
+    public getConfiguration(): bigint[] {
         return [...this.configuration];
     }
 
@@ -86,7 +86,7 @@ export class PocketCube implements RubiksCube {
     private getColorOfIndex(index: number): Colors | undefined {
         let counter = 0;
         for (let color of this.configuration) {
-            if (color & (1 << index)) {
+            if (color & (BigInt(1 << index))) {
                 return counter;
             }
             ++counter;

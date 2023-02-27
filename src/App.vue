@@ -1,10 +1,10 @@
 <script lang="ts">
-import type { RubiksCube } from "@/engine/rubiks-cube";
+import type { Cube } from "@/engine/cube";
 import { defineComponent } from 'vue';
 import { CubeScrambler } from "./engine/cube-scrambler";
-import { World } from "./renderers/world";
+import { World } from "./world";
 import { Vector3 } from "three";
-import { HumanTranslator } from "./engine/human-tranlator";
+import { HumanTranslator } from "./printers/human-tranlator";
 import { CubeRenderer } from "./renderers/cube-renderer";
 import { SolverRenderer } from "./renderers/solver-renderer";
 import { Font, FontLoader } from "three/examples/jsm/loaders/FontLoader";
@@ -13,7 +13,7 @@ import GithubCorner from "./components/GithubCorner.vue";
 import fontUrl from '/Courier New_Regular.json?url' // '/helvetiker_regular.typeface.json?url';
 import type { FaceRotation } from "./engine/face-rotation";
 import { KeyboardInterpreter } from "./keyboard-interpreter";
-import { RotationsTuner } from "./engine/rotations-tuner";
+import { RotationsTuner } from "./printers/rotations-tuner";
 import { getAllSides, getOppositeSide, Sides } from "./constants/sides";
 
 //They have to be non reactive
@@ -23,7 +23,7 @@ const tuner = new RotationsTuner();
 let world: World;
 let cubeRenderer: CubeRenderer;
 let solverRenderers: SolverRenderer[] = [];
-let cube: RubiksCube | undefined;
+let cube: Cube | undefined;
 let font: Font;
 let shuffleMoves: FaceRotation[] = [];
 
@@ -45,13 +45,15 @@ export default defineComponent({
       shuffled: false,
       shuffleMovesText: '',
       solving: false,
-      solver: Configuration.solvers
-        .find(solver => solver.dimension === availableDimensions[0]),
       aiMethods: Configuration.solvers
         .find(solver => solver.dimension === availableDimensions[0])!.methods
     };
   },
   computed: {
+    solver() {
+      return Configuration.solvers
+        .find(solver => solver.dimension === this.availableDimensions[this.selectedDimensionIndex])
+    },
     mainActionButtonEnabled() {
       if (this.shuffling) {
         return false;
@@ -68,6 +70,7 @@ export default defineComponent({
   },
   watch: {
     selectedDimensionIndex() {
+      this.reset();
       this.aiMethods = this.solver!.methods;
     },
     shuffleMovesText() {
@@ -107,12 +110,13 @@ export default defineComponent({
         if (faceRotation !== undefined) {
           shuffleMoves = tuner.tune(shuffleMoves.concat(faceRotation));
           this.shuffling = true;
-          this.solver!.type!
           cube = cube!.rotateFace(faceRotation);
           await cubeRenderer.rotateFace(faceRotation);
           this.shuffleMovesText = translator.translateRotations(shuffleMoves, { showNumberOfMoves: true });
           this.shuffled = !cube.isSolved();
           this.shuffling = false;
+
+          console.log(translator.translateCube(cube));
         }
       }
     });
@@ -131,13 +135,15 @@ export default defineComponent({
       const sides = getAllSides();
       const sideToRotateFourTimes = Math.floor(Math.random() * sides.length);
       const oppositeSideToRotateFourTimes = getOppositeSide(sideToRotateFourTimes)
-      //cool animation effetct
+      this.shuffling = true;
+      //cool animation effect
       for (let i = 0; i < 4; ++i) {
         await Promise.all([
           cubeRenderer.rotateFace({ side: sideToRotateFourTimes, duration: Configuration.renderers.rotationDuration / 2 }),
-          await cubeRenderer.rotateFace({ side: oppositeSideToRotateFourTimes, duration: Configuration.renderers.rotationDuration / 2, counterClockwiseDirection: true })
+          cubeRenderer.rotateFace({ side: oppositeSideToRotateFourTimes, duration: Configuration.renderers.rotationDuration / 2, counterClockwiseDirection: true })
         ])
       }
+      this.shuffling = false;
     },
     async returnCubesToStage() {
       this.solved = false;

@@ -5,7 +5,7 @@ import type { CubeSolver, Solution } from "../cube-solver";
 import { ProcedureMeasurer } from "../procedure-measurer";
 import type { FaceRotation } from "@/engine/face-rotation";
 import { type Colors, getOppositeColor } from "@/constants/colors";
-import type { Cubelet } from "@/engine/rubiks-cube";
+import type { Cubelet } from "@/engine/cube";
 
 enum Metrics {
     ADD_CANDIDATE,

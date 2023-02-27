@@ -64,7 +64,7 @@ export class World {
     private createControls(container: HTMLElement): OrbitControls {
         const controls = new OrbitControls(this.camera, this.renderer.domElement);
         controls.enableDamping = true;
-        controls.minDistance = 25;
+        controls.minDistance = 10;
         controls.maxDistance = 120;
         controls.minAzimuthAngle = -3 * Math.PI / 4; // radians
         controls.maxAzimuthAngle = 3 * Math.PI / 4; // radians
@@ -86,7 +86,7 @@ export class World {
         const near = 0.1; // the near clipping plane
         const far = 150; // the far clipping plane
         const camera = new PerspectiveCamera(fov, aspect, near, far);
-        camera.position.set(-10, -10, 50);
+        camera.position.set(-10, -10, 35);
         return camera;
     }
 

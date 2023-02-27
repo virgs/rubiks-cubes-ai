@@ -1,4 +1,4 @@
-import { getOppositeRotation, rotationsAreEqual, rotationsCancel, type FaceRotation } from "./face-rotation";
+import { getOppositeRotation, rotationsAreEqual, rotationsCancel, type FaceRotation } from "../engine/face-rotation";
 
 export class RotationsTuner {
 

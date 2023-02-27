@@ -7,11 +7,11 @@ type FaceRotatorMap = {
     source: number
 };
 
-export class PocketCubeFaceRotator {
+export class RubiksCubeFaceRotator {
     private static faceRotatorMap: Map<Sides, FaceRotatorMap[]>;
 
     public constructor() {
-        if (!PocketCubeFaceRotator.faceRotatorMap) {
+        if (!RubiksCubeFaceRotator.faceRotatorMap) {
             this.initializeMap();
         }
     }
@@ -39,32 +39,34 @@ export class PocketCubeFaceRotator {
 
     public rotate(original: bigint[], faceRotation: FaceRotation): bigint[] {
         const clone = [...original];
-        PocketCubeFaceRotator.faceRotatorMap.get(faceRotation.side)!
+        RubiksCubeFaceRotator.faceRotatorMap.get(faceRotation.side)!
             .forEach(item => {
                 if (faceRotation.counterClockwiseDirection) {
-                    PocketCubeFaceRotator.setColorOfIndex(clone, item.source, 
-                        PocketCubeFaceRotator.getColorOfIndex(original, item.destination)!);
+                    RubiksCubeFaceRotator.setColorOfIndex(clone, item.source,
+                        RubiksCubeFaceRotator.getColorOfIndex(original, item.destination)!);
                 } else {
-                    PocketCubeFaceRotator.setColorOfIndex(clone, item.destination, 
-                        PocketCubeFaceRotator.getColorOfIndex(original, item.source)!);
+                    RubiksCubeFaceRotator.setColorOfIndex(clone, item.destination,
+                        RubiksCubeFaceRotator.getColorOfIndex(original, item.source)!);
                 }
             })
         return clone;
     }
 
     private initializeMap() {
-        // Initial configuration
-        //       UP
-        //        0  1
-        //        3  2
-        // LEFT  FRONT  RIGHT  BACK
-        // 4  5   8  9  12 13  16 17
-        // 7  6  11 10  15 14  19 18
-        //       DOWN
-        //       20 21
-        //       23 22
+        //           UP
+        //           0  1  2
+        //           3  4  5
+        //           6  7  8
+        // LEFT      FRONT     RIGHT     BACK
+        // 9  10 11  18 19 20  27 28 29  36 37 38
+        // 12 13 14  21 22 23  30 31 32  39 40 41
+        // 15 16 17  24 25 26  33 34 35  42 43 44
+        //           DOWN
+        //           45 46 47
+        //           48 49 50
+        //           51 52 53
 
-        PocketCubeFaceRotator.faceRotatorMap = new Map();
+        RubiksCubeFaceRotator.faceRotatorMap = new Map();
 
         const upFaceRotator: FaceRotatorMap[] = this.createUpFaceClockwiseRotator();
         const leftFaceRotator: FaceRotatorMap[] = this.createLeftFaceClockwiseRotator();
@@ -73,12 +75,12 @@ export class PocketCubeFaceRotator {
         const backFaceRotator: FaceRotatorMap[] = this.createBackFaceClockwiseRotator();
         const downFaceRotator: FaceRotatorMap[] = this.createDownFaceClockwiseRotator();
 
-        PocketCubeFaceRotator.faceRotatorMap.set(Sides.UP, upFaceRotator);
-        PocketCubeFaceRotator.faceRotatorMap.set(Sides.LEFT, leftFaceRotator);
-        PocketCubeFaceRotator.faceRotatorMap.set(Sides.FRONT, frontFaceRotator);
-        PocketCubeFaceRotator.faceRotatorMap.set(Sides.RIGHT, rightFaceRotator);
-        PocketCubeFaceRotator.faceRotatorMap.set(Sides.BACK, backFaceRotator);
-        PocketCubeFaceRotator.faceRotatorMap.set(Sides.DOWN, downFaceRotator);
+        RubiksCubeFaceRotator.faceRotatorMap.set(Sides.UP, upFaceRotator);
+        RubiksCubeFaceRotator.faceRotatorMap.set(Sides.LEFT, leftFaceRotator);
+        RubiksCubeFaceRotator.faceRotatorMap.set(Sides.FRONT, frontFaceRotator);
+        RubiksCubeFaceRotator.faceRotatorMap.set(Sides.RIGHT, rightFaceRotator);
+        RubiksCubeFaceRotator.faceRotatorMap.set(Sides.BACK, backFaceRotator);
+        RubiksCubeFaceRotator.faceRotatorMap.set(Sides.DOWN, downFaceRotator);
     }
 
     private createDownFaceClockwiseRotator(): FaceRotatorMap[] {
@@ -144,33 +146,44 @@ export class PocketCubeFaceRotator {
     }
 
     private createUpFaceClockwiseRotator(): FaceRotatorMap[] {
-        //       UP
-        //        3  0
-        //        2  1
-        // LEFT  FRONT  RIGHT  BACK
-        // 8  9  12 13  16 17  4  5
-        // 7  6  11 10  15 14  19 18
-        //       DOWN
-        //       20 21
-        //       23 22
+        //           UP
+        //           6  3  0
+        //           7  4  1
+        //           8  5  2
+        // LEFT      FRONT     RIGHT     BACK
+        // 18 19 20  27 28 29  36 37 38  9  10 11
+        // 12 13 14  21 22 23  30 31 32  39 40 41
+        // 15 16 17  24 25 26  33 34 35  42 43 44
+        //           DOWN
+        //           45 46 47
+        //           48 49 50
+        //           51 52 53
 
         return [
-            { destination: 0, source: 3 },
-            { destination: 1, source: 0 },
-            { destination: 2, source: 1 },
-            { destination: 3, source: 2 },
+            { destination: 6, source: 0 },
+            { destination: 3, source: 1 },
+            { destination: 0, source: 2 },
+            { destination: 7, source: 3 },
+            { destination: 1, source: 5 },
+            { destination: 8, source: 6 },
+            { destination: 5, source: 7 },
+            { destination: 2, source: 8 },
 
-            { destination: 4, source: 8 },
-            { destination: 5, source: 9 },
+            { destination: 9, source: 18 },
+            { destination: 10, source: 19 },
+            { destination: 11, source: 20 },
 
-            { destination: 8, source: 12 },
-            { destination: 9, source: 13 },
+            { destination: 18, source: 27 },
+            { destination: 19, source: 28 },
+            { destination: 20, source: 29 },
 
-            { destination: 12, source: 16 },
-            { destination: 13, source: 17 },
+            { destination: 27, source: 36 },
+            { destination: 28, source: 37 },
+            { destination: 29, source: 38 },
 
-            { destination: 16, source: 4 },
-            { destination: 17, source: 5 },
+            { destination: 36, source: 9 },
+            { destination: 37, source: 10 },
+            { destination: 38, source: 11 },
         ];
 
     }

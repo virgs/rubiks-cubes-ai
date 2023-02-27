@@ -1,6 +1,6 @@
 import { getAllSides, Sides } from "../constants/sides";
 import type { FaceRotation } from "./face-rotation";
-import type { RubiksCube } from "./rubiks-cube";
+import type { Cube } from "./cube";
 
 export class CubeScrambler {
     private readonly moves: number;
@@ -9,7 +9,7 @@ export class CubeScrambler {
         this.moves = moves;
     }
 
-    public scramble(cube: RubiksCube): FaceRotation[] {
+    public scramble(cube: Cube): FaceRotation[] {
         let lastRotation: FaceRotation | undefined = undefined;
         const layers = Math.floor(cube.getDimension() / 2); //If it's a 5x5, for example, rotating the first two layers of each face is enough 
         const allSides = getAllSides();

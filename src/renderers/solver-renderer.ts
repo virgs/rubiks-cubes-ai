@@ -1,5 +1,5 @@
 import type { FaceRotation } from "@/engine/face-rotation";
-import type { RubiksCube } from "@/engine/rubiks-cube";
+import type { Cube } from "@/engine/cube";
 import { Mesh, MeshStandardMaterial, Object3D, Vector3 } from "three";
 import { CubeRenderer } from "./cube-renderer"
 import * as Tween from '@tweenjs/tween.js'
@@ -9,7 +9,7 @@ import SolversMapWorker from "../solvers/solver-web-worker?worker";
 import type { Solution } from "../solvers/cube-solver";
 import type { SolverWorkerRequest, SolverWorkerResponse } from "../solvers/solver-web-worker";
 import { Configuration } from "@/configuration";
-import { HumanTranslator } from "@/engine/human-tranlator";
+import { HumanTranslator } from "@/printers/human-tranlator";
 
 export type SolverRendererConfig = {
     font: Font,
@@ -21,7 +21,7 @@ export type SolverRendererConfig = {
         from: Vector3,
         angle: number
     },
-    cube: RubiksCube
+    cube: Cube
 }
 
 export class SolverRenderer {

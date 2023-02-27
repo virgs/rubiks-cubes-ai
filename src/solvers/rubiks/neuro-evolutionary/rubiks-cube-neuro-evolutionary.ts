@@ -1,14 +1,14 @@
 import { NeuroEvolutionaryConfig } from "@/configuration";
 import { type Colors, getOppositeColor } from "@/constants/colors";
 import { Sides, getOppositeSide } from "@/constants/sides";
-import { getOppositeRotation, rotationsAreEqual, rotationsCancel, type FaceRotation } from "@/engine/face-rotation";
-import { PocketCube } from "@/engine/pocket-cube";
-import type { Cubelet, RubiksCube } from "@/engine/rubiks-cube";
-import type { CubeSolver, Solution } from "../cube-solver";
-import { ProcedureMeasurer } from "../procedure-measurer";
+import type { Cubelet, Cube } from "@/engine/cube";
 import { NeuroGeneticAlgorithm } from "./neuro-genetic-algorithm";
 import { NeuralNetwork } from "./neural-network";
-import { RotationsTuner } from "@/engine/rotations-tuner";
+import { RotationsTuner } from "@/printers/rotations-tuner";
+import type { FaceRotation } from "@/engine/face-rotation";
+import type { CubeSolver, Solution } from "@/solvers/cube-solver";
+import { ProcedureMeasurer } from "@/solvers/procedure-measurer";
+import type { RubiksCube } from "@/engine/rubiks-cube";
 
 enum Metrics {
     NOT_MEASURED,
@@ -19,25 +19,24 @@ enum Metrics {
 type Citizen = {
     genes: number[],
     neuralNetwork: NeuralNetwork,
-    cube: RubiksCube,
+    cube: Cube,
     moves: FaceRotation[],
 }
 
 const countBitsOn = (n: number) => n.toString(2).replace(/0/g, "").length;
 
 //https://robertovaccari.com/blog/2020_07_07_genetic_rubik/
-export class PocketCubeNeuroEvolutionary implements CubeSolver {
+export class RubiksCubeNeuroEvolutionary implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
-    private readonly goalState: number[];
     private readonly inputs: number;
-    private readonly initialState: PocketCube;
+    private readonly initialState: RubiksCube;
     private actions: FaceRotation[];
     private neuroGeneticAlgorithm: NeuroGeneticAlgorithm;
     private citizens: Citizen[];
     private aborted: boolean;
     private armageddonCounter: number;
 
-    public constructor(cube: PocketCube) {
+    public constructor(cube: RubiksCube) {
         this.aborted = false;
         this.measurer = new ProcedureMeasurer();
         this.armageddonCounter = 0;
@@ -48,8 +47,6 @@ export class PocketCubeNeuroEvolutionary implements CubeSolver {
 
         this.inputs = cube.getConfiguration().length
         this.actions = [];
-        const fixedCubelet = cube.getCubeletsBySides(Sides.BACK, Sides.LEFT, Sides.DOWN)[0];
-        this.goalState = this.buildSolvedPocketCubeFromCornerCubelet(fixedCubelet).getConfiguration();
         this.actions = [];
         [Sides.FRONT, Sides.UP, Sides.RIGHT] //Important to be the opposite side of fixedCubelet so we can calculate the fitness function correctly
             .map((side: Sides) => [true, false]
