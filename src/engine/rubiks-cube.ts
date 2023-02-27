@@ -6,9 +6,9 @@ import { RubiksCubeFaceRotator } from './rubiks-cube-face-rotator';
 
 // Initial configuration
 //           UP
-//           0  1  2
-//           3  4  5
-//           6  7  8
+//            0  1  2
+//            3  4  5
+//            6  7  8
 // LEFT      FRONT     RIGHT     BACK
 // 9  10 11  18 19 20  27 28 29  36 37 38
 // 12 13 14  21 22 23  30 31 32  39 40 41
@@ -66,12 +66,13 @@ export class RubiksCube implements Cube {
             const colorMap = config?.colorMap || defaultColorMap;
             this.configuration = getAllColors()
                 .map(color => {
-                    const side = colorMap.get(color)!
-                    return BigInt(511 << (side * 9)); // 511 = 111.111.111 in binary
+                    const side = BigInt(colorMap.get(color)!);
+                    return BigInt(511n << (side * 9n)); // 511 = 111.111.111 in binary
                 });
         }
         this.hash = this.configuration.join('.');
     }
+
 
     public clone(): RubiksCube {
         return new RubiksCube({ clone: this.configuration });
@@ -92,7 +93,7 @@ export class RubiksCube implements Cube {
     private getColorOfIndex(index: number): Colors | undefined {
         let counter = 0;
         for (let color of this.configuration) {
-            if (color & BigInt(1 << index)) {
+            if (color & BigInt(1n << BigInt(index))) {
                 return counter;
             }
             ++counter;
@@ -146,7 +147,6 @@ export class RubiksCube implements Cube {
                             x: x,
                             y: y
                         };
-
                     })
             }))
     }

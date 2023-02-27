@@ -1,5 +1,5 @@
-import { Sides } from "@/constants/sides";
-import { Colors } from "../constants/colors";
+import { getAllSides, Sides } from "@/constants/sides";
+import { Colors, getAllColors } from "../constants/colors";
 import { rotationsAreEqual, type FaceRotation } from "../engine/face-rotation";
 import type { Cubelet, Cube, Sticker } from "../engine/cube";
 
@@ -44,12 +44,17 @@ export class HumanTranslator {
         const back = this.translateSide(Sides.BACK, cube);
         const down = this.translateSide(Sides.DOWN, cube);
         let text = '';
+        const titleEmptySpace = Array.from(new Array(up[1].length)).fill(' ').join('');
         up
             .forEach(line => {
-                text += Array.from(new Array(up[0].length)).fill(' ').join('') + line + '\n'
+                text += titleEmptySpace + line + '\n'
             });
 
-        for (let y = 0; y < dimension + 1; ++y) {
+        text += left[0]
+        text += (titleEmptySpace + front[0]).slice(-titleEmptySpace.length)
+        text += (titleEmptySpace + right[0]).slice(-titleEmptySpace.length)
+        text += (titleEmptySpace + back[0]).slice(-titleEmptySpace.length) + '\n';
+        for (let y = 1; y < dimension + 1; ++y) {
             text += left[y]
             text += front[y]
             text += right[y]
@@ -57,8 +62,39 @@ export class HumanTranslator {
         }
         down
             .forEach(line => {
-                text += Array.from(new Array(down[0].length)).fill(' ').join('') + line + '\n'
+                text += titleEmptySpace + line + '\n'
             });
+        return text;
+    }
+
+    // Up    Left  Front Right Back  Down
+    // 1111  0000  0000  0000  0000  0000 (<- Yellow)
+    // 0000  1111  0000  0000  0000  0000 (<- Orange)
+    // 0000  0000  1111  0000  0000  0000 (<- Blue)
+    // 0000  0000  0000  1111  0000  0000 (<- Red)
+    // 0000  0000  0000  0000  1111  0000 (<- Green)
+    // 0000  0000  0000  0000  0000  1111 (<- White)
+
+    public translateCubeBits(cube: Cube): string {
+        const stickersPerSide = cube.getDimension() * cube.getDimension();
+        const stickersNumber = stickersPerSide * 6;
+        const zeroedBits = Array.from(new Array(stickersNumber)).fill('0').join('');
+        const tab = Array.from(new Array(stickersPerSide).fill(' '))
+            .join('');
+        let text = getAllSides()
+            .reduce((acc, side) => acc + Sides[side]
+                .concat(tab).substring(0, stickersPerSide + 2), '')
+
+        cube.getConfiguration()
+            .forEach((color, index) => {
+                const sideText = (zeroedBits + color.toString(2)).slice(-stickersNumber)
+                const parts = sideText
+                    .match(new RegExp(`.{${stickersPerSide}}`, 'g'))!
+                    .reverse()
+                    .join("  ");
+
+                text += '\n' + parts + ' (<- ' + Colors[index] + ')';
+            })
         return text;
     }
 

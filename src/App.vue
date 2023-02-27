@@ -117,6 +117,8 @@ export default defineComponent({
           this.shuffling = false;
 
           console.log(translator.translateCube(cube));
+          console.log(translator.translateCubeBits(cube));
+          console.log('solved', cube.isSolved())
         }
       }
     });
