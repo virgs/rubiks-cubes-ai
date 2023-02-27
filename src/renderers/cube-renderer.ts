@@ -13,7 +13,10 @@ type RotationTween = {
     rotation: number
 }
 
-type FaceRotationAnimation = FaceRotation & { duration?: number };
+type FaceRotationAnimation = FaceRotation & {
+    duration?: number,
+    easing?: (amount: number) => number
+};
 
 //https://github.com/SuboptimalEng/gamedex/blob/19b0466ad30ef0fb6c760eb78f74e6cf64fa1a73/08-rubiks-cube/src/lib/Cube.js
 export class CubeRenderer {
@@ -64,7 +67,7 @@ export class CubeRenderer {
         return new Promise((resolve) => {
             new Tween.Tween(start)
                 .to(end, faceRotation.duration !== undefined ? faceRotation.duration : CubeRenderer.animatioDuration)
-                .easing(Tween.Easing.Quadratic.InOut)
+                .easing(faceRotation.easing !== undefined ? faceRotation.easing : Tween.Easing.Quadratic.InOut)
                 .onUpdate((item: RotationTween) => {
                     rotationGroup.rotation[axisName] = item.rotation;
                 })

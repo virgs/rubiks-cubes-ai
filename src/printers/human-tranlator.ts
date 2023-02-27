@@ -98,8 +98,9 @@ export class HumanTranslator {
         return text;
     }
 
-    public convertStringToFaceRotations(...string: String[]): FaceRotation[] {
-        return string
+    public convertStringToFaceRotations(humanString: String): FaceRotation[] {
+        return humanString
+            .match(/((\d?)(\w)(\d?)('?))\s?/g)!
             .reduce((acc, current) => {
                 const [_, duplicated, side, layer, prime] = current.match(/(2?)(\w)(\d?)('?)/)!;
                 const rotation: FaceRotation = {

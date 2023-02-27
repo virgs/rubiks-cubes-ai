@@ -15,6 +15,8 @@ import type { FaceRotation } from "./engine/face-rotation";
 import { KeyboardInterpreter } from "./keyboard-interpreter";
 import { RotationsTuner } from "./printers/rotations-tuner";
 import { getAllSides, getOppositeSide, Sides } from "./constants/sides";
+import { CubeletsCreator } from "./engine/cubelets-creator";
+import * as Tween from '@tweenjs/tween.js'
 
 //They have to be non reactive
 const keyboardInterpreter = new KeyboardInterpreter();
@@ -141,8 +143,8 @@ export default defineComponent({
       //cool animation effect
       for (let i = 0; i < 4; ++i) {
         await Promise.all([
-          cubeRenderer.rotateFace({ side: sideToRotateFourTimes, duration: Configuration.renderers.rotationDuration / 2 }),
-          cubeRenderer.rotateFace({ side: oppositeSideToRotateFourTimes, duration: Configuration.renderers.rotationDuration / 2, counterClockwiseDirection: true })
+          cubeRenderer.rotateFace({ side: sideToRotateFourTimes, duration: Configuration.renderers.rotationDuration, layer: 0, easing: Tween.Easing.Circular.InOut }),
+          cubeRenderer.rotateFace({ side: sideToRotateFourTimes, duration: Configuration.renderers.rotationDuration, layer: 1, easing: Tween.Easing.Circular.InOut })
         ])
       }
       this.shuffling = false;
@@ -285,7 +287,7 @@ export default defineComponent({
       </div>
     </div>
     <div class="row" style="background-color: transparent;">
-      <div id="scene-container" style="cursor: move;">
+      <div id="scene-container" style="cursor: move; background-color: transparent;">
       </div>
     </div>
   </div>
