@@ -10,22 +10,29 @@ defaultColorMap.set(Colors.ORANGE, Sides.LEFT);
 defaultColorMap.set(Colors.GREEN, Sides.BACK);
 defaultColorMap.set(Colors.WHITE, Sides.DOWN);
 
-export type Sticker = {
+export type ColorlessSticker = {
     side: Sides,
     id: number,
-    color: Colors,
     x: number,
     y: number
 };
 
-export type Cubelet = {
-    stickers: Sticker[]
+export type Sticker = ColorlessSticker & {
+    color: Colors
 };
 
-export type StickerMap = {
-    side: Sides,
-    id: number
-}[];
+export type ColorlessCubelet = {
+    stickers: ColorlessSticker[]
+}
+
+export type Cubelet = {
+    stickers: Sticker[]
+}
+
+// export type StickerMap = {
+//     side: Sides,
+//     id: number
+// }[];
 
 export interface Cube {
     getDimension(): number;

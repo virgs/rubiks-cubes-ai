@@ -15,7 +15,6 @@ import type { FaceRotation } from "./engine/face-rotation";
 import { KeyboardInterpreter } from "./keyboard-interpreter";
 import { RotationsTuner } from "./printers/rotations-tuner";
 import { getAllSides, getOppositeSide, Sides } from "./constants/sides";
-import { CubeletsCreator } from "./engine/cubelets-creator";
 import * as Tween from '@tweenjs/tween.js'
 
 //They have to be non reactive
@@ -37,31 +36,26 @@ export default defineComponent({
   name: "App",
   components: { GithubCorner },
   data() {
-    const availableDimensions = Configuration.solvers
-      .map(solver => solver.dimension);
     return {
+      cubeTypes: Configuration.cubeTypes,
       selectedDimensionIndex: 0,
-      availableDimensions: availableDimensions,
       solved: false,
       shuffling: false,
       shuffled: false,
       shuffleMovesText: '',
       solving: false,
-      aiMethods: Configuration.solvers
-        .find(solver => solver.dimension === availableDimensions[0])!.methods
     };
   },
   computed: {
-    solver() {
-      return Configuration.solvers
-        .find(solver => solver.dimension === this.availableDimensions[this.selectedDimensionIndex])
+    selectedCubeType() {
+      return this.cubeTypes[this.selectedDimensionIndex];
     },
     mainActionButtonEnabled() {
       if (this.shuffling) {
         return false;
       }
       if (this.shuffled) {
-        return this.aiMethods
+        return this.selectedCubeType.methods
           .some(method => method.checked);;
       }
       if (this.solved) {
@@ -73,7 +67,6 @@ export default defineComponent({
   watch: {
     selectedDimensionIndex() {
       this.reset();
-      this.aiMethods = this.solver!.methods;
     },
     shuffleMovesText() {
       document.querySelector("textarea")!.scrollTop = document.querySelector("textarea")!.scrollHeight;
@@ -138,7 +131,6 @@ export default defineComponent({
       });
       const sides = getAllSides();
       const sideToRotateFourTimes = Math.floor(Math.random() * sides.length);
-      const oppositeSideToRotateFourTimes = getOppositeSide(sideToRotateFourTimes)
       this.shuffling = true;
       //cool animation effect
       for (let i = 0; i < 4; ++i) {
@@ -159,7 +151,7 @@ export default defineComponent({
       this.shuffled = !cube!.isSolved();
     },
     async reset() {
-      cube = this.solver!.instantiator!();
+      cube = this.selectedCubeType!.instantiator!();
       await this.returnCubesToStage();
       this.shuffleMovesText = "";
       shuffleMoves = [];
@@ -188,7 +180,7 @@ export default defineComponent({
         this.solving = false;
         return;
       }
-      const solverKeys: string[] = this.aiMethods
+      const solverKeys: string[] = this.selectedCubeType.methods
         .filter(method => method.checked)
         .map(method => method.key);
       solverRenderers = solverKeys
@@ -203,7 +195,8 @@ export default defineComponent({
               from: cubeRenderer.getMesh().position.clone(),
               angle: angle
             },
-            dimensionKey: this.availableDimensions[this.selectedDimensionIndex],
+            dimension: this.selectedCubeType.dimension,
+            label: this.selectedCubeType.label,
             key: key
           });
         });
@@ -246,15 +239,15 @@ export default defineComponent({
             <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
               <i class="fa-solid fa-caret-down"></i>
               <span class="mx-2">
-                {{ availableDimensions[selectedDimensionIndex] }}
+                {{ selectedCubeType.label }}
               </span>
             </button>
             <ul class="dropdown-menu">
-              <li v-for="dimension, index in availableDimensions" @click="selectedDimensionIndex = index"><a
-                  class="dropdown-item" href="#">{{ dimension }}</a></li>
+              <li v-for="item, index in cubeTypes" @click="selectedDimensionIndex = index"><a
+                  class="dropdown-item" href="#">{{ item.label }}</a></li>
             </ul>
           </div>
-          <template v-for="method, index in aiMethods">
+          <template v-for="method, index in selectedCubeType.methods">
             <input type="checkbox" v-model="method.checked" class="btn-check" :id="'btncheck' + index" autocomplete="off">
             <label class="btn btn-outline-info fa-solid" :for="'btncheck' + index" data-bs-toggle="tooltip"
               data-bs-placement="bottom" :data-bs-title="method.info">{{ method.key }}

@@ -16,7 +16,8 @@ export type SolverRendererConfig = {
     scene: Object3D,
     rendererSize: number,
     key: string,
-    dimensionKey: string,
+    label: string,
+    dimension: number,
     position: {
         from: Vector3,
         angle: number
@@ -93,7 +94,7 @@ export class SolverRenderer {
                 key: event.key,
                 shiftKey: event.shiftKey
             },
-            dimension: this.config.dimensionKey,
+            label: this.config.label,
             solverTag: this.config.key
         } as SolverWorkerRequest);
     }
@@ -108,7 +109,7 @@ export class SolverRenderer {
                 if (!this.terminated) {
                     if (event.data.solution) {
                         const solution = JSON.parse(event.data.solution!) as Solution;
-                        console.log(this.config.dimensionKey, this.config.key, solution)
+                        console.log(this.config.label, this.config.key, solution)
                         if (!solution.data.human) {
                             this.movesAnimationsQueue.push(...solution.rotations);
                         }
@@ -130,7 +131,7 @@ export class SolverRenderer {
             this.solversMapWorker.postMessage({
                 cube: this.config.cube.getConfiguration(),
                 solverTag: this.config.key,
-                dimension: this.config.dimensionKey,
+                label: this.config.label,
             } as SolverWorkerRequest);
             this.solversMapWorker.onmessage = onMessage;
         });

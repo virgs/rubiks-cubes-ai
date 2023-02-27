@@ -5,7 +5,7 @@ import { HumanSolver, type KeyboardEvent } from "./human-solver";
 
 export type SolverWorkerRequest = {
     abort?: true,
-    dimension?: string,
+    label?: string,
     solverTag?: string,
     cube?: number[],
     keyboardEvent?: KeyboardEvent
@@ -19,8 +19,8 @@ export type SolverWorkerResponse = {
 };
 
 const solverMethodFinder = (request: SolverWorkerRequest) => {
-    for (let item of Configuration.solvers) {
-        if (item.dimension.toLowerCase() === request.dimension!.toLowerCase()) {
+    for (let item of Configuration.cubeTypes) {
+        if (item.label.toLowerCase() === request.label!.toLowerCase()) {
             for (let solver of item.methods) {
                 if (solver.key.toLowerCase() === request.solverTag!.toLowerCase()) {
                     return solver;
@@ -46,7 +46,7 @@ self.onmessage = async (event: MessageEvent<SolverWorkerRequest>) => {
                     const solution: Solution = await solver.findSolution()!;
                     self.postMessage({ solution: JSON.stringify(solution), solverKey: tag });    
                 } catch (e) {
-                    console.log(`Solver '${event.data.dimension}.${tag}' aborted`, e)
+                    console.log(`Solver '${event.data.label}.${tag}' aborted`, e)
                 }
             } else if (event.data.keyboardEvent) {
                 if (solver instanceof HumanSolver) {

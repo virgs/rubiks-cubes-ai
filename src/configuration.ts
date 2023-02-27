@@ -8,8 +8,9 @@ import { PocketCubeBreadthFirstSearch } from "./solvers/pocket/pocket-cube-bread
 import { RubiksCubeGeneticAlgorithm } from "./solvers/rubiks/genetic-algorithm/rubiks-cube-genetic-algorithm";
 import { RubiksCubeNeuroEvolutionary } from "./solvers/rubiks/neuro-evolutionary/rubiks-cube-neuro-evolutionary";
 
-export type Solver = {
-    dimension: string,
+export type CubeTypes = {
+    label: string,
+    dimension: number,
     instantiator: () => Cube,
     methods: {
         key: string,
@@ -50,9 +51,10 @@ export const Configuration = {
         titleDistance: 8.5,
         cubeSize: 2.5
     },
-    solvers: [
+    cubeTypes: [
         {
-            dimension: '2x2',
+            label: '2x2',
+            dimension: 2,
             instantiator: () => new PocketCube(),
             methods: [{
                 key: 'Human',
@@ -75,12 +77,13 @@ export const Configuration = {
             ]
         },
         {
-            dimension: '3x3',
+            label: '3x3',
+            dimension: 3,
             instantiator: () => new RubiksCube(),
             methods: [
                 {
                     key: 'Human',
-                    instantiator: (configuration: bigint[]) => new HumanSolver(new PocketCube({ clone: configuration })),
+                    instantiator: (configuration: bigint[]) => new HumanSolver(new RubiksCube({ clone: configuration })),
                     checked: false,
                     info: 'Use keys \'WASDFX\' combined with \'shift\' to rotate cube faces'
                 },
@@ -98,5 +101,5 @@ export const Configuration = {
                 }
             ]
         },
-    ] as Solver[]
+    ] as CubeTypes[]
 }

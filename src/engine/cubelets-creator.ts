@@ -1,15 +1,9 @@
 import { getAllSides, Sides, } from "@/constants/sides";
-
-type ColorlessCubelet = {
-    side: Sides,
-    id: number,
-    x: number,
-    y: number
-}
+import type { ColorlessCubelet, ColorlessSticker } from "./cube";
 
 export class CubeletsCreator {
     private readonly dimension: number;
-    private readonly stickers: ColorlessCubelet[];
+    private readonly stickers: ColorlessSticker[];
 
     public constructor(dimension: number) {
         this.dimension = dimension;
@@ -25,33 +19,32 @@ export class CubeletsCreator {
             });
     }
 
-    public create(): ColorlessCubelet[][] {
-        const centers: ColorlessCubelet[][] = this.extractCenters();
-        const corners: ColorlessCubelet[][] = this.extractCorners();
-        const edges: ColorlessCubelet[][] = this.extractEdges();
+    public create(): ColorlessCubelet[] {
+        const centers: ColorlessCubelet[] = this.extractCenters();
+        const corners: ColorlessCubelet[] = this.extractCorners();
+        const edges: ColorlessCubelet[] = this.extractEdges();
         return [...corners, ...edges, ...centers];
     }
 
-    private cubeletsMerger(cubelets: { side: Sides, x: number, y: number }[]): ColorlessCubelet[] {
-        const result: ColorlessCubelet[] = [];
+    private cubeletsMerger(cubelets: { side: Sides, x: number, y: number }[]): ColorlessCubelet {
+        const result: ColorlessCubelet = { stickers: [] };
 
         cubelets
             .forEach(cubelet => {
                 this.stickers
                     .forEach((item, index, original) => {
                         if (item.side === cubelet.side && cubelet.x === item.x && cubelet.y === item.y) {
-                            result.push(...original.splice(index, 1));
+                            result.stickers.push(...original.splice(index, 1));
                         }
                     });
-
             })
 
         return result;
     }
 
-    private extractEdges(): ColorlessCubelet[][] {
+    private extractEdges(): ColorlessCubelet[] {
         const end = this.dimension - 1;
-        const edges: ColorlessCubelet[][] = [];
+        const edges: ColorlessCubelet[] = [];
 
         for (let i = 1; i < this.dimension - 1; ++i) {
             edges.push(this.cubeletsMerger([
@@ -98,21 +91,21 @@ export class CubeletsCreator {
         return edges;
     }
 
-    private extractCenters(): ColorlessCubelet[][] {
+    private extractCenters(): ColorlessCubelet[] {
         const end = this.dimension - 1;
-        const centers: ColorlessCubelet[][] = [];
+        const centers: ColorlessCubelet[] = [];
         this.stickers
             .forEach((item, index, original) => {
                 if (item.x !== 0 && item.x !== end && item.y !== 0 && item.y !== end) {
-                    centers.push(original.splice(index, 1));
+                    centers.push({ stickers: original.splice(index, 1) });
                 }
             });
 
         return centers;
     }
 
-    private extractCorners(): ColorlessCubelet[][] {
-        const corners: ColorlessCubelet[][] = [];
+    private extractCorners(): ColorlessCubelet[] {
+        const corners: ColorlessCubelet[] = [];
         const end = this.dimension - 1;
         corners.push(this.cubeletsMerger([
             { side: Sides.FRONT, x: 0, y: 0 },
