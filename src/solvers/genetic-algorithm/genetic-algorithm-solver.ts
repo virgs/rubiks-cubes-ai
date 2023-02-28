@@ -5,11 +5,10 @@ import { CubeScrambler } from "@/engine/cube-scrambler";
 import type { FaceRotation } from "@/engine/face-rotation";
 import { RotationsTuner } from "@/printers/rotations-tuner";
 import type { Cubelet } from "@/engine/cube";
-import type { CubeSolver, Solution } from "../../cube-solver";
-import { ProcedureMeasurer } from "../../procedure-measurer";
+import type { CubeSolver, Solution } from "../cube-solver";
+import { ProcedureMeasurer } from "../procedure-measurer";
 import { GeneticAlgorithm, type Chromosome } from "./genetic-algorithm";
 import { HumanTranslator } from "@/printers/human-tranlator";
-import { PocketCube } from "@/engine/pocket-cube";
 import type { RubiksCube } from "@/engine/rubiks-cube";
 
 enum Metrics {
@@ -22,7 +21,7 @@ enum Metrics {
 const countBitsOn = (n: number) => n.toString(2).replace(/0/g, "").length;
 
 //https://robertovaccari.com/blog/2020_07_07_genetic_rubik/
-export class RubiksCubeGeneticAlgorithm implements CubeSolver {
+export class GeneticAlgorithmSolver implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
     private readonly initialState: RubiksCube;
     private geneticAlgorithm: GeneticAlgorithm;

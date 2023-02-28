@@ -26,7 +26,7 @@ type Citizen = {
 const countBitsOn = (n: number) => n.toString(2).replace(/0/g, "").length;
 
 //https://robertovaccari.com/blog/2020_07_07_genetic_rubik/
-export class RubiksCubeNeuroEvolutionary implements CubeSolver {
+export class NeuroEvolutionarySolver implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
     private readonly inputs: number;
     private readonly initialState: RubiksCube;

@@ -1,11 +1,12 @@
 import Heap from 'heap';
-import { PocketCube } from "../../engine/pocket-cube";
-import { getOppositeSide, Sides } from "../../constants/sides";
-import type { CubeSolver, Solution } from "../cube-solver";
-import { ProcedureMeasurer } from "../procedure-measurer";
+import { getOppositeSide, Sides } from "../constants/sides";
+import type { CubeSolver, Solution } from "./cube-solver";
+import { ProcedureMeasurer } from "./procedure-measurer";
 import type { FaceRotation } from "@/engine/face-rotation";
-import { type Colors, getOppositeColor } from "@/constants/colors";
+import { Colors, getOppositeColor } from "@/constants/colors";
 import type { Cubelet } from "@/engine/cube";
+import { RubiksCube } from '@/engine/rubiks-cube';
+import { HumanTranslator } from '@/printers/human-tranlator';
 
 enum Metrics {
     ADD_CANDIDATE,
@@ -20,22 +21,24 @@ enum Metrics {
 }
 type Candidate = {
     cost: number,
-    cube: PocketCube;
+    cube: RubiksCube;
     rotation?: FaceRotation,
     parent?: Candidate
 }
 
 
-export class PocketCubeAStar implements CubeSolver {
+export class AStarSolver implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
     private readonly candidates: Heap<Candidate>;
-    private readonly goalState: PocketCube;
+    private readonly goalState: RubiksCube;
     private readonly visitedChecklist: Map<string, boolean>;
     private readonly actions: FaceRotation[];
+    private readonly dimension: number;
     private aborted: boolean;
 
-    public constructor(cube: PocketCube) {
+    public constructor(cube: RubiksCube) {
         this.aborted = false;
+        this.dimension = cube.getDimension();
         this.measurer = new ProcedureMeasurer();
         this.candidates = new Heap((a: Candidate, b: Candidate) => a.cost - b.cost);
         this.visitedChecklist = new Map();
@@ -122,7 +125,7 @@ export class PocketCubeAStar implements CubeSolver {
     }
 
     //Calcs how many sides the cubelet corner shares with the corner where it's supposed to be
-    private calculateDistanceToFinalState(cube: PocketCube): number {
+    private calculateDistanceToFinalState(cube: RubiksCube): number {
         const numberOfCubeletsMovedInOneRotation: number = 4.0;
         return cube.getAllCubelets()
             .reduce((acc, cubelet) => {
@@ -139,14 +142,14 @@ export class PocketCubeAStar implements CubeSolver {
             }, 0) / numberOfCubeletsMovedInOneRotation;
     }
 
-    public buildSolvedPocketCubeFromCornerCubelet(cubelet: Cubelet): PocketCube {
+    public buildSolvedPocketCubeFromCornerCubelet(cubelet: Cubelet): RubiksCube {
         const colorMap: Map<Colors, Sides> = new Map();
         cubelet.stickers
             .forEach(sticker => {
                 colorMap.set(sticker.color, sticker.side);
                 colorMap.set(getOppositeColor(sticker.color), getOppositeSide(sticker.side));
             });
-        return new PocketCube({ colorMap: colorMap });
+        return new RubiksCube(this.dimension, { colorMap: colorMap });
     }
 
 }

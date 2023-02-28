@@ -1,12 +1,11 @@
 import type { Cube } from "./engine/cube";
-import { PocketCube } from "./engine/pocket-cube";
 import { RubiksCube } from "./engine/rubiks-cube";
 import type { CubeSolver } from "./solvers/cube-solver";
 import { HumanSolver } from "./solvers/human-solver";
-import { PocketCubeAStar } from "./solvers/pocket/pocket-cube-a-star";
-import { PocketCubeBreadthFirstSearch } from "./solvers/pocket/pocket-cube-breadth-first-search";
-import { RubiksCubeGeneticAlgorithm } from "./solvers/rubiks/genetic-algorithm/rubiks-cube-genetic-algorithm";
-import { RubiksCubeNeuroEvolutionary } from "./solvers/rubiks/neuro-evolutionary/rubiks-cube-neuro-evolutionary";
+import { AStarSolver } from "./solvers/a-star-solver";
+import { BreadthFirstSearchSolver } from "./solvers/breadth-first-search-solver";
+import { NeuroEvolutionarySolver } from "./solvers/neuro-evolutionary/neuro-evolutionary-solver";
+import { GeneticAlgorithmSolver } from "./solvers/genetic-algorithm/genetic-algorithm-solver";
 
 export type CubeTypes = {
     label: string,
@@ -55,7 +54,7 @@ export const Configuration = {
         {
             label: '2x2',
             dimension: 2,
-            instantiator: () => new PocketCube(),
+            instantiator: () => new RubiksCube(2),
             methods: [{
                 key: 'Human',
                 instantiator: (configuration: bigint[]) => new HumanSolver(new RubiksCube(2, { clone: configuration })),
@@ -64,13 +63,13 @@ export const Configuration = {
             },
             {
                 key: 'BFS',
-                instantiator: (configuration: bigint[]) => new PocketCubeBreadthFirstSearch(new PocketCube({ clone: configuration })),
+                instantiator: (configuration: bigint[]) => new BreadthFirstSearchSolver(new RubiksCube(2, { clone: configuration })),
                 checked: false,
                 info: `Breadth-first-search. Brute force`
             },
             {
                 key: 'A*',
-                instantiator: (configuration: bigint[]) => new PocketCubeAStar(new PocketCube({ clone: configuration })),
+                instantiator: (configuration: bigint[]) => new AStarSolver(new RubiksCube(2, { clone: configuration })),
                 checked: true,
                 info: `Astar. Uses number of misplaced cubies as heuristic`
             }
@@ -89,13 +88,13 @@ export const Configuration = {
                 },
                 {
                     key: 'NE',
-                    instantiator: (configuration: bigint[]) => new RubiksCubeNeuroEvolutionary(new RubiksCube(3, { clone: configuration })),
+                    instantiator: (configuration: bigint[]) => new NeuroEvolutionarySolver(new RubiksCube(3, { clone: configuration })),
                     checked: false,
                     info: `Neuro Evolutionary. Uses number of misplaced stickers as fitness function. Internal neurons: ${NeuroEvolutionaryConfig.neuralNetworkData.hiddenNeurons}. Population: ${NeuroEvolutionaryConfig.geneticData.populationPerGeneration}. No elitism`
                 },
                 {
                     key: 'GA',
-                    instantiator: (configuration: bigint[]) => new RubiksCubeGeneticAlgorithm(new RubiksCube(3, { clone: configuration })),
+                    instantiator: (configuration: bigint[]) => new GeneticAlgorithmSolver(new RubiksCube(3, { clone: configuration })),
                     checked: true,
                     info: `Predefined macro movements combined with genetic algorithm. Uses number of misplaced stickers as fitness function. Population: ${GeneticAlgorithmConfig.populationPerGeneration}. Elitism ${GeneticAlgorithmConfig.elitism}. Asexual reproduction`
                 }

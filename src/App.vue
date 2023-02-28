@@ -105,7 +105,8 @@ export default defineComponent({
       if (!this.solving && !this.shuffling && solverRenderers.length <= 0) {
         const faceRotation = keyboardInterpreter.readKeys(event);
         if (faceRotation !== undefined) {
-          shuffleMoves = tuner.tune(shuffleMoves.concat(faceRotation));
+          // shuffleMoves = tuner.tune(shuffleMoves.concat(faceRotation));
+          shuffleMoves = shuffleMoves.concat(faceRotation)
           this.shuffling = true;
           cube = cube!.rotateFace(faceRotation);
           await cubeRenderer.rotateFace(faceRotation);

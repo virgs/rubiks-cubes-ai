@@ -1,10 +1,10 @@
 
-import { Sides } from "../../constants/sides";
+import { Sides } from "../constants/sides";
 import LinkedList from "double-linked-list";
-import type { PocketCube } from "../../engine/pocket-cube";
-import { ProcedureMeasurer } from "../procedure-measurer";
-import type { CubeSolver, Solution } from "../cube-solver";
+import { ProcedureMeasurer } from "./procedure-measurer";
+import type { CubeSolver, Solution } from "./cube-solver";
 import type { FaceRotation } from "@/engine/face-rotation";
+import type { RubiksCube } from "@/engine/rubiks-cube";
 
 enum Metrics {
     ADD_CANDIDATE,
@@ -19,19 +19,19 @@ enum Metrics {
 }
 
 type Candidate = {
-    cube: PocketCube;
+    cube: RubiksCube;
     rotation?: FaceRotation,
     parent?: Candidate
 }
 
-export class PocketCubeBreadthFirstSearch implements CubeSolver {
+export class BreadthFirstSearchSolver implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
     private readonly candidates: LinkedList;
     private readonly visitedChecklist: Map<string, boolean>;
     private readonly actions: FaceRotation[];
     private aborted: boolean;
 
-    public constructor(cube: PocketCube) {
+    public constructor(cube: RubiksCube) {
         this.measurer = new ProcedureMeasurer();
         this.visitedChecklist = new Map();
         this.candidates = new LinkedList();

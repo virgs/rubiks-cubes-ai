@@ -63,9 +63,11 @@ export class RubiksCubeFaceRotator {
             .get(faceRotation.side)!
             .forEach(item => {
                 if (faceRotation.counterClockwiseDirection) {
+                    // console.log(item.source, item.destination)
                     RubiksCubeFaceRotator.setColorOfIndex(clone, item.source,
                         RubiksCubeFaceRotator.getColorOfIndex(original, item.destination)!);
                 } else {
+                    // console.log(item.source, item.destination)
                     RubiksCubeFaceRotator.setColorOfIndex(clone, item.destination,
                         RubiksCubeFaceRotator.getColorOfIndex(original, item.source)!);
                 }
@@ -112,16 +114,14 @@ export class RubiksCubeFaceRotator {
     private createSideLidClockwiseRotator(side: Sides): FaceStickerRotatorMap[] {
         const map = [];
         for (let i = 0; i < this.dimension * this.dimension; ++i) {
-            const pivot = Math.floor(this.dimension / 2);
-            const x = (i % this.dimension) - pivot;
-            const y = Math.floor(i / this.dimension) - pivot;
-            //rotation matrix
-            const xPrime = -y;
-            const yPrime = x;
+            const x = (i % this.dimension);
+            const y = Math.floor(i / this.dimension);
 
+            const xPrime = this.dimension - 1 - y;
+            const yPrime = x;
             map.push({
-                source: { side: side, x: x + pivot, y: y + pivot },
-                destination: { side: side, x: xPrime + pivot, y: yPrime + pivot }
+                source: { side: side, x: x, y: y },
+                destination: { side: side, x: xPrime, y: yPrime }
             });
         }
         return map;
@@ -136,8 +136,8 @@ export class RubiksCubeFaceRotator {
 
         for (let i = 0; i < this.dimension; ++i) {
             map.push({ source: { side: Sides.FRONT, x: i, y: layer }, destination: { side: Sides.LEFT, x: i, y: layer } });
-            map.push({ source: { side: Sides.LEFT, x: i, y: layer }, destination: { side: Sides.BACK, x: end - i, y: layer } });
-            map.push({ source: { side: Sides.BACK, x: end - i, y: layer }, destination: { side: Sides.RIGHT, x: i, y: layer } });
+            map.push({ source: { side: Sides.LEFT, x: i, y: layer }, destination: { side: Sides.BACK, x: i, y: layer } });
+            map.push({ source: { side: Sides.BACK, x: i, y: layer }, destination: { side: Sides.RIGHT, x: i, y: layer } });
             map.push({ source: { side: Sides.RIGHT, x: i, y: layer }, destination: { side: Sides.FRONT, x: i, y: layer } });
         }
         return map;
@@ -192,8 +192,8 @@ export class RubiksCubeFaceRotator {
         }
         for (let i = 0; i < this.dimension; ++i) {
             map.push({ source: { side: Sides.UP, x: end - layer, y: i }, destination: { side: Sides.BACK, x: layer, y: end - i } });
-            map.push({ source: { side: Sides.BACK, x: layer, y: end - i }, destination: { side: Sides.DOWN, x: end - layer, y: end - i } });
-            map.push({ source: { side: Sides.DOWN, x: end - layer, y: end - i }, destination: { side: Sides.FRONT, x: end - layer, y: i } });
+            map.push({ source: { side: Sides.BACK, x: layer, y: end - i }, destination: { side: Sides.DOWN, x: end - layer, y: i } });
+            map.push({ source: { side: Sides.DOWN, x: end - layer, y: i }, destination: { side: Sides.FRONT, x: end - layer, y: i } });
             map.push({ source: { side: Sides.FRONT, x: end - layer, y: i }, destination: { side: Sides.UP, x: end - layer, y: i } });
         }
         return map;
@@ -209,8 +209,8 @@ export class RubiksCubeFaceRotator {
         for (let i = 0; i < this.dimension; ++i) {
             map.push({ source: { side: Sides.LEFT, x: layer, y: i }, destination: { side: Sides.DOWN, x: i, y: end - layer } });
             map.push({ source: { side: Sides.DOWN, x: i, y: end - layer }, destination: { side: Sides.RIGHT, x: end - layer, y: end - i } });
-            map.push({ source: { side: Sides.RIGHT, x: end - layer, y: end - i }, destination: { side: Sides.UP, x: end - i, y: end - layer } });
-            map.push({ source: { side: Sides.UP, x: end - i, y: end - layer }, destination: { side: Sides.LEFT, x: layer, y: i } });
+            map.push({ source: { side: Sides.RIGHT, x: end - layer, y: end - i }, destination: { side: Sides.UP, x: end - i, y: layer } });
+            map.push({ source: { side: Sides.UP, x: end - i, y: layer }, destination: { side: Sides.LEFT, x: layer, y: i } });
         }
         return map;
     }
@@ -224,8 +224,8 @@ export class RubiksCubeFaceRotator {
         for (let i = 0; i < this.dimension; ++i) {
             map.push({ source: { side: Sides.LEFT, x: i, y: end - layer }, destination: { side: Sides.FRONT, x: i, y: end - layer } });
             map.push({ source: { side: Sides.FRONT, x: i, y: end - layer }, destination: { side: Sides.RIGHT, x: i, y: end - layer } });
-            map.push({ source: { side: Sides.RIGHT, x: i, y: end - layer }, destination: { side: Sides.BACK, x: end - i, y: end - layer } });
-            map.push({ source: { side: Sides.BACK, x: end - i, y: end - layer }, destination: { side: Sides.LEFT, x: i, y: end - layer } });
+            map.push({ source: { side: Sides.RIGHT, x: i, y: end - layer }, destination: { side: Sides.BACK, x: i, y: end - layer } });
+            map.push({ source: { side: Sides.BACK, x: i, y: end - layer }, destination: { side: Sides.LEFT, x: i, y: end - layer } });
         }
         return map;
 

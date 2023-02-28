@@ -1,10 +1,10 @@
 import { GeneticAlgorithmConfig } from "@/configuration";
 import type { FaceRotation } from "@/engine/face-rotation";
-import type { PocketCube } from "@/engine/pocket-cube";
+import type { RubiksCube } from "@/engine/rubiks-cube";
 
 export type Chromosome = {
     genes: FaceRotation[],
-    cube: PocketCube,
+    cube: RubiksCube,
     score: number,
     newGenes: FaceRotation[],
     goalState: number[];
