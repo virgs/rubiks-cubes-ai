@@ -2,33 +2,42 @@ import { getAllSides, Sides, } from "@/constants/sides";
 import type { ColorlessCubelet, ColorlessSticker } from "./cube";
 
 export class CubeletsCreator {
+    private static readonly cubeletsCreatorMap: Map<number, ColorlessCubelet[]> = new Map();
+
     private readonly dimension: number;
     private readonly stickers: ColorlessSticker[];
 
     public constructor(dimension: number) {
         this.dimension = dimension;
         this.stickers = [];
-        let id = 0;
-        getAllSides()
-            .map(side => {
-                for (let y = 0; y < this.dimension; ++y) {
-                    for (let x = 0; x < this.dimension; ++x) {
-                        this.stickers.push({ side: side, x: x, y: y, id: id++ });
-                    }
-                }
-            });
     }
 
     public create(): ColorlessCubelet[] {
-        const centers: ColorlessCubelet[] = this.extractCenters();
-        const corners: ColorlessCubelet[] = this.extractCorners();
-        const edges: ColorlessCubelet[] = this.extractEdges();
-        return [...corners, ...edges, ...centers];
+        if (CubeletsCreator.cubeletsCreatorMap.has(this.dimension)) {
+            return CubeletsCreator.cubeletsCreatorMap.get(this.dimension)!;
+        } else {
+            let id = 0;
+            getAllSides()
+                .map(side => {
+                    for (let y = 0; y < this.dimension; ++y) {
+                        for (let x = 0; x < this.dimension; ++x) {
+                            this.stickers.push({ side: side, x: x, y: y, id: id++ });
+                        }
+                    }
+                });
+
+            const centers: ColorlessCubelet[] = this.extractCenters();
+            const corners: ColorlessCubelet[] = this.extractCorners();
+            const edges: ColorlessCubelet[] = this.extractEdges();
+            const cubelets = [...corners, ...edges, ...centers];
+
+            CubeletsCreator.cubeletsCreatorMap.set(this.dimension, cubelets);
+            return cubelets;
+        }
     }
 
     private cubeletsMerger(cubelets: { side: Sides, x: number, y: number }[]): ColorlessCubelet {
         const result: ColorlessCubelet = { stickers: [] };
-
         cubelets
             .forEach(cubelet => {
                 this.stickers

@@ -67,40 +67,9 @@ export class HumanTranslator {
         return text;
     }
 
-    // Up    Left  Front Right Back  Down
-    // 1111  0000  0000  0000  0000  0000 (<- Yellow)
-    // 0000  1111  0000  0000  0000  0000 (<- Orange)
-    // 0000  0000  1111  0000  0000  0000 (<- Blue)
-    // 0000  0000  0000  1111  0000  0000 (<- Red)
-    // 0000  0000  0000  0000  1111  0000 (<- Green)
-    // 0000  0000  0000  0000  0000  1111 (<- White)
-
-    public translateCubeBits(cube: Cube): string {
-        const stickersPerSide = cube.getDimension() * cube.getDimension();
-        const stickersNumber = stickersPerSide * 6;
-        const zeroedBits = Array.from(new Array(stickersNumber)).fill('0').join('');
-        const tab = Array.from(new Array(stickersPerSide).fill(' '))
-            .join('');
-        let text = getAllSides()
-            .reduce((acc, side) => acc + Sides[side]
-                .concat(tab).substring(0, stickersPerSide + 2), '')
-
-        cube.getConfiguration()
-            .forEach((color, index) => {
-                const sideText = (zeroedBits + color.toString(2)).slice(-stickersNumber)
-                const parts = sideText
-                    .match(new RegExp(`.{${stickersPerSide}}`, 'g'))!
-                    .reverse()
-                    .join("  ");
-
-                text += '\n' + parts + ' (<- ' + Colors[index] + ')';
-            })
-        return text;
-    }
-
     public convertStringToFaceRotations(humanString: String): FaceRotation[] {
         return humanString
-            .match(/((\d?)(\w)(\d?)('?))\s?/g)!
+            .match(/((\d?)(\w)(\d?)('?))\s*/g)!
             .reduce((acc, current) => {
                 const [_, duplicated, side, layer, prime] = current.match(/(2?)(\w)(\d?)('?)/)!;
                 const rotation: FaceRotation = {

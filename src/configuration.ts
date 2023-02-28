@@ -58,7 +58,7 @@ export const Configuration = {
             instantiator: () => new PocketCube(),
             methods: [{
                 key: 'Human',
-                instantiator: (configuration: bigint[]) => new HumanSolver(new PocketCube({ clone: configuration })),
+                instantiator: (configuration: bigint[]) => new HumanSolver(new RubiksCube(2, { clone: configuration })),
                 checked: false,
                 info: 'Use keys \'WASDFX\' combined with \'shift\' to rotate cube faces'
             },
@@ -79,23 +79,23 @@ export const Configuration = {
         {
             label: '3x3',
             dimension: 3,
-            instantiator: () => new RubiksCube(),
+            instantiator: () => new RubiksCube(3),
             methods: [
                 {
                     key: 'Human',
-                    instantiator: (configuration: bigint[]) => new HumanSolver(new RubiksCube({ clone: configuration })),
+                    instantiator: (configuration: bigint[]) => new HumanSolver(new RubiksCube(3, { clone: configuration })),
                     checked: false,
                     info: 'Use keys \'WASDFX\' combined with \'shift\' to rotate cube faces'
                 },
                 {
                     key: 'NE',
-                    instantiator: (configuration: bigint[]) => new RubiksCubeNeuroEvolutionary(new RubiksCube({ clone: configuration })),
+                    instantiator: (configuration: bigint[]) => new RubiksCubeNeuroEvolutionary(new RubiksCube(3, { clone: configuration })),
                     checked: false,
                     info: `Neuro Evolutionary. Uses number of misplaced stickers as fitness function. Internal neurons: ${NeuroEvolutionaryConfig.neuralNetworkData.hiddenNeurons}. Population: ${NeuroEvolutionaryConfig.geneticData.populationPerGeneration}. No elitism`
                 },
                 {
                     key: 'GA',
-                    instantiator: (configuration: bigint[]) => new RubiksCubeGeneticAlgorithm(new RubiksCube({ clone: configuration })),
+                    instantiator: (configuration: bigint[]) => new RubiksCubeGeneticAlgorithm(new RubiksCube(3, { clone: configuration })),
                     checked: true,
                     info: `Predefined macro movements combined with genetic algorithm. Uses number of misplaced stickers as fitness function. Population: ${GeneticAlgorithmConfig.populationPerGeneration}. Elitism ${GeneticAlgorithmConfig.elitism}. Asexual reproduction`
                 }

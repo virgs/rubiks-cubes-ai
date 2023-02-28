@@ -14,8 +14,9 @@ import fontUrl from '/Courier New_Regular.json?url' // '/helvetiker_regular.type
 import type { FaceRotation } from "./engine/face-rotation";
 import { KeyboardInterpreter } from "./keyboard-interpreter";
 import { RotationsTuner } from "./printers/rotations-tuner";
-import { getAllSides, getOppositeSide, Sides } from "./constants/sides";
+import { getAllSides } from "./constants/sides";
 import * as Tween from '@tweenjs/tween.js'
+import type { RubiksCube } from "./engine/rubiks-cube";
 
 //They have to be non reactive
 const keyboardInterpreter = new KeyboardInterpreter();
@@ -77,6 +78,7 @@ export default defineComponent({
   },
   async mounted() {
     const tooltipTriggerList = document.querySelectorAll("[data-bs-toggle=\"tooltip\"]");
+    //@ts-expect-error
     const tooltipList = [...tooltipTriggerList]
       //@ts-expect-error
       .map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl, { delay: { show: 500, hide: 500 } }));
@@ -112,7 +114,7 @@ export default defineComponent({
           this.shuffling = false;
 
           console.log(translator.translateCube(cube));
-          console.log(translator.translateCubeBits(cube));
+          console.log((cube as RubiksCube).translateCubeBits());
           console.log('solved', cube.isSolved())
         }
       }
@@ -134,10 +136,14 @@ export default defineComponent({
       this.shuffling = true;
       //cool animation effect
       for (let i = 0; i < 4; ++i) {
-        await Promise.all([
-          cubeRenderer.rotateFace({ side: sideToRotateFourTimes, duration: Configuration.renderers.rotationDuration, layer: 0, easing: Tween.Easing.Circular.InOut }),
-          cubeRenderer.rotateFace({ side: sideToRotateFourTimes, duration: Configuration.renderers.rotationDuration, layer: 1, easing: Tween.Easing.Circular.InOut })
-        ])
+        await Promise.all(Array
+          .from(new Array(cube!.getDimension()))
+          .map((_, layer) => cubeRenderer.rotateFace({
+            side: sideToRotateFourTimes,
+            duration: Configuration.renderers.rotationDuration,
+            layer: layer,
+            easing: Tween.Easing.Circular.InOut
+          })))
       }
       this.shuffling = false;
     },
@@ -243,8 +249,8 @@ export default defineComponent({
               </span>
             </button>
             <ul class="dropdown-menu">
-              <li v-for="item, index in cubeTypes" @click="selectedDimensionIndex = index"><a
-                  class="dropdown-item" href="#">{{ item.label }}</a></li>
+              <li v-for="item, index in cubeTypes" @click="selectedDimensionIndex = index"><a class="dropdown-item"
+                  href="#">{{ item.label }}</a></li>
             </ul>
           </div>
           <template v-for="method, index in selectedCubeType.methods">

@@ -29,11 +29,6 @@ export type Cubelet = {
     stickers: Sticker[]
 }
 
-// export type StickerMap = {
-//     side: Sides,
-//     id: number
-// }[];
-
 export interface Cube {
     getDimension(): number;
     getConfiguration(): bigint[];
