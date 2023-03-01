@@ -68,6 +68,14 @@ export class BitBuffer {
         this.byteArray[endOffset] |= (255 >> (BitBuffer.BYTE_LENGTH - endByteIndex));
     }
 
+    public print(separator: number = 8) {
+        const bytes = new Uint8Array(this.buffer);
+        return bytes
+            .reduce((str, byte) => str + byte.toString(2).padStart(8, '0'), '')
+            .match(new RegExp(`.{1,${separator}}`, 'g'))!
+            .join(" ");
+    }
+
     private validateIndex(index: number) {
         if (!Number.isInteger(index)) {
             throw new TypeError("bit array index must be integer");

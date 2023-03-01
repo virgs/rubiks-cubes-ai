@@ -1,5 +1,5 @@
-import { getAllSides, Sides } from "@/constants/sides";
-import { Colors, getAllColors } from "../constants/colors";
+import { Sides } from "@/constants/sides";
+import { Colors } from "../constants/colors";
 import { rotationsAreEqual, type FaceRotation } from "../engine/face-rotation";
 import type { Cubelet, Cube, Sticker } from "../engine/cube";
 
