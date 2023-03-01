@@ -25,6 +25,9 @@ export class RotationsTuner {
                         continue;
                     }
                 }
+                if (!lastRotation) {
+                    ++consecutiveEqualsRotations;
+                }
                 result.push(rotation);
             }
             lastRotation = rotation;

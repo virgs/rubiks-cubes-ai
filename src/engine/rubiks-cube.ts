@@ -7,22 +7,26 @@ import { RubiksCubeFaceRotator } from './rubiks-cube-face-rotator';
 
 export class RubiksCube implements Cube {
     private readonly hash: string;
-    private readonly configuration: bigint[];
+    private readonly configuration: ArrayBuffer[];
     private readonly dimension: number;
     private readonly faceRotator: RubiksCubeFaceRotator;
     private readonly cubelets: ColorlessCubelet[];
 
-    public constructor(dimension: number, config?: { clone?: bigint[], colorMap?: Map<Colors, Sides> }) {
+    public constructor(dimension: number, config?: { clone?: ArrayBuffer[], colorMap?: Map<Colors, Sides> }) {
         this.dimension = dimension;
         if (config?.clone) {
-            this.configuration = [...config.clone];
+            this.configuration = config.clone
+                .map(byte => new Uint8Array(byte))
         } else {
+
             const colorMap = config?.colorMap || defaultColorMap;
             this.configuration = getAllColors()
                 .map(color => {
-                    const side = BigInt(colorMap.get(color)!);
+                    const side = colorMap.get(color)!;
                     const fullBits = (1 << (this.dimension * this.dimension)) - 1; //dimension 2: 1111, dimension 3: 111111111 and so on...
-                    return BigInt(BigInt(fullBits) << (side * BigInt(this.dimension * this.dimension)));
+                    const result = new Uint8Array(new ArrayBuffer(this.dimension * this.dimension * 6))
+                    result = fullBits << (side * (this.dimension * this.dimension));
+                    return result;
                 });
         }
         this.faceRotator = new RubiksCubeFaceRotator(this.dimension);

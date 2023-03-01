@@ -100,5 +100,31 @@ export const Configuration = {
                 }
             ]
         },
+        {
+            label: '4x4',
+            dimension: 4,
+            instantiator: () => new RubiksCube(4),
+            methods: [
+                {
+                    key: 'Human',
+                    instantiator: (configuration: bigint[]) => new HumanSolver(new RubiksCube(3, { clone: configuration })),
+                    checked: false,
+                    info: 'Use keys \'WASDFX\' combined with \'shift\' and numbers to rotate cube faces'
+                }
+            ]
+        },        
+        {
+            label: '5x5',
+            dimension: 5,
+            instantiator: () => new RubiksCube(5),
+            methods: [
+                {
+                    key: 'Human',
+                    instantiator: (configuration: bigint[]) => new HumanSolver(new RubiksCube(3, { clone: configuration })),
+                    checked: false,
+                    info: 'Use keys \'WASDFX\' combined with \'shift\' and numbers to rotate cube faces'
+                }
+            ]
+        },        
     ] as CubeTypes[]
 }

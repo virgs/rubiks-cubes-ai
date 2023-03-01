@@ -144,16 +144,6 @@ export class RubiksCubeFaceRotator {
     }
 
     private createLeftFaceClockwiseRotator(layer: number): FaceStickerRotatorMap[] {
-        //       UP
-        //        0  1
-        //        6  5
-        // LEFT  FRONT  RIGHT  BACK
-        // 4 20  11  8   3 13  16 17
-        // 7 21  10  9   2 14  19 18
-        //       DOWN
-        //       15 12
-        //       23 22
-
         const end = this.dimension - 1;
         const map = [];
         if (layer === 0) {
