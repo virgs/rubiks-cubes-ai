@@ -24,7 +24,7 @@ const tuner = new RotationsTuner();
 let world: World;
 let cubeRenderer: CubeRenderer;
 let solverRenderers: SolverRenderer[] = [];
-let cube: RubiksCube | undefined;
+let cube: RubiksCube;
 let font: Font;
 let shuffleMoves: FaceRotation[] = [];
 
@@ -67,6 +67,10 @@ export default defineComponent({
   watch: {
     selectedDimensionIndex() {
       this.reset();
+      // console.log(translator.translateCube(cube!));
+      // console.log(cube!.getHash());
+      // console.log(cube!.translateCubeBits());
+      // console.log('solved', cube.isSolved());
     },
     shuffleMovesText() {
       document.querySelector("textarea")!.scrollTop = document.querySelector("textarea")!.scrollHeight;
@@ -89,6 +93,7 @@ export default defineComponent({
     world = new World(container);
     world.start();
     await this.reset();
+    await this.coolEffect();
 
     window.addEventListener('keypress', async (event: KeyboardEvent) => {
       solverRenderers
@@ -121,6 +126,24 @@ export default defineComponent({
     });
   },
   methods: {
+    async coolEffect() {
+      const sides = getAllSides();
+      const sideToRotateFourTimes = Math.floor(Math.random() * sides.length);
+      this.shuffling = true;
+      //cool animation effect
+      for (let i = 0; i < 4; ++i) {
+        await Promise.all(Array
+          .from(new Array(cube!.getDimension()))
+          .map((_, layer) => cubeRenderer.rotateFace({
+            side: sideToRotateFourTimes,
+            duration: Configuration.renderers.rotationDuration,
+            layer: layer,
+            easing: Tween.Easing.Circular.InOut
+          })))
+      }
+      this.shuffling = false;
+
+    },
     async createCubeRenderer() {
       if (cubeRenderer) {
         world.getScene().remove(cubeRenderer.getMesh());
@@ -131,21 +154,6 @@ export default defineComponent({
         position: new Vector3(0, 0, 0),
         size: Configuration.renderers.cubeSize
       });
-      const sides = getAllSides();
-      const sideToRotateFourTimes = Math.floor(Math.random() * sides.length);
-      this.shuffling = true;
-      //cool animation effect
-      // for (let i = 0; i < 4; ++i) {
-      //   await Promise.all(Array
-      //     .from(new Array(cube!.getDimension()))
-      //     .map((_, layer) => cubeRenderer.rotateFace({
-      //       side: sideToRotateFourTimes,
-      //       duration: Configuration.renderers.rotationDuration,
-      //       layer: layer,
-      //       easing: Tween.Easing.Circular.InOut
-      //     })))
-      // }
-      this.shuffling = false;
     },
     async returnCubesToStage() {
       this.solved = false;
@@ -159,6 +167,7 @@ export default defineComponent({
     async reset() {
       cube = this.selectedCubeType!.instantiator!();
       await this.returnCubesToStage();
+      await this.coolEffect();
       this.shuffleMovesText = "";
       shuffleMoves = [];
       this.shuffled = false;

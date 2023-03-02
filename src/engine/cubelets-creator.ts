@@ -1,5 +1,5 @@
 import { getAllSides, Sides, } from "@/constants/sides";
-import type { ColorlessCubelet, ColorlessSticker } from "./cube";
+import type { ColorlessCubelet, ColorlessSticker } from "./rubiks-cube";
 
 export class CubeletsCreator {
     private static readonly cubeletsCreatorMap: Map<number, ColorlessCubelet[]> = new Map();
@@ -30,6 +30,9 @@ export class CubeletsCreator {
             const corners: ColorlessCubelet[] = this.extractCorners();
             const edges: ColorlessCubelet[] = this.extractEdges();
             const cubelets = [...corners, ...edges, ...centers];
+            console.log('centers', centers)
+            console.log('corners', corners)
+            console.log('edges', edges)
 
             CubeletsCreator.cubeletsCreatorMap.set(this.dimension, cubelets);
             return cubelets;
@@ -104,10 +107,9 @@ export class CubeletsCreator {
         const end = this.dimension - 1;
         const centers: ColorlessCubelet[] = [];
         this.stickers
-            .forEach((item, index, original) => {
-                if (item.x !== 0 && item.x !== end && item.y !== 0 && item.y !== end) {
-                    centers.push({ stickers: original.splice(index, 1) });
-                }
+            .filter(item => item.x !== 0 && item.x !== end && item.y !== 0 && item.y !== end)
+            .forEach(item => {
+                centers.push({ stickers: [item] });
             });
 
         return centers;

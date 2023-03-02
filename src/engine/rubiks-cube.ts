@@ -99,34 +99,35 @@ export class RubiksCube {
     }
 
     public translateCubeBits(): string {
+        const stickersPerSide = this.dimension * this.dimension;
         let text = getAllSides()
-            .map(side => (Sides[side] + new Array(10).fill(' ').join('')).substring(0, 6))
+            .map(side => (Sides[side] + new Array(stickersPerSide + 5).fill(' ').join('')).substring(0, stickersPerSide + 2))
             .join('')
             .concat('\n');
 
-        const spacing = '-'.repeat(this.dimension * this.dimension)
+        const spacing = '-'.repeat(stickersPerSide)
             .concat('  ')
             .repeat(6)
             .concat('\n')
 
         text += spacing;
         this.configuration
-            .map(config => {
+            .forEach(config => {
                 const bytes = new Uint8Array(config.buffer).slice(0); //clones it
                 text += bytes
                     .reverse()
                     .reduce((str, byte) => str + byte.toString(2).padStart(8, '0'), '')
-                    .match(new RegExp(`.{1,${this.dimension * this.dimension}}`, 'g'))!
-                    .reverse()
-                    .join("  ")
+                    .split('').reverse().join('')
+                    .match(new RegExp(`.{${stickersPerSide}}`, 'g'))!
+                    .join('  ')
                     .concat('\n');
             });
         text += spacing;
-        text += Array.from(new Array(this.dimension * this.dimension * 6))
+        text += Array.from(new Array(stickersPerSide * 6))
             .map((_, index) => Colors[this.getColorOfIndex(index)].substring(0, 1))
             .join('')
-            .match(new RegExp(`.{1,${this.dimension * this.dimension}}`, 'g'))!
-            .join("  ")
+            .match(new RegExp(`.{1,${stickersPerSide}}`, 'g'))!
+            .join('  ')
             .concat('\n');
         return text;
     }

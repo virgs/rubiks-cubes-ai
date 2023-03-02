@@ -20,6 +20,7 @@ export class HumanTranslator {
                     return sticker;
                 }
             }
+            console.log(`Sticker not found: ${Sides[side]}, ${x}, ${y}`);
         }
 
         const text = [];

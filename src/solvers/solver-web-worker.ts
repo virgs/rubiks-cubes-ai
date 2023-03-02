@@ -41,8 +41,8 @@ self.onmessage = async (event: MessageEvent<SolverWorkerRequest>) => {
         const solverMethod = solverMethodFinder(event.data);
         if (tag && solverMethod) {
             if (event.data.cube) {
-                solver = solverMethod.instantiator(event.data.cube);
                 try {
+                    solver = solverMethod.instantiator(event.data.cube);
                     const solution: Solution = await solver.findSolution()!;
                     self.postMessage({ solution: JSON.stringify(solution), solverKey: tag });
                 } catch (e) {
