@@ -6,7 +6,6 @@ import type { FaceRotation } from "@/engine/face-rotation";
 import { Colors, getOppositeColor } from "@/constants/colors";
 import type { Cubelet } from "@/engine/cube";
 import { RubiksCube } from '@/engine/rubiks-cube';
-import { HumanTranslator } from '@/printers/human-tranlator';
 
 enum Metrics {
     ADD_CANDIDATE,
@@ -62,7 +61,7 @@ export class AStarSolver implements CubeSolver {
     public async findSolution(): Promise<Solution> {
         return new Promise((resolve, reject) => {
             this.measurer.start();
-            let current: Candidate | undefined;
+            let current: Candidate;
             let iterations = 0;
             while (this.candidates.size() > 0) {
                 if (this.aborted) {
@@ -70,18 +69,19 @@ export class AStarSolver implements CubeSolver {
                 }
                 ++iterations;
                 current = this.measurer.add(Metrics[Metrics.POP_CANDIDATE], () => this.candidates.pop());
-                if (this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.visitedChecklist.has(current!.cube.getHash()))) {
+                if (this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.visitedChecklist.has(current.cube.getHash()))) {
                     continue;
                 }
-                if (this.measurer.add(Metrics[Metrics.CHECK_SOLUTION], () => current!.cube.isSolved())) {
+                if (this.measurer.add(Metrics[Metrics.CHECK_SOLUTION], () => current.cube.getHash() === this.goalState.getHash())) {
                     this.measurer.finish();
                     this.candidates.clear();
                     return resolve(this.createSolution(current!, iterations));
                 } else {
-                    this.measurer.add(Metrics[Metrics.ADD_TO_VISISTED_LIST_CHECK], () => this.visitedChecklist.set(current!.cube.getHash(), true));
+                    this.measurer.add(Metrics[Metrics.ADD_TO_VISISTED_LIST_CHECK], () => this.visitedChecklist.set(current.cube.getHash(), true));
                     this.applyRotations(current!);
                 }
             }
+            reject(Error(`No more candidates to explore`));
         })
     }
 
@@ -109,7 +109,7 @@ export class AStarSolver implements CubeSolver {
     private applyRotations(parent: Candidate): void {
         this.actions
             .forEach(rotation => {
-                const newCandidate = this.measurer.add(Metrics[Metrics.PERFORM_ROTATION], () => parent.cube.rotateFace(rotation));
+                const newCandidate: RubiksCube = this.measurer.add(Metrics[Metrics.PERFORM_ROTATION], () => parent.cube.rotateFace(rotation));
                 if (!this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.visitedChecklist.has(newCandidate.getHash()))) {
                     this.measurer.add(Metrics[Metrics.ADD_CANDIDATE], () => {
                         this.candidates.push({

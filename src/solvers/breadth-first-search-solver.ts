@@ -71,6 +71,7 @@ export class BreadthFirstSearchSolver implements CubeSolver {
                     this.applyRotations(current!);
                 }
             }
+            reject(Error(`No more candidates to explore`));
         });
     }
 
@@ -107,7 +108,7 @@ export class BreadthFirstSearchSolver implements CubeSolver {
     private applyRotations(current: Candidate): void {
         this.actions
             .forEach(rotation => {
-                const newCandidate = this.measurer.add(Metrics[Metrics.PERFORM_ROTATION], () => current.cube.rotateFace(rotation));
+                const newCandidate: RubiksCube = this.measurer.add(Metrics[Metrics.PERFORM_ROTATION], () => current.cube.rotateFace(rotation));
                 if (!this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.visitedChecklist.has(newCandidate.getHash()))) {
                     this.measurer.add(Metrics[Metrics.ADD_CANDIDATE], () => {
                         this.candidates.push({

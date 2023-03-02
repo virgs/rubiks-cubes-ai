@@ -1,7 +1,7 @@
 import type { FaceRotation } from "@/engine/face-rotation";
-import type { Cube } from "@/engine/cube";
 import { KeyboardInterpreter } from "@/keyboard-interpreter";
 import type { CubeSolver, Solution } from "./cube-solver";
+import type { RubiksCube } from "@/engine/rubiks-cube";
 
 export type KeyboardEvent = {
     key: string,
@@ -12,11 +12,11 @@ export class HumanSolver implements CubeSolver {
     private readonly moves: FaceRotation[];
     private findSolutionResolve?: (value: Solution | PromiseLike<Solution>) => void;
     private findSolutionReject?: (reason?: any) => void;
-    private cube: Cube;
+    private cube: RubiksCube;
     private startTime?: number;
     private keyboardInterpreter: KeyboardInterpreter;
 
-    public constructor(cube: Cube) {
+    public constructor(cube: RubiksCube) {
         this.cube = cube;
         this.moves = [];
         this.keyboardInterpreter = new KeyboardInterpreter();

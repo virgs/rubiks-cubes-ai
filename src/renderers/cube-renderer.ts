@@ -6,8 +6,8 @@ import * as Tween from '@tweenjs/tween.js'
 import { Sides } from "@/constants/sides";
 import { CubeletRenderer } from "./cubelet-renderer";
 import { Axis, getAxisFromSide } from "@/constants/axis";
-import type { Cube } from "@/engine/cube";
 import type { FaceRotation } from "@/engine/face-rotation";
+import type { RubiksCube } from "@/engine/rubiks-cube";
 
 type RotationTween = {
     rotation: number
@@ -25,7 +25,7 @@ export class CubeRenderer {
     private readonly dimension: number;
     private rubiksCubeGroup: Group;
 
-    public constructor(config: { cube: Cube, parent: Object3D, position: Vector3, size: number }) {
+    public constructor(config: { cube: RubiksCube, parent: Object3D, position: Vector3, size: number }) {
         this.rubiksCubeGroup = new Group();
         this.parent = config.parent;
         this.dimension = config.cube.getDimension();

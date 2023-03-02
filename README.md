@@ -18,6 +18,16 @@ on the other hand... The rotation operations and cubelets mapping (show code) ar
 
 The abstraction allows higher order cubes.. The solvers wouldn't work because they are stricted attached to this dimension cube. It would be really easy to change it.
 
+```
+    UP    LEFT  FRONT RIGHT BACK  DOWN  
+    ----  ----  ----  ----  ----  ----  
+    0000  1111  0000  1111  0000  1111
+    0000  0000  1111  1111  0000  0000
+    0000  0000  0000  0000  1111  1111
+    ----  ----  ----  ----  ----  ----  
+    YYYY  OOOO  BBBB  RRRR  GGGG  WWWW
+
+```
 
 ```
           UP        

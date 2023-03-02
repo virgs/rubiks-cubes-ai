@@ -1,7 +1,7 @@
-import type { Colors } from '@/constants/colors';
+import { Colors } from '@/constants/colors';
 import { Sides } from '@/constants/sides';
 import type { FaceRotation } from './face-rotation';
-import type { RubiksCube } from './rubiks-cube';
+import { RubiksCube } from './rubiks-cube';
 
 type FaceRotatorMap = {
     destination: number,
@@ -54,47 +54,23 @@ export class RubiksCubeFaceRotator {
 
     }
 
-    public rotate(originalCube: RubiksCube, faceRotation: FaceRotation): bigint[] {
-        const original = originalCube.getConfiguration();
-        const clone = [...original];
+    public rotate(originalCube: RubiksCube, faceRotation: FaceRotation): RubiksCube {
+        const clone = new RubiksCube(originalCube.getDimension(), { clone: originalCube.getConfiguration() })
+
         RubiksCubeFaceRotator.faceRotatorMap
             .get(this.dimension)!
             .get(faceRotation.layer || 0)!
             .get(faceRotation.side)!
             .forEach(item => {
                 if (faceRotation.counterClockwiseDirection) {
-                    // console.log(item.source, item.destination)
-                    RubiksCubeFaceRotator.setColorOfIndex(clone, item.source,
-                        RubiksCubeFaceRotator.getColorOfIndex(original, item.destination)!);
+                    clone.setColorOfIndex(item.source,
+                        originalCube.getColorOfIndex(item.destination));
                 } else {
-                    // console.log(item.source, item.destination)
-                    RubiksCubeFaceRotator.setColorOfIndex(clone, item.destination,
-                        RubiksCubeFaceRotator.getColorOfIndex(original, item.source)!);
+                    clone.setColorOfIndex(item.destination,
+                        originalCube.getColorOfIndex(item.source));
                 }
-            })
+            });
         return clone;
-    }
-
-
-    private static setColorOfIndex(configuration: bigint[], index: number, color: number): void {
-        configuration
-            .forEach((_, i, config) => {
-                if (i === color) {
-                    config[i] |= BigInt(1n << BigInt(index)); // sets color bit to 1
-                } else {
-                    config[i] &= BigInt(-1n ^ (1n << BigInt(index))); //sets bit of every other color to 0
-                }
-            })
-    }
-
-    private static getColorOfIndex(configuration: bigint[], index: number): Colors | undefined {
-        let counter = 0;
-        for (let color of configuration) {
-            if (color & BigInt(1n << BigInt(index))) {
-                return counter;
-            }
-            ++counter;
-        }
     }
 
     private idMapper(item: StickerLocator): number {

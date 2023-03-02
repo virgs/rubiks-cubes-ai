@@ -1,5 +1,4 @@
 <script lang="ts">
-import type { Cube } from "@/engine/cube";
 import { defineComponent } from 'vue';
 import { CubeScrambler } from "./engine/cube-scrambler";
 import { World } from "./world";
@@ -16,7 +15,7 @@ import { KeyboardInterpreter } from "./keyboard-interpreter";
 import { RotationsTuner } from "./printers/rotations-tuner";
 import { getAllSides } from "./constants/sides";
 import * as Tween from '@tweenjs/tween.js'
-import type { RubiksCube } from "./engine/rubiks-cube";
+import type { RubiksCube } from './engine/rubiks-cube';
 
 //They have to be non reactive
 const keyboardInterpreter = new KeyboardInterpreter();
@@ -25,7 +24,7 @@ const tuner = new RotationsTuner();
 let world: World;
 let cubeRenderer: CubeRenderer;
 let solverRenderers: SolverRenderer[] = [];
-let cube: Cube | undefined;
+let cube: RubiksCube | undefined;
 let font: Font;
 let shuffleMoves: FaceRotation[] = [];
 
@@ -114,8 +113,9 @@ export default defineComponent({
           this.shuffling = false;
 
           console.log(translator.translateCube(cube));
-          console.log((cube as RubiksCube).translateCubeBits());
-          console.log('solved', cube.isSolved())
+          console.log(cube.getHash());
+          console.log(cube.translateCubeBits());
+          console.log('solved', cube.isSolved());
         }
       }
     });
@@ -135,16 +135,16 @@ export default defineComponent({
       const sideToRotateFourTimes = Math.floor(Math.random() * sides.length);
       this.shuffling = true;
       //cool animation effect
-      for (let i = 0; i < 4; ++i) {
-        await Promise.all(Array
-          .from(new Array(cube!.getDimension()))
-          .map((_, layer) => cubeRenderer.rotateFace({
-            side: sideToRotateFourTimes,
-            duration: Configuration.renderers.rotationDuration,
-            layer: layer,
-            easing: Tween.Easing.Circular.InOut
-          })))
-      }
+      // for (let i = 0; i < 4; ++i) {
+      //   await Promise.all(Array
+      //     .from(new Array(cube!.getDimension()))
+      //     .map((_, layer) => cubeRenderer.rotateFace({
+      //       side: sideToRotateFourTimes,
+      //       duration: Configuration.renderers.rotationDuration,
+      //       layer: layer,
+      //       easing: Tween.Easing.Circular.InOut
+      //     })))
+      // }
       this.shuffling = false;
     },
     async returnCubesToStage() {

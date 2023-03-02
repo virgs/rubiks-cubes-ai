@@ -1,4 +1,3 @@
-import type { Cube } from "./engine/cube";
 import { RubiksCube } from "./engine/rubiks-cube";
 import type { CubeSolver } from "./solvers/cube-solver";
 import { HumanSolver } from "./solvers/human-solver";
@@ -10,10 +9,10 @@ import { GeneticAlgorithmSolver } from "./solvers/genetic-algorithm/genetic-algo
 export type CubeTypes = {
     label: string,
     dimension: number,
-    instantiator: () => Cube,
+    instantiator: () => RubiksCube,
     methods: {
         key: string,
-        instantiator: (configuration: bigint[]) => CubeSolver,
+        instantiator: (configuration: ArrayBuffer[]) => CubeSolver,
         checked: boolean,
         info: string
     }[]
@@ -57,19 +56,19 @@ export const Configuration = {
             instantiator: () => new RubiksCube(2),
             methods: [{
                 key: 'Human',
-                instantiator: (configuration: bigint[]) => new HumanSolver(new RubiksCube(2, { clone: configuration })),
+                instantiator: (configuration: ArrayBuffer[]) => new HumanSolver(new RubiksCube(2, { clone: configuration })),
                 checked: false,
                 info: 'Use keys \'WASDFX\' combined with \'shift\' to rotate cube faces'
             },
             {
                 key: 'BFS',
-                instantiator: (configuration: bigint[]) => new BreadthFirstSearchSolver(new RubiksCube(2, { clone: configuration })),
+                instantiator: (configuration: ArrayBuffer[]) => new BreadthFirstSearchSolver(new RubiksCube(2, { clone: configuration })),
                 checked: false,
                 info: `Breadth-first-search. Brute force`
             },
             {
                 key: 'A*',
-                instantiator: (configuration: bigint[]) => new AStarSolver(new RubiksCube(2, { clone: configuration })),
+                instantiator: (configuration: ArrayBuffer[]) => new AStarSolver(new RubiksCube(2, { clone: configuration })),
                 checked: true,
                 info: `Astar. Uses number of misplaced cubies as heuristic`
             }
@@ -82,19 +81,19 @@ export const Configuration = {
             methods: [
                 {
                     key: 'Human',
-                    instantiator: (configuration: bigint[]) => new HumanSolver(new RubiksCube(3, { clone: configuration })),
+                    instantiator: (configuration: ArrayBuffer[]) => new HumanSolver(new RubiksCube(3, { clone: configuration })),
                     checked: false,
                     info: 'Use keys \'WASDFX\' combined with \'shift\' to rotate cube faces'
                 },
                 {
                     key: 'NE',
-                    instantiator: (configuration: bigint[]) => new NeuroEvolutionarySolver(new RubiksCube(3, { clone: configuration })),
+                    instantiator: (configuration: ArrayBuffer[]) => new NeuroEvolutionarySolver(new RubiksCube(3, { clone: configuration })),
                     checked: false,
                     info: `Neuro Evolutionary. Uses number of misplaced stickers as fitness function. Internal neurons: ${NeuroEvolutionaryConfig.neuralNetworkData.hiddenNeurons}. Population: ${NeuroEvolutionaryConfig.geneticData.populationPerGeneration}. No elitism`
                 },
                 {
                     key: 'GA',
-                    instantiator: (configuration: bigint[]) => new GeneticAlgorithmSolver(new RubiksCube(3, { clone: configuration })),
+                    instantiator: (configuration: ArrayBuffer[]) => new GeneticAlgorithmSolver(new RubiksCube(3, { clone: configuration })),
                     checked: true,
                     info: `Predefined macro movements combined with genetic algorithm. Uses number of misplaced stickers as fitness function. Population: ${GeneticAlgorithmConfig.populationPerGeneration}. Elitism ${GeneticAlgorithmConfig.elitism}. Asexual reproduction`
                 }
@@ -107,12 +106,12 @@ export const Configuration = {
             methods: [
                 {
                     key: 'Human',
-                    instantiator: (configuration: bigint[]) => new HumanSolver(new RubiksCube(3, { clone: configuration })),
+                    instantiator: (configuration: ArrayBuffer[]) => new HumanSolver(new RubiksCube(3, { clone: configuration })),
                     checked: false,
                     info: 'Use keys \'WASDFX\' combined with \'shift\' and numbers to rotate cube faces'
                 }
             ]
-        },        
+        },
         {
             label: '5x5',
             dimension: 5,
@@ -120,11 +119,11 @@ export const Configuration = {
             methods: [
                 {
                     key: 'Human',
-                    instantiator: (configuration: bigint[]) => new HumanSolver(new RubiksCube(3, { clone: configuration })),
+                    instantiator: (configuration: ArrayBuffer[]) => new HumanSolver(new RubiksCube(3, { clone: configuration })),
                     checked: false,
                     info: 'Use keys \'WASDFX\' combined with \'shift\' and numbers to rotate cube faces'
                 }
             ]
-        },        
+        },
     ] as CubeTypes[]
 }

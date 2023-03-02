@@ -1,87 +1,133 @@
 import { getAllSides, Sides } from '@/constants/sides';
-import { defaultColorMap, type Cubelet, type Cube, type ColorlessCubelet } from './cube';
 import type { FaceRotation } from './face-rotation';
 import { Colors, getAllColors } from '@/constants/colors';
 import { CubeletsCreator } from './cubelets-creator';
 import { RubiksCubeFaceRotator } from './rubiks-cube-face-rotator';
+import { BitStream, BitView } from 'bit-buffer'
+import { Buffer } from 'buffer';
 
-export class RubiksCube implements Cube {
-    private readonly hash: string;
-    private readonly configuration: ArrayBuffer[];
+
+export const defaultColorMap: Map<Colors, Sides> = new Map();
+defaultColorMap.set(Colors.BLUE, Sides.FRONT);
+defaultColorMap.set(Colors.YELLOW, Sides.UP);
+defaultColorMap.set(Colors.RED, Sides.RIGHT);
+defaultColorMap.set(Colors.ORANGE, Sides.LEFT);
+defaultColorMap.set(Colors.GREEN, Sides.BACK);
+defaultColorMap.set(Colors.WHITE, Sides.DOWN);
+
+export type ColorlessSticker = {
+    side: Sides,
+    id: number,
+    x: number,
+    y: number
+};
+
+export type Sticker = ColorlessSticker & {
+    color: Colors
+};
+
+export type ColorlessCubelet = {
+    stickers: ColorlessSticker[]
+}
+
+export type Cubelet = {
+    stickers: Sticker[]
+}
+
+export class RubiksCube {
+    private readonly configuration: BitView[];
     private readonly dimension: number;
     private readonly faceRotator: RubiksCubeFaceRotator;
     private readonly cubelets: ColorlessCubelet[];
+    private hash?: string;
 
     public constructor(dimension: number, config?: { clone?: ArrayBuffer[], colorMap?: Map<Colors, Sides> }) {
         this.dimension = dimension;
         if (config?.clone) {
             this.configuration = config.clone
-                .map(byte => new Uint8Array(byte))
+                .map(config => new BitView(config.slice(0)));
         } else {
-
+            const stickersPerSide = this.dimension * this.dimension;
             const colorMap = config?.colorMap || defaultColorMap;
-            this.configuration = getAllColors()
-                .map(color => {
+            const numOfBytes = Math.ceil(stickersPerSide * 6 * 0.125); //muliplied by number of sides divided by number of bits per byte
+            this.configuration = Array.from(new Array(3))
+                .map(() => new BitView(new ArrayBuffer(numOfBytes)));
+
+            getAllColors()
+                .forEach(color => {
                     const side = colorMap.get(color)!;
-                    const fullBits = (1 << (this.dimension * this.dimension)) - 1; //dimension 2: 1111, dimension 3: 111111111 and so on...
-                    const result = new Uint8Array(new ArrayBuffer(this.dimension * this.dimension * 6))
-                    result = fullBits << (side * (this.dimension * this.dimension));
-                    return result;
+                    const fullBitsValue = (1 << stickersPerSide) - 1;
+                    const value0 = (color & 0b1) > 0b0 ? fullBitsValue : 0b0000;
+                    const value1 = (color & 0b10) > 0b0 ? fullBitsValue : 0b0000;
+                    const value2 = (color & 0b100) > 0b0 ? fullBitsValue : 0b0000;
+                    this.configuration[0].setBits(side * stickersPerSide, value0, stickersPerSide);
+                    this.configuration[1].setBits(side * stickersPerSide, value1, stickersPerSide);
+                    this.configuration[2].setBits(side * stickersPerSide, value2, stickersPerSide);
                 });
         }
+
         this.faceRotator = new RubiksCubeFaceRotator(this.dimension);
         this.cubelets = new CubeletsCreator(this.dimension).create();
-        this.hash = this.configuration.join('.');
+        this.updateHash();
     }
 
 
     public clone(): RubiksCube {
-        return new RubiksCube(this.dimension, { clone: this.configuration });
+        return new RubiksCube(this.dimension, { clone: this.configuration.map(config => config.buffer) });
     }
 
     public getDimension(): number {
         return this.dimension;
     }
 
-    public getConfiguration(): bigint[] {
-        return [...this.configuration];
+    public getConfiguration(): ArrayBuffer[] {
+        return this.configuration
+            .map(config => config.buffer);
+    }
+
+    private updateHash(): void {
+        this.hash = this.configuration
+            .map(config => Buffer.from(config.buffer).toString('base64'))
+            .join('.');
     }
 
     public getHash(): string {
-        return this.hash;
+        const newHash = this.configuration
+            .map(config => Buffer.from(config.buffer).toString('base64'))
+            .join('.');
+        return newHash;
     }
 
-    // Up    Left  Front Right Back  Down
-    // 1111  0000  0000  0000  0000  0000 (<- Yellow)
-    // 0000  1111  0000  0000  0000  0000 (<- Orange)
-    // 0000  0000  1111  0000  0000  0000 (<- Blue)
-    // 0000  0000  0000  1111  0000  0000 (<- Red)
-    // 0000  0000  0000  0000  1111  0000 (<- Green)
-    // 0000  0000  0000  0000  0000  1111 (<- White)
-
     public translateCubeBits(): string {
-        const stickersPerSide = this.dimension * this.dimension;
-        const stickersNumber = stickersPerSide * 6;
-        const zeroedBits = Array.from(new Array(stickersNumber)).fill('0').join('');
-        const tab = Array.from(new Array(stickersPerSide).fill(' '))
-            .join('');
         let text = getAllSides()
-            .reduce((acc, side) => acc + Sides[side]
-                .concat(tab).substring(0, stickersPerSide + 2), '')
+            .map(side => (Sides[side] + new Array(10).fill(' ').join('')).substring(0, 6))
+            .join('')
+            .concat('\n');
 
+        const spacing = '-'.repeat(this.dimension * this.dimension)
+            .concat('  ')
+            .repeat(6)
+            .concat('\n')
+
+        text += spacing;
         this.configuration
-            .forEach((color, index) => {
-                const sideText = (zeroedBits + color.toString(2)).
-                    slice(-stickersNumber)
-                    .split('')
+            .map(config => {
+                const bytes = new Uint8Array(config.buffer).slice(0); //clones it
+                text += bytes
                     .reverse()
-                    .join('')
-                const parts = sideText
-                    .match(new RegExp(`.{${stickersPerSide}}`, 'g'))!
-                    .join("  ");
-
-                text += '\n' + parts + ' (<- ' + Colors[index] + ')';
-            })
+                    .reduce((str, byte) => str + byte.toString(2).padStart(8, '0'), '')
+                    .match(new RegExp(`.{1,${this.dimension * this.dimension}}`, 'g'))!
+                    .reverse()
+                    .join("  ")
+                    .concat('\n');
+            });
+        text += spacing;
+        text += Array.from(new Array(this.dimension * this.dimension * 6))
+            .map((_, index) => Colors[this.getColorOfIndex(index)].substring(0, 1))
+            .join('')
+            .match(new RegExp(`.{1,${this.dimension * this.dimension}}`, 'g'))!
+            .join("  ")
+            .concat('\n');
         return text;
     }
 
@@ -96,7 +142,8 @@ export class RubiksCube implements Cube {
 
     public rotateFace(faceRotation: FaceRotation): RubiksCube {
         const result = this.faceRotator.rotate(this, faceRotation);
-        return new RubiksCube(this.dimension, { clone: result });
+        result.updateHash();
+        return result;
     }
 
     public getAllCubelets(): Cubelet[] {
@@ -117,14 +164,20 @@ export class RubiksCube implements Cube {
         return this.addColorToCubelets(found);
     }
 
-    private getColorOfIndex(index: number): Colors | undefined {
-        let counter = 0;
-        for (let color of this.configuration) {
-            if (color & BigInt(1n << BigInt(index))) {
-                return counter;
-            }
-            ++counter;
-        }
+    public getColorOfIndex(index: number): Colors {
+        return this.configuration
+            .reduce((acc, config, i) => acc | (config.getBits(index, 1) << i), 0b0)
+            .valueOf();
+    }
+
+    public setColorOfIndex(index: number, color: Colors): void {
+        const value0 = (color & 0b1) > 0b0 ? 0b1 : 0b0
+        const value1 = (color & 0b10) > 0b0 ? 0b1 : 0b0000;
+        const value2 = (color & 0b100) > 0b0 ? 0b1 : 0b0000;
+
+        this.configuration[0].setBits(index, value0, 1);
+        this.configuration[1].setBits(index, value1, 1);
+        this.configuration[2].setBits(index, value2, 1);
     }
 
     private addColorToCubelets(colorless: ColorlessCubelet[]): Cubelet[] {

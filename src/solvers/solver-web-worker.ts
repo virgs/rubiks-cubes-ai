@@ -7,7 +7,7 @@ export type SolverWorkerRequest = {
     abort?: true,
     label?: string,
     solverTag?: string,
-    cube?: number[],
+    cube?: ArrayBuffer[],
     keyboardEvent?: KeyboardEvent
 };
 
@@ -44,7 +44,7 @@ self.onmessage = async (event: MessageEvent<SolverWorkerRequest>) => {
                 solver = solverMethod.instantiator(event.data.cube);
                 try {
                     const solution: Solution = await solver.findSolution()!;
-                    self.postMessage({ solution: JSON.stringify(solution), solverKey: tag });    
+                    self.postMessage({ solution: JSON.stringify(solution), solverKey: tag });
                 } catch (e) {
                     console.log(`Solver '${event.data.label}.${tag}' aborted`, e)
                 }

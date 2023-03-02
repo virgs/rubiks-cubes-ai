@@ -2,9 +2,10 @@ import { Sides } from "@/constants/sides";
 import { Colors } from "../constants/colors";
 import { rotationsAreEqual, type FaceRotation } from "../engine/face-rotation";
 import type { Cubelet, Cube, Sticker } from "../engine/cube";
+import type { RubiksCube } from "@/engine/rubiks-cube";
 
 export class HumanTranslator {
-    public translateSide(side: Sides, cube: Cube): string[] {
+    public translateSide(side: Sides, cube: RubiksCube): string[] {
         const cubelets = cube.getAllCubelets();
         const dimension = cube.getDimension();
         const lineLength = 10;
@@ -34,7 +35,7 @@ export class HumanTranslator {
         return text;
     }
 
-    public translateCube(cube: Cube): string {
+    public translateCube(cube: RubiksCube): string {
         const dimension = cube.getDimension();
 
         const up = this.translateSide(Sides.UP, cube);
