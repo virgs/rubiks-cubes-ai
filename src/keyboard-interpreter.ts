@@ -7,7 +7,7 @@ export type KeyboardEvent = {
 }
 
 export class KeyboardInterpreter {
-    public readKeys(event: KeyboardEvent): FaceRotation | undefined {
+    public readKeys(event: KeyboardEvent, layer: number): FaceRotation | undefined {
         let side: Sides | undefined;
         switch (event.key.toLowerCase()) {
             case 'w':
@@ -30,7 +30,7 @@ export class KeyboardInterpreter {
                 break;
         }
         if (side !== undefined) {
-            return { side: side, counterClockwiseDirection: event.shiftKey, layer: 0 };
+            return { side: side, counterClockwiseDirection: event.shiftKey, layer: layer };
         }
     }
 }

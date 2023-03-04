@@ -30,7 +30,6 @@ export class RubiksCubeFaceRotator {
         if (!RubiksCubeFaceRotator.faceRotatorMap.has(this.dimension)) {
             const layerMap = new Map();
             for (let layer = 0; layer < this.dimension; ++layer) {
-                console.log(`Creating rotation map for layer: ${layer} of ${dimension}x${dimension} cubes`);
                 const upFaceRotator: FaceStickerRotatorMap[] = this.createUpFaceClockwiseRotator(layer);
                 const leftFaceRotator: FaceStickerRotatorMap[] = this.createLeftFaceClockwiseRotator(layer);
                 const frontFaceRotator: FaceStickerRotatorMap[] = this.createFrontFaceClockwiseRotator(layer);

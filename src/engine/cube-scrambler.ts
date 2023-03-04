@@ -1,6 +1,5 @@
 import { getAllSides, Sides } from "../constants/sides";
 import type { FaceRotation } from "./face-rotation";
-import type { Cube } from "./cube";
 import type { RubiksCube } from "./rubiks-cube";
 
 export class CubeScrambler {

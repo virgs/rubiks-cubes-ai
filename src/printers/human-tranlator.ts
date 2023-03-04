@@ -72,7 +72,7 @@ export class HumanTranslator {
         return humanString
             .match(/((\d?)(\w)(\d?)('?))\s*/g)!
             .reduce((acc, current) => {
-                const [_, duplicated, side, layer, prime] = current.match(/(2?)(\w)(\d?)('?)/)!;
+                const [_, duplicated, side, layer, prime] = current.match(/(\d?)(\w)(\d?)('?)\s*/)!;
                 const rotation: FaceRotation = {
                     side: Sides.UP,
                     counterClockwiseDirection: prime?.length > 0,

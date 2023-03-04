@@ -54,6 +54,75 @@ export class World {
         window.addEventListener('resize', () => this.adjustSize(container));
     }
 
+
+    public start(): void {
+        this.renderer.setAnimationLoop(() => {
+            Tween.update();
+            this.controls.update();
+            const delta = this.clock.getDelta();
+            this.stats?.update()
+            this.animations
+                .forEach(animation => animation(delta));
+            this.render();
+        });
+    }
+
+    public stop(): void {
+        this.renderer.setAnimationLoop(null);
+    }
+
+    public getScene(): Scene {
+        return this.scene;
+    }
+
+    public addAnimationLoop(animationLoop: AnimationFunction): void {
+        this.animations.push(animationLoop)
+    }
+
+    public async sendCameraAwayFromTheCenter(): Promise<void> {
+        return new Promise(resolve => {
+            const from = { length: Math.round(this.camera.position.length()), x: this.camera.position.x, y: this.camera.position.y }
+            const to = { length: Configuration.world.camera.farDistance, x: 0.0, y: 0 }
+            new Tween.Tween(from)
+                .to(to, 500)
+                .easing(Tween.Easing.Quadratic.InOut)
+                .onUpdate((update: any) => {
+                    this.camera.position.setLength(update.length);
+                    this.camera.position.x = update.x;
+                    this.camera.position.y = update.y;
+                })
+                .onComplete(update => {
+                    this.camera.position.setLength(update.length);
+                    this.camera.position.x = update.x;
+                    this.camera.position.y = update.y;
+                    resolve();
+                })
+                .start();
+        });
+    }
+
+    public async bringCameraToTheCenter(): Promise<void> {
+        return new Promise(resolve => {
+            const from = { length: Math.round(this.camera.position.length()), x: this.camera.position.x, y: this.camera.position.y }
+            const to = { length: Configuration.world.camera.closeDistance, x: 5.0, y: 5 }
+            new Tween.Tween(from)
+                .to(to, 500)
+                .easing(Tween.Easing.Quadratic.InOut)
+                .onUpdate((update: { length: number, x: number }) => {
+                    this.camera.position.setLength(update.length);
+                    this.camera.position.x = update.x;
+                    this.camera.position.y = update.y;
+                })
+                .onComplete((update: { length: number, x: number }) => {
+                    this.camera.position.setLength(update.length);
+                    this.camera.position.x = update.x;
+                    this.camera.position.y = update.y;
+                    resolve();
+                })
+                .start();
+        });
+    }
+
     private adjustSize(container: HTMLElement): void {
         this.camera.aspect = container.clientWidth / container.clientHeight;
         this.camera.updateProjectionMatrix();
@@ -86,32 +155,8 @@ export class World {
         const near = 0.1; // the near clipping plane
         const far = 150; // the far clipping plane
         const camera = new PerspectiveCamera(fov, aspect, near, far);
-        camera.position.set(-10, -10, 35);
+        camera.position.set(5, 5, Configuration.world.camera.closeDistance);
         return camera;
-    }
-
-    public start(): void {
-        this.renderer.setAnimationLoop(() => {
-            Tween.update();
-            this.controls.update();
-            const delta = this.clock.getDelta();
-            this.stats?.update()
-            this.animations
-                .forEach(animation => animation(delta));
-            this.render();
-        });
-    }
-
-    public stop(): void {
-        this.renderer.setAnimationLoop(null);
-    }
-
-    public getScene(): Scene {
-        return this.scene;
-    }
-
-    public addAnimationLoop(animationLoop: AnimationFunction): void {
-        this.animations.push(animationLoop)
     }
 
     private render(): void {

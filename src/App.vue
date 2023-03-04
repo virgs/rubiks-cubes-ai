@@ -37,8 +37,9 @@ export default defineComponent({
   components: { GithubCorner },
   data() {
     return {
+      currentLayer: 1,
       cubeTypes: Configuration.cubeTypes,
-      selectedDimensionIndex: 0,
+      selectedDimensionIndex: 1,
       solved: false,
       shuffling: false,
       shuffled: false,
@@ -47,6 +48,11 @@ export default defineComponent({
     };
   },
   computed: {
+    badgeLayerNumberIsEnabled() {
+      return (method: any): boolean => {
+        return method.checked && method.key.toLowerCase() === 'human' && this.selectedCubeType.dimension > 2;
+      };
+    },
     selectedCubeType() {
       return this.cubeTypes[this.selectedDimensionIndex];
     },
@@ -102,8 +108,12 @@ export default defineComponent({
         case 'r': !this.shuffling && this.shuffle()
           break;
       }
+      const layer = Number(event.key.toLowerCase())
+      if (!Number.isNaN(layer) && layer > 0 && layer < this.selectedCubeType.dimension) {
+        this.currentLayer = layer;
+      }
       if (!this.solving && !this.shuffling && solverRenderers.length <= 0) {
-        const faceRotation = keyboardInterpreter.readKeys(event);
+        const faceRotation = keyboardInterpreter.readKeys(event, this.currentLayer - 1);
         if (faceRotation !== undefined) {
           shuffleMoves = tuner.tune(shuffleMoves.concat(faceRotation));
           this.shuffling = true;
@@ -112,11 +122,6 @@ export default defineComponent({
           this.shuffleMovesText = translator.translateRotations(shuffleMoves, { showNumberOfMoves: true });
           this.shuffled = !cube.isSolved();
           this.shuffling = false;
-
-          console.log(translator.translateCube(cube));
-          console.log(cube.getHash());
-          // console.log(cube.translateCubeBits());
-          console.log('solved', cube.isSolved());
         }
       }
     });
@@ -158,6 +163,7 @@ export default defineComponent({
         position: new Vector3(0, 0, 0),
         size: Configuration.renderers.cubeSize
       });
+      world.bringCameraToTheCenter();
     },
     async returnCubesToStage() {
       this.solved = false;
@@ -174,6 +180,7 @@ export default defineComponent({
     },
     async reset() {
       cube = this.selectedCubeType!.instantiator!();
+      this.currentLayer = 1;
       await this.returnCubesToStage();
       await this.coolEffect();
       this.shuffleMovesText = "";
@@ -224,6 +231,7 @@ export default defineComponent({
           });
         });
       world!.getScene().remove(cubeRenderer.getMesh());
+      world.sendCameraAwayFromTheCenter();
       this.solving = true;
       try {
         await Promise.all(solverRenderers
@@ -274,6 +282,9 @@ export default defineComponent({
             <input type="checkbox" v-model="method.checked" class="btn-check" :id="'btncheck' + index" autocomplete="off">
             <label class="btn btn-outline-info fa-solid" :for="'btncheck' + index" data-bs-toggle="tooltip"
               data-bs-placement="bottom" :data-bs-title="method.info">{{ method.key }}
+              <span v-if="badgeLayerNumberIsEnabled(method)"
+                style="margin-left: 10px; color: var(--bs-btn-active-color); background-color: var(--color-text) !important;"
+                class="badge bg-secondary">{{ currentLayer }}</span>
             </label>
           </template>
         </div>

@@ -31,9 +31,9 @@ export const NeuroEvolutionaryConfig = {
 }
 
 export const GeneticAlgorithmConfig = {
-    populationPerGeneration: 100,
-    elitism: 10,
-    armageddonThreshold: 10
+    populationPerGeneration: 250,
+    elitism: 25,
+    armageddonThreshold: 100
 }
 
 export const Configuration = {
@@ -44,7 +44,11 @@ export const Configuration = {
         debug: false,
         scrambleMoves: 10,
         scrambleRotationDuration: 100,
-        cubesCircleRay: 5
+        cubesCircleRay: 5,
+        camera: {
+            closeDistance: 10,
+            farDistance: 50
+        }
     },
     renderers: {
         translationDuration: 500,
@@ -85,7 +89,7 @@ export const Configuration = {
                 {
                     key: 'Human',
                     instantiator: (configuration: string) => new HumanSolver(new RubiksCube({ clone: configuration })),
-                    checked: false,
+                    checked: true,
                     info: 'Use keys \'WASDFX\' combined with \'shift\' to rotate cube faces'
                 },
                 {
