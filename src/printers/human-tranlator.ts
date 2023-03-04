@@ -1,8 +1,7 @@
 import { Sides } from "@/constants/sides";
 import { Colors } from "../constants/colors";
 import { rotationsAreEqual, type FaceRotation } from "../engine/face-rotation";
-import type { Cubelet, Cube, Sticker } from "../engine/cube";
-import type { RubiksCube } from "@/engine/rubiks-cube";
+import type { Cubelet, RubiksCube, Sticker } from "@/engine/rubiks-cube";
 
 export class HumanTranslator {
     public translateSide(side: Sides, cube: RubiksCube): string[] {

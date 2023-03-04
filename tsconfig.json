@@ -1,9 +1,7 @@
 {
   "files": [],
   "compilerOptions": {
-    "moduleResolution": "node",
     "isolatedModules": true,
-    "types": ["node"]
   },
   "useDefineForClassFields": true,
   "references": [

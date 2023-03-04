@@ -30,10 +30,6 @@ export class CubeletsCreator {
             const corners: ColorlessCubelet[] = this.extractCorners();
             const edges: ColorlessCubelet[] = this.extractEdges();
             const cubelets = [...corners, ...edges, ...centers];
-            console.log('centers', centers)
-            console.log('corners', corners)
-            console.log('edges', edges)
-
             CubeletsCreator.cubeletsCreatorMap.set(this.dimension, cubelets);
             return cubelets;
         }

@@ -1,19 +1,17 @@
 import { getAllSides, Sides } from '@/constants/sides';
 import type { FaceRotation } from './face-rotation';
-import { Colors, getAllColors } from '@/constants/colors';
+import { Colors, mapColorInitialsToString, mapStringInitialToColor } from '@/constants/colors';
 import { CubeletsCreator } from './cubelets-creator';
 import { RubiksCubeFaceRotator } from './rubiks-cube-face-rotator';
-import { BitStream, BitView } from 'bit-buffer'
-import { Buffer } from 'buffer';
 
 
-export const defaultColorMap: Map<Colors, Sides> = new Map();
-defaultColorMap.set(Colors.BLUE, Sides.FRONT);
-defaultColorMap.set(Colors.YELLOW, Sides.UP);
-defaultColorMap.set(Colors.RED, Sides.RIGHT);
-defaultColorMap.set(Colors.ORANGE, Sides.LEFT);
-defaultColorMap.set(Colors.GREEN, Sides.BACK);
-defaultColorMap.set(Colors.WHITE, Sides.DOWN);
+export const defaultColorMap: Map<Sides, Colors> = new Map();
+defaultColorMap.set(Sides.FRONT, Colors.BLUE);
+defaultColorMap.set(Sides.UP, Colors.YELLOW);
+defaultColorMap.set(Sides.RIGHT, Colors.RED);
+defaultColorMap.set(Sides.LEFT, Colors.ORANGE);
+defaultColorMap.set(Sides.BACK, Colors.GREEN);
+defaultColorMap.set(Sides.DOWN, Colors.WHITE);
 
 export type ColorlessSticker = {
     side: Sides,
@@ -34,103 +32,89 @@ export type Cubelet = {
     stickers: Sticker[]
 }
 
+export type ColorPermutation = {
+    index: number,
+    color: Colors
+};
+
 export class RubiksCube {
-    private readonly configuration: BitView[];
+    private configuration: string;
     private readonly dimension: number;
     private readonly faceRotator: RubiksCubeFaceRotator;
     private readonly cubelets: ColorlessCubelet[];
-    private hash?: string;
 
-    public constructor(dimension: number, config?: { clone?: ArrayBuffer[], colorMap?: Map<Colors, Sides> }) {
-        this.dimension = dimension;
+    public constructor(config?: { clone?: string, colorMap?: Map<Sides, Colors>, dimension?: number }) {
+        this.dimension = config?.dimension!;
         if (config?.clone) {
-            this.configuration = config.clone
-                .map(config => new BitView(config.slice(0)));
+            this.dimension = Math.sqrt(config.clone.length / 6);
+            this.configuration = config.clone.slice();
         } else {
             const stickersPerSide = this.dimension * this.dimension;
             const colorMap = config?.colorMap || defaultColorMap;
-            const numOfBytes = Math.ceil(stickersPerSide * 6 * 0.125); //muliplied by number of sides divided by number of bits per byte
-            this.configuration = Array.from(new Array(3))
-                .map(() => new BitView(new ArrayBuffer(numOfBytes)));
-
-            getAllColors()
-                .forEach(color => {
-                    const side = colorMap.get(color)!;
-                    const fullBitsValue = (1 << stickersPerSide) - 1;
-                    const value0 = (color & 0b1) > 0b0 ? fullBitsValue : 0b0000;
-                    const value1 = (color & 0b10) > 0b0 ? fullBitsValue : 0b0000;
-                    const value2 = (color & 0b100) > 0b0 ? fullBitsValue : 0b0000;
-                    this.configuration[0].setBits(side * stickersPerSide, value0, stickersPerSide);
-                    this.configuration[1].setBits(side * stickersPerSide, value1, stickersPerSide);
-                    this.configuration[2].setBits(side * stickersPerSide, value2, stickersPerSide);
-                });
+            const allSides = getAllSides();
+            this.configuration = '';
+            for (let side = 0; side < allSides.length; ++side) {
+                const color = colorMap.get(side)!;
+                const initial = mapColorInitialsToString(color);
+                this.configuration += initial.repeat(stickersPerSide);
+            }
         }
-
         this.faceRotator = new RubiksCubeFaceRotator(this.dimension);
         this.cubelets = new CubeletsCreator(this.dimension).create();
-        this.updateHash();
     }
 
 
     public clone(): RubiksCube {
-        return new RubiksCube(this.dimension, { clone: this.configuration.map(config => config.buffer) });
+        return new RubiksCube({ clone: this.configuration });
     }
 
     public getDimension(): number {
         return this.dimension;
     }
 
-    public getConfiguration(): ArrayBuffer[] {
-        return this.configuration
-            .map(config => config.buffer);
-    }
-
-    private updateHash(): void {
-        this.hash = this.configuration
-            .map(config => Buffer.from(config.buffer).toString('base64'))
-            .join('.');
+    public getConfiguration(): string {
+        return this.configuration;
     }
 
     public getHash(): string {
-        const newHash = this.configuration
-            .map(config => Buffer.from(config.buffer).toString('base64'))
-            .join('.');
-        return newHash;
+        return this.configuration;
     }
 
     public translateCubeBits(): string {
-        const stickersPerSide = this.dimension * this.dimension;
-        let text = getAllSides()
-            .map(side => (Sides[side] + new Array(stickersPerSide + 5).fill(' ').join('')).substring(0, stickersPerSide + 2))
-            .join('')
-            .concat('\n');
-
-        const spacing = '-'.repeat(stickersPerSide)
-            .concat('  ')
-            .repeat(6)
-            .concat('\n')
-
-        text += spacing;
-        this.configuration
-            .forEach(config => {
-                const bytes = new Uint8Array(config.buffer).slice(0); //clones it
-                text += bytes
-                    .reverse()
-                    .reduce((str, byte) => str + byte.toString(2).padStart(8, '0'), '')
-                    .split('').reverse().join('')
-                    .match(new RegExp(`.{${stickersPerSide}}`, 'g'))!
-                    .join('  ')
-                    .concat('\n');
-            });
-        text += spacing;
-        text += Array.from(new Array(stickersPerSide * 6))
-            .map((_, index) => Colors[this.getColorOfIndex(index)].substring(0, 1))
-            .join('')
-            .match(new RegExp(`.{1,${stickersPerSide}}`, 'g'))!
-            .join('  ')
-            .concat('\n');
-        return text;
+        return this.configuration;
     }
+    //     const stickersPerSide = this.dimension * this.dimension;
+    //     let text = getAllSides()
+    //         .map(side => (Sides[side] + new Array(stickersPerSide + 5).fill(' ').join('')).substring(0, stickersPerSide + 2))
+    //         .join('')
+    //         .concat('\n');
+
+    //     const spacing = '-'.repeat(stickersPerSide)
+    //         .concat('  ')
+    //         .repeat(6)
+    //         .concat('\n')
+
+    //     text += spacing;
+    //     this.configuration
+    //         .forEach(config => {
+    //             const bytes = new Uint8Array(config.buffer).slice(0); //clones it
+    //             text += bytes
+    //                 .reverse()
+    //                 .reduce((str, byte) => str + byte.toString(2).padStart(8, '0'), '')
+    //                 .split('').reverse().join('')
+    //                 .match(new RegExp(`.{${stickersPerSide}}`, 'g'))!
+    //                 .join('  ')
+    //                 .concat('\n');
+    //         });
+    //     text += spacing;
+    //     text += Array.from(new Array(stickersPerSide * 6))
+    //         .map((_, index) => Colors[this.getColorOfIndex(index)].substring(0, 1))
+    //         .join('')
+    //         .match(new RegExp(`.{1,${stickersPerSide}}`, 'g'))!
+    //         .join('  ')
+    //         .concat('\n');
+    //     return text;
+    // }
 
     public isSolved(): boolean {
         const stickersPerSide = this.dimension * this.dimension;
@@ -138,17 +122,19 @@ export class RubiksCube {
         const stickersArray = Array.from(new Array(stickersPerSide));
         return sides
             .every((_, sideIndex) => stickersArray
-                .every((_, index) => this.getColorOfIndex(sideIndex * stickersPerSide + index) === this.getColorOfIndex(sideIndex * stickersPerSide)))
+                .every((_, index) => this.configuration[sideIndex * stickersPerSide + index] === this.configuration[sideIndex * stickersPerSide]))
     }
 
     public rotateFace(faceRotation: FaceRotation): RubiksCube {
-        const result = this.faceRotator.rotate(this, faceRotation);
-        result.updateHash();
-        return result;
+        return this.faceRotator.rotate(this, faceRotation);
     }
 
     public getAllCubelets(): Cubelet[] {
         return this.addColorToCubelets(this.cubelets);
+    }
+
+    public getAllColorlessCubelets(): ColorlessCubelet[] {
+        return this.cubelets;
     }
 
     public getCubeletsBySides(...sides: Sides[]): Cubelet[] {
@@ -160,25 +146,24 @@ export class RubiksCube {
 
     public getCubeletsByColor(...colors: Colors[]): Cubelet[] {
         const found = this.cubelets
-            .filter(cubelet => cubelet.stickers
-                .every(sticker => colors.includes(this.getColorOfIndex(sticker.id)!)));
+            .filter(cubelet => cubelet
+                .stickers
+                .every(sticker => colors
+                    .includes(mapStringInitialToColor(this.configuration[sticker.id]))));
         return this.addColorToCubelets(found);
     }
 
     public getColorOfIndex(index: number): Colors {
-        return this.configuration
-            .reduce((acc, config, i) => acc | (config.getBits(index, 1) << i), 0b0)
-            .valueOf();
+        return mapStringInitialToColor(this.configuration[index])!;
     }
 
-    public setColorOfIndex(index: number, color: Colors): void {
-        const value0 = (color & 0b1) > 0b0 ? 0b1 : 0b0
-        const value1 = (color & 0b10) > 0b0 ? 0b1 : 0b0000;
-        const value2 = (color & 0b100) > 0b0 ? 0b1 : 0b0000;
-
-        this.configuration[0].setBits(index, value0, 1);
-        this.configuration[1].setBits(index, value1, 1);
-        this.configuration[2].setBits(index, value2, 1);
+    public setColorsOfIndexes(permutations: ColorPermutation[]): void {
+        const temp = this.configuration.split('');
+        permutations
+            .forEach(permutation => {
+                temp[permutation.index] = mapColorInitialsToString(permutation.color);
+            })
+        this.configuration = temp.join('');
     }
 
     private addColorToCubelets(colorless: ColorlessCubelet[]): Cubelet[] {
@@ -187,7 +172,7 @@ export class RubiksCube {
                 stickers: cubelet.stickers
                     .map(sticker => ({
                         ...sticker,
-                        color: this.getColorOfIndex(sticker.id)!,
+                        color: mapStringInitialToColor(this.configuration[sticker.id]),
                     }))
             }))
     }

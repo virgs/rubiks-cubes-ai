@@ -7,7 +7,7 @@ export type SolverWorkerRequest = {
     abort?: true,
     label?: string,
     solverTag?: string,
-    cube?: ArrayBuffer[],
+    cube?: string,
     keyboardEvent?: KeyboardEvent
 };
 

@@ -1,7 +1,6 @@
-import { Colors } from '@/constants/colors';
 import { Sides } from '@/constants/sides';
 import type { FaceRotation } from './face-rotation';
-import { RubiksCube } from './rubiks-cube';
+import { RubiksCube, type ColorPermutation } from './rubiks-cube';
 
 type FaceRotatorMap = {
     destination: number,
@@ -31,6 +30,7 @@ export class RubiksCubeFaceRotator {
         if (!RubiksCubeFaceRotator.faceRotatorMap.has(this.dimension)) {
             const layerMap = new Map();
             for (let layer = 0; layer < this.dimension; ++layer) {
+                console.log(`Creating rotation map for layer: ${layer} of ${dimension}x${dimension} cubes`);
                 const upFaceRotator: FaceStickerRotatorMap[] = this.createUpFaceClockwiseRotator(layer);
                 const leftFaceRotator: FaceStickerRotatorMap[] = this.createLeftFaceClockwiseRotator(layer);
                 const frontFaceRotator: FaceStickerRotatorMap[] = this.createFrontFaceClockwiseRotator(layer);
@@ -55,7 +55,8 @@ export class RubiksCubeFaceRotator {
     }
 
     public rotate(originalCube: RubiksCube, faceRotation: FaceRotation): RubiksCube {
-        const clone = new RubiksCube(originalCube.getDimension(), { clone: originalCube.getConfiguration() })
+        const clone = new RubiksCube({ clone: originalCube.getConfiguration() })
+        const permutations: ColorPermutation[] = [];
 
         RubiksCubeFaceRotator.faceRotatorMap
             .get(this.dimension)!
@@ -63,13 +64,13 @@ export class RubiksCubeFaceRotator {
             .get(faceRotation.side)!
             .forEach(item => {
                 if (faceRotation.counterClockwiseDirection) {
-                    clone.setColorOfIndex(item.source,
-                        originalCube.getColorOfIndex(item.destination));
+                    permutations.push({ index: item.source, color: originalCube.getColorOfIndex(item.destination) });
                 } else {
-                    clone.setColorOfIndex(item.destination,
-                        originalCube.getColorOfIndex(item.source));
+                    permutations.push({ index: item.destination, color: originalCube.getColorOfIndex(item.source) });
                 }
             });
+
+        clone.setColorsOfIndexes(permutations);
         return clone;
     }
 

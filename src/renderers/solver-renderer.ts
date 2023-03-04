@@ -67,18 +67,7 @@ export class SolverRenderer {
 
         this.interval = setInterval(async () => {
             if (this.movesAnimationsQueue.length > 0 && !this.rotatingFace) {
-                this.rotatingFace = true;
-                const faceRotation = this.movesAnimationsQueue.shift()!;
-                this.movesList.push(faceRotation);
-                let duration = Configuration.renderers.rotationDuration;
-                if (this.movesAnimationsQueue.length > 25) {
-                    duration /= 2;
-                    if (this.movesAnimationsQueue.length > 50) {
-                        duration /= 5;
-                    }
-                }
-                await this.cubeRenderer.rotateFace({ ...faceRotation, duration: duration })
-                this.rotatingFace = false;
+                this.performRotations();
                 if (this.terminated) {
                     this.findSolutionResolve!();
                 }
@@ -137,6 +126,21 @@ export class SolverRenderer {
         });
     }
 
+    private async performRotations(durationFactor: number = 1): Promise<void> {
+        this.rotatingFace = true;
+        const faceRotation = this.movesAnimationsQueue.shift()!;
+        this.movesList.push(faceRotation);
+        let duration = Configuration.renderers.rotationDuration / durationFactor;
+        if (this.movesAnimationsQueue.length > 25) {
+            duration /= 2;
+            if (this.movesAnimationsQueue.length > 50) {
+                duration /= 5;
+            }
+        }
+        await this.cubeRenderer.rotateFace({ ...faceRotation, duration: duration })
+        this.rotatingFace = false;
+    }
+
     private createText(text: string, size: number): Mesh {
         const geometry = new TextGeometry(text, {
             font: this.config.font,
@@ -180,7 +184,16 @@ export class SolverRenderer {
         })
     }
 
+    public getCubeMesh(): Object3D {
+        return this.cubeRenderer.getMesh();
+    }
+
     public async remove(): Promise<void> {
+        this.movesAnimationsQueue.push(...this.movesList.reverse()
+            .map(move => ({ ...move, counterClockwiseDirection: !move.counterClockwiseDirection })));
+        while (this.movesAnimationsQueue.length > 0) {
+            await this.performRotations(4);
+        }
         if (this.solutionsText) {
             this.config.scene.remove(this.solutionsText);
         }
@@ -192,7 +205,6 @@ export class SolverRenderer {
         this.solversMapWorker.terminate();
         clearInterval(this.interval);
         await this.translate(1, 0);
-        this.config.scene.remove(this.cubeRenderer.getMesh());
         this.config.scene.remove(this.title);
         this.findSolutionReject!(Error(`Abort solver '${this.config.key}' rendering`));
     }

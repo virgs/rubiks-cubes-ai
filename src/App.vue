@@ -66,6 +66,7 @@ export default defineComponent({
   },
   watch: {
     selectedDimensionIndex() {
+      this.refreshTooltips();
       this.reset();
       // console.log(translator.translateCube(cube!));
       // console.log(cube!.getHash());
@@ -80,11 +81,7 @@ export default defineComponent({
     await this.returnCubesToStage();
   },
   async mounted() {
-    const tooltipTriggerList = document.querySelectorAll("[data-bs-toggle=\"tooltip\"]");
-    //@ts-expect-error
-    const tooltipList = [...tooltipTriggerList]
-      //@ts-expect-error
-      .map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl, { delay: { show: 500, hide: 500 } }));
+    this.refreshTooltips();
     const container = document.getElementById("scene-container")!;
     const navBar = document.getElementById("nav-bar")!;
     const app = document.getElementById("app")!;
@@ -93,7 +90,6 @@ export default defineComponent({
     world = new World(container);
     world.start();
     await this.reset();
-    await this.coolEffect();
 
     window.addEventListener('keypress', async (event: KeyboardEvent) => {
       solverRenderers
@@ -119,13 +115,21 @@ export default defineComponent({
 
           console.log(translator.translateCube(cube));
           console.log(cube.getHash());
-          console.log(cube.translateCubeBits());
+          // console.log(cube.translateCubeBits());
           console.log('solved', cube.isSolved());
         }
       }
     });
   },
   methods: {
+    refreshTooltips() {
+      const tooltipTriggerList = document.querySelectorAll("[data-bs-toggle=\"tooltip\"]");
+      //@ts-expect-error
+      const tooltipList = [...tooltipTriggerList]
+        //@ts-expect-error
+        .map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl, { delay: { show: 500, hide: 500 } }));
+
+    },
     async coolEffect() {
       const sides = getAllSides();
       const sideToRotateFourTimes = Math.floor(Math.random() * sides.length);
@@ -160,6 +164,10 @@ export default defineComponent({
       this.solving = false;
       await Promise.all(solverRenderers
         .map(solver => solver.remove()));
+      solverRenderers
+        .forEach(sr => {
+          world.getScene().remove(sr.getCubeMesh())
+        });
       solverRenderers = [];
       await this.createCubeRenderer();
       this.shuffled = !cube!.isSolved();

@@ -33,3 +33,28 @@ export const getOppositeColor = (color: Colors): Colors => {
         case Colors.WHITE: return Colors.YELLOW;
     }
 }
+
+
+const colorToStringMap = new Map<Colors, string>();
+colorToStringMap.set(Colors.YELLOW, 'y')
+colorToStringMap.set(Colors.ORANGE, 'o')
+colorToStringMap.set(Colors.BLUE, 'b')
+colorToStringMap.set(Colors.RED, 'r')
+colorToStringMap.set(Colors.GREEN, 'g')
+colorToStringMap.set(Colors.WHITE, 'w')
+
+export const mapColorInitialsToString = (color: Colors): string => {
+    return colorToStringMap.get(color)!
+}
+
+const stringToColorMap = new Map<string, Colors>();
+stringToColorMap.set('y', Colors.YELLOW)
+stringToColorMap.set('o', Colors.ORANGE)
+stringToColorMap.set('b', Colors.BLUE)
+stringToColorMap.set('r', Colors.RED)
+stringToColorMap.set('g', Colors.GREEN)
+stringToColorMap.set('w', Colors.WHITE)
+
+export const mapStringInitialToColor = (initial: string): Colors => {
+    return stringToColorMap.get(initial)!
+}

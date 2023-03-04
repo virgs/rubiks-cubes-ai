@@ -4,12 +4,11 @@ import { Sides, getOppositeSide } from "@/constants/sides";
 import { CubeScrambler } from "@/engine/cube-scrambler";
 import type { FaceRotation } from "@/engine/face-rotation";
 import { RotationsTuner } from "@/printers/rotations-tuner";
-import type { Cubelet } from "@/engine/cube";
 import type { CubeSolver, Solution } from "../cube-solver";
 import { ProcedureMeasurer } from "../procedure-measurer";
 import { GeneticAlgorithm, type Chromosome } from "./genetic-algorithm";
 import { HumanTranslator } from "@/printers/human-tranlator";
-import type { RubiksCube } from "@/engine/rubiks-cube";
+import { RubiksCube, type Cubelet } from "@/engine/rubiks-cube";
 
 enum Metrics {
     NOT_MEASURED,
@@ -45,17 +44,17 @@ export class GeneticAlgorithmSolver implements CubeSolver {
             translator.convertStringToFaceRotations('U\''),
             translator.convertStringToFaceRotations('R'),
             translator.convertStringToFaceRotations('R\''),
-            translator.convertStringToFaceRotations('B', 'U', 'B\''),
-            translator.convertStringToFaceRotations('U', 'R', 'U\''),
-            translator.convertStringToFaceRotations('F', 'U\'', 'F\''),
-            translator.convertStringToFaceRotations('D', 'B', 'D\''),
-            translator.convertStringToFaceRotations('R', 'U', 'R\'', 'U', 'R', '2U', 'R\''),
-            translator.convertStringToFaceRotations('U', 'R\'', 'U\'', 'R', 'U\'', 'R\'', '2U', 'R'),
-            translator.convertStringToFaceRotations('U\'', 'R\'', 'U\'', 'R', 'U\'', 'R\'', '2U', 'R'),
-            // translator.convertStringToFaceRotations('2U', 'R\'', 'U\'', 'R', 'U\'', 'R\'', '2U', 'R'),
-            // translator.convertStringToFaceRotations('L\'', 'U', 'R\'', '2D', 'R', 'U\'', 'R\'', '2D', '2R'),
-            // translator.convertStringToFaceRotations('2R', 'L\'', 'U', 'R\'', '2D', 'R', 'U\'', 'R\'', '2D'),
-            // translator.convertStringToFaceRotations('2F', 'L\'', 'U', 'R\'', '2D', 'R', 'U\'', 'R\'', '2D', '2R', '2F\''),
+            translator.convertStringToFaceRotations('B U B\''),
+            translator.convertStringToFaceRotations('U R U\''),
+            translator.convertStringToFaceRotations('F U\' F\''),
+            translator.convertStringToFaceRotations('D B D\''),
+            translator.convertStringToFaceRotations('R U R\' U R 2U R\''),
+            translator.convertStringToFaceRotations('U R\' U\' R U\' R\' 2U R'),
+            translator.convertStringToFaceRotations('U\' R\' U\' R U\' R\' 2U R'),
+            translator.convertStringToFaceRotations('2U R\' U\' R U\' R\' 2U R'),
+            translator.convertStringToFaceRotations('L\' U R\' 2D R U\' R\' 2D 2R'),
+            translator.convertStringToFaceRotations('2R L\' U R\' 2D R U\' R\' 2D'),
+            translator.convertStringToFaceRotations('2F L\' U R\' 2D R U\' R\' 2D 2R 2F\''),
         ]);
     }
 
@@ -93,7 +92,7 @@ export class GeneticAlgorithmSolver implements CubeSolver {
                 // console.log(new HumanTranslator().translateRotations(rotations))
                 const cube = this.initialState.clone()
                 // rotations
-                    // .reduce((cube, rotation) => cube.rotateFace(rotation), this.initialState.clone());
+                // .reduce((cube, rotation) => cube.rotateFace(rotation), this.initialState.clone());
                 const fixedCubelets = cube.getCubeletsBySides(Sides.BACK, Sides.LEFT, Sides.DOWN)[0];
                 const goalState = this.buildSolvedPocketCubeFromCornerCubelet(fixedCubelets).getConfiguration();
                 return {
@@ -167,14 +166,14 @@ export class GeneticAlgorithmSolver implements CubeSolver {
         }
     }
 
-    public buildSolvedPocketCubeFromCornerCubelet(cubelet: Cubelet): PocketCube {
+    public buildSolvedPocketCubeFromCornerCubelet(cubelet: Cubelet): RubiksCube {
         const colorMap: Map<Colors, Sides> = new Map();
         cubelet.stickers
             .forEach(sticker => {
                 colorMap.set(sticker.color, sticker.side);
                 colorMap.set(getOppositeColor(sticker.color), getOppositeSide(sticker.side));
             });
-        return new PocketCube({ colorMap: colorMap });
+        return new RubiksCube(this.initialState.getDimension(), { colorMap: colorMap });
     }
 
 }

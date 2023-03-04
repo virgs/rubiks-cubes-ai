@@ -1,27 +1,50 @@
-type Measurement = {
-    time: number;
-    calls: number
-};
+
+type Call = {
+    calls: number,
+    elapsedTime: number,
+    stack: string,
+    stackSize: number
+}
+
+type ReportItem = {
+    label: string;
+    totalTime: number,
+    totalRelativeTime: string,
+    avgTimePerCall: number,
+    numOfCalls: number
+}
+
+
 export class ProcedureMeasurer {
-    private readonly map: Map<string, Measurement>;
+    private readonly map: Map<string, Call>;
+    private readonly enabled: boolean;
+    private measurerOverhead: number;
     private startTime?: number;
     private totalTime?: number;
 
-    constructor() {
+    constructor(enabled: boolean = true) {
         this.map = new Map();
+        this.enabled = enabled;
+        this.measurerOverhead = 0;
     }
 
     public add(label: string, method: () => any): any {
         const before = new Date().getTime();
+        if (!this.enabled) {
+            return method();
+        }
         const result = method();
         const after = new Date().getTime();
-        const measurement = this.map.get(label) || {
-            time: 0,
-            calls: 0
+        const call = this.map.get(label) || {
+            elapsedTime: 0,
+            calls: 0,
+            stack: '',
+            stackSize: 0,
         };
-        measurement.time += after - before;
-        measurement.calls++;
-        this.map.set(label, measurement);
+        call.elapsedTime += after - before;
+        ++call.calls;
+        this.map.set(label, call);
+        this.measurerOverhead += (new Date().getTime() - after);
         return result;
     }
 
@@ -39,31 +62,38 @@ export class ProcedureMeasurer {
         return this.totalTime;
     }
 
-    public getData(notMeasuredLabel?: string): any {
+    public getData(extra?: { notMeasuredLabel?: string, measurementOverheadLabel?: string }): any {
+        const result: ReportItem[] = [];
         if (this.totalTime) {
             let sumTimes: number = 0;
-            const result: any = {};
 
             Array.from(this.map.entries())
                 .forEach(item => {
-                    const [label, measurement] = item;
-                    sumTimes += measurement.time;
-                    result[label] = this.createSummary(measurement.time, measurement.calls);
+                    const [label, calls] = item;
+                    sumTimes += calls.elapsedTime;
+                    result.push(this.createSummary(calls.elapsedTime, calls.calls, label))
                 });
 
-            if (notMeasuredLabel) {
-                result[notMeasuredLabel] = this.createSummary(this.totalTime - sumTimes, 0);
+            if (extra?.notMeasuredLabel) {
+                result.push(this.createSummary(this.totalTime - sumTimes, 0, extra.notMeasuredLabel))
             }
-            return result;
+            if (extra?.measurementOverheadLabel) {
+                result.push(this.createSummary(this.measurerOverhead, 0, extra.measurementOverheadLabel))
+            }
         }
+        return result;
     }
 
-    private createSummary(time: number, calls: number): string {
-        let summary = `${time}ms (~${Math.trunc(1000 * time / this.totalTime!) / 10}%)`;
-        if (calls > 0) {
-            summary += `; calls: ${calls}; avg: ~${10 * Math.trunc(1000000 * time * 1.0 / calls) / 10}ns`;
+    private createSummary(time: number, calls: number, label: string): ReportItem {
+        const percentRelativeTime = 100 * time / this.totalTime!;
+        const reportItem: ReportItem = {
+            label,
+            totalTime: time,
+            totalRelativeTime: (Math.trunc(100 * percentRelativeTime) / 100) + '%',
+            numOfCalls: calls,
+            avgTimePerCall: time * 1.0 / (calls || 1)
         }
-        return summary;
+        return reportItem;
     }
 
 }
