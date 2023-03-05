@@ -11,7 +11,7 @@ https://en.wikipedia.org/wiki/A*_search_algorithm
 Show average time table. Tell the distinctions of each method. Show gifs.
 Explain they compete for CPU resources
 
-Copy the readme from https://github.com/achmand/Solving-2x2-Rubiks-Cube and adapt it
+Copy the readme from https://github.com/achmand/Solving-2x2-Rubiks-Cube and https://github.com/lukapopijac/pocket-cube-optimal-solver and adapt them
 
 A cube is represented by an array of colors (26). That way is easier to clone a clube, all we have to do is to copy the array.
 on the other hand... The rotation operations and cubelets mapping (show code) are super annoying since it includes some manual mapping.
@@ -52,3 +52,6 @@ Meaning...
   ```
 
  Meaning first layer move...
+
+Given that for a pocket cube, the God's number is 11. You'll find often times that the path found by these algorithms are not optimal.
+ BFS and A* don't find the best answer because they don't look for the best answer to solve the cube. They look for the best answer to solve the cube with a given configuration. As long as one predefined cubelet remains static (usually, the bottom-left-back one). The reason behind it is to keep the branching factor smaller. You see, in this particular cube, you don't have to move all the sides (6) both directions. If the L move basically consists of a R' move and a new cube orientation (which is not a move, technically), you don't need to do the L move at all. The same applies for the other 2 axis. So, instead of having a branching factor of 2\*6, I make it 2\*3. I could even claim that R' is the same 3R, as in fact it is. It would make the branching factor 3\*1, so even smaller. But the solutions found would be even farther from the optimal one,

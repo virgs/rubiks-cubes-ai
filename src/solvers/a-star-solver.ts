@@ -64,7 +64,6 @@ export class AStarSolver implements CubeSolver {
         const fixedCubelet = cube.getCubeletsBySides(Sides.BACK, Sides.LEFT, Sides.DOWN)[0];
         this.goalState = this.buildSolvedPocketCubeFromCornerCubelet(fixedCubelet);
         this.goalStateHash = this.goalState.getHash();
-        console.log(this.goalStateHash)
         this.goalStateCubelets = new Map();
         this.goalState.getAllCubelets()
             .forEach(cubelet => {

@@ -24,7 +24,7 @@ type Candidate = {
     parent?: Candidate
 }
 
-export class BreadthFirstSearchSolver implements CubeSolver {
+export class DepthFirstSearchSolver implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
     private readonly candidates: LinkedList;
     private readonly visitedChecklist: Map<string, boolean>;
@@ -83,7 +83,7 @@ export class BreadthFirstSearchSolver implements CubeSolver {
         [xIndex, yIndex, zIndex]
             .map(side => [true, false]
                 .map(direction => {
-                    result.push({ side: side, counterClockwiseDirection: direction, layer: 0 });
+                    result.unshift({ side: side, counterClockwiseDirection: direction, layer: 0 });
                 }));
         return result;
     }

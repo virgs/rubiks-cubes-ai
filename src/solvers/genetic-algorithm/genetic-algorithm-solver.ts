@@ -18,18 +18,16 @@ const orientations = [
     "F F2 F3",
     "F' F2' F3'",
     "2F 2F2 2F3",
-]
-
-const rotations = [
     "R R2 R3",
     "R' R2' R3'",
     "2R 2R2 2R3",
     "U U2 U3",
     "U' U2' U3'",
     "2U 2U2 2U3",
-]
+];
 
-const permutations = [
+const supervisedPermutations = [
+    "2R2 2F2 2F2",
     // permutes two edges: U face, bottom edge and right edge
     "F' L' B' R' U' R U' B L F R U R' U",
     // permutes two edges: U face, bottom edge and left edge
@@ -78,8 +76,11 @@ export class GeneticAlgorithmSolver implements CubeSolver {
         this.armageddonCounter = 0;
         // this.goalStateConfiguration = this.buildSolvedCubeFromCenterCubelets(cube).getConfiguration();
         const translator = new HumanTranslator();
-        this.geneticAlgorithm = new GeneticAlgorithm(this.initialState, permutations
-            .map(permutation => translator.convertStringToFaceRotations(permutation)));
+        this.geneticAlgorithm = new GeneticAlgorithm(this.initialState,
+            supervisedPermutations
+                .map(permutation => translator.convertStringToFaceRotations(permutation)),
+            orientations
+                .map(permutation => translator.convertStringToFaceRotations(permutation)));
         this.citizens = this.geneticAlgorithm.createNextGeneration();
     }
 
@@ -90,16 +91,16 @@ export class GeneticAlgorithmSolver implements CubeSolver {
                 if (this.aborted) {
                     return reject();
                 }
-                let it = 0;
+                const result = [];
                 for (let citizen of this.citizens) {
-                    ++it;
-                    if (this.runCitizen(citizen)) {
+                    const citizenResult = this.runCitizen(citizen);
+                    if (citizen.score === 0) {
                         return resolve(this.createSolution(citizen));
                     }
+                    result.push(citizen)
                 }
-                console.log(it, this.citizens.length)
 
-                this.citizens = this.geneticAlgorithm.createNextGeneration(this.citizens);
+                this.citizens = this.geneticAlgorithm.createNextGeneration(result);
             }
         })
     }
@@ -108,7 +109,8 @@ export class GeneticAlgorithmSolver implements CubeSolver {
         this.aborted = true;
     }
 
-    private runCitizen(citizen: Chromosome): boolean {
+    private runCitizen(citizen: Chromosome): Chromosome {
+        let result: Chromosome;
         // citizen.genes = citizen.genes.concat(citizen.newGenes);
         // const currentRotations: FaceRotation[] = [];
         // let currentCube = this.initialState.clone();
@@ -122,18 +124,25 @@ export class GeneticAlgorithmSolver implements CubeSolver {
                 console.log('what')
             }
             citizen.score = score;
+            // if (result === undefined || result.score > score) {
+                result = {
+                    genes: citizen.genes.slice(),
+                    score: score,
+                    newGenes: [],
+                    cube: citizen.cube.clone()
+                }
+            // }
             // citizen.genes.push(rotation);
             // citizen.cube = citizen.cube.rotateFace(rotation);
             // if (citizen.cube.getConfiguration().toString() === citizen.goalState.toString()) {
-            if (citizen.score === 0) {
+            if (score === 0) {
+                return result;
                 // const proof = currentRotations.reduce((cube, rotation) => cube.rotateFace(rotation), this.initialState.clone())
                 // console.log('proof', citizen.genes)
                 // console.log(currentRotations)
                 // console.log(new HumanTranslator().translateCube(proof));
                 // console.log(new HumanTranslator().translateCube(currentCube));
                 // citizen.genes = currentRotations;
-                console.log(score)
-                return true;
             }
             // return false;
             // })) {
@@ -156,7 +165,9 @@ export class GeneticAlgorithmSolver implements CubeSolver {
         // citizen.cube = bestMoment!.cube.clone();    
         // }
 
-        return false;
+        result!.genes = new RotationsTuner().tune(result!.genes!); 
+
+        return result!;
     }
 
     private calculateCitizenScore(currentCube: RubiksCube): number {

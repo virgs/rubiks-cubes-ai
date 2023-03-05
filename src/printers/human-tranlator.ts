@@ -1,5 +1,7 @@
 import { Sides } from "@/constants/sides";
 import { Colors } from "../constants/colors";
+import { color } from 'console-log-colors';
+
 import { rotationsAreEqual, type FaceRotation } from "../engine/face-rotation";
 import type { Cubelet, RubiksCube, Sticker } from "@/engine/rubiks-cube";
 
@@ -28,14 +30,25 @@ export class HumanTranslator {
             let line = '';
             for (let x = 0; x < dimension; ++x) {
                 const sticker = stickerFinder(side, x, y)!;
-                line += Colors[sticker.color].substring(0, 1) + HumanTranslator.mapToSubscript(`${('  ' + sticker.id).slice(-2)}  `);
+                const element = Colors[sticker.color].substring(0, 1) + HumanTranslator.mapToSubscript(`${('  ' + sticker.id).slice(-2)}  `);
+                let colorNameMethod = Colors[sticker.color].toLowerCase();
+                if (colorNameMethod === 'white') {
+                    colorNameMethod = 'gray'
+                }
+                if (colorNameMethod === 'orange') {
+                    colorNameMethod = 'redBright'
+                }
+                //@ts-expect-error
+                const colored = color[colorNameMethod](element)
+
+                line += colored;
             }
             text.push(line);
         }
         return text;
     }
 
-    public translateCube(cube: RubiksCube): string {
+    public translateCube(cube: RubiksCube): void {
         const dimension = cube.getDimension();
 
         const up = this.translateSide(Sides.UP, cube);
@@ -45,7 +58,7 @@ export class HumanTranslator {
         const back = this.translateSide(Sides.BACK, cube);
         const down = this.translateSide(Sides.DOWN, cube);
         let text = '';
-        const titleEmptySpace = Array.from(new Array(up[1].length)).fill(' ').join('');
+        const titleEmptySpace = Array.from(new Array(up[1].length / 3)).fill(' ').join('');
         up
             .forEach(line => {
                 text += titleEmptySpace + line + '\n'
@@ -65,7 +78,7 @@ export class HumanTranslator {
             .forEach(line => {
                 text += titleEmptySpace + line + '\n'
             });
-        return text;
+        console.log(text);
     }
 
     public convertStringToFaceRotations(humanString: String): FaceRotation[] {

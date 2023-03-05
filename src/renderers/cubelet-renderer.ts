@@ -1,10 +1,10 @@
 import {
-    Mesh, MeshStandardMaterial, Material, Vector3, DoubleSide
+    Mesh, Material, Vector3, MeshPhongMaterial
 } from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry";
 import { Sides } from "@/constants/sides";
 import { mapColorsToHex } from "@/constants/colors";
-import type { Cubelet } from "@/engine/cube";
+import type { Cubelet } from "@/engine/rubiks-cube";
 
 type Config = {
     sideSize: number;
@@ -23,7 +23,7 @@ export class CubeletRenderer {
         let position: Vector3 = this.getPositionFromCubelet(config);
         position.subScalar((config.cubeDimension - 1) * .5);
         position.multiplyScalar(config.sideSize);
-        this.cubeletMesh = new Mesh(geometry, this.createMaterial(config.cubelet))
+        this.cubeletMesh = new Mesh(geometry, this.createMaterial(config.cubelet));
         this.cubeletMesh.position.set(position.x, position.y, position.z);
     }
     public getMesh(): Mesh {
@@ -36,14 +36,15 @@ export class CubeletRenderer {
                 const side = this.mapCubeFaceToSide(index)!;
                 const sticker = cubelet.stickers
                     .find(sticker => sticker.side === side);
-                const material = new MeshStandardMaterial({
+                const material = new MeshPhongMaterial({
                     color: sticker ? mapColorsToHex(sticker.color) : CubeletRenderer.stickerlessColor,
                     // metalness: .51,
-                    roughness: .5,
+                    // roughness: .5,
                     flatShading: true,
-                    // transparent: true,
+                    transparent: true,
                     // side: DoubleSide,
                 });
+                material.polygonOffsetUnits = 1;
                 return material;
             })
     }

@@ -5,6 +5,7 @@ import { AStarSolver } from "./solvers/a-star-solver";
 import { BreadthFirstSearchSolver } from "./solvers/breadth-first-search-solver";
 import { NeuroEvolutionarySolver } from "./solvers/neuro-evolutionary/neuro-evolutionary-solver";
 import { GeneticAlgorithmSolver } from "./solvers/genetic-algorithm/genetic-algorithm-solver";
+import { DepthFirstSearchSolver } from "./solvers/depth-first-search-solver";
 
 export type CubeTypes = {
     label: string,
@@ -31,9 +32,10 @@ export const NeuroEvolutionaryConfig = {
 }
 
 export const GeneticAlgorithmConfig = {
-    populationPerGeneration: 250,
-    elitism: 25,
-    armageddonThreshold: 100
+    populationPerGeneration: 500,
+    elitism: 20,
+    armageddonThreshold: 50,
+    numberOfInitialScrambleMovements: 10
 }
 
 export const Configuration = {
@@ -60,22 +62,28 @@ export const Configuration = {
         {
             label: '2x2',
             dimension: 2,
-            instantiator: () => new RubiksCube({dimension: 2}),
+            instantiator: () => new RubiksCube({ dimension: 2 }),
             methods: [{
                 key: 'Human',
-                instantiator: (configuration: string) => new HumanSolver(new RubiksCube({ clone: configuration, dimension: 2 })),
+                instantiator: (configuration: string) => new HumanSolver(new RubiksCube({ clone: configuration })),
                 checked: false,
                 info: 'Use keys \'WASDFX\' combined with \'shift\' to rotate cube faces'
             },
             {
+                key: 'DFS',
+                instantiator: (configuration: string) => new DepthFirstSearchSolver(new RubiksCube({ clone: configuration })),
+                checked: false,
+                info: `Depth-first-search. Brute force`
+            },
+            {
                 key: 'BFS',
-                instantiator: (configuration: string) => new BreadthFirstSearchSolver(new RubiksCube({ clone: configuration, dimension: 2  })),
+                instantiator: (configuration: string) => new BreadthFirstSearchSolver(new RubiksCube({ clone: configuration })),
                 checked: false,
                 info: `Breadth-first-search. Brute force`
             },
             {
                 key: 'A*',
-                instantiator: (configuration: string) => new AStarSolver(new RubiksCube({ clone: configuration, dimension: 2  })),
+                instantiator: (configuration: string) => new AStarSolver(new RubiksCube({ clone: configuration })),
                 checked: true,
                 info: `Astar. Uses number of misplaced cubies as heuristic`
             }
@@ -84,7 +92,7 @@ export const Configuration = {
         {
             label: '3x3',
             dimension: 3,
-            instantiator: () => new RubiksCube({dimension: 3}),
+            instantiator: () => new RubiksCube({ dimension: 3 }),
             methods: [
                 {
                     key: 'Human',
@@ -109,7 +117,7 @@ export const Configuration = {
         {
             label: '4x4',
             dimension: 4,
-            instantiator: () => new RubiksCube({dimension: 4}),
+            instantiator: () => new RubiksCube({ dimension: 4 }),
             methods: [
                 {
                     key: 'Human',
@@ -122,7 +130,7 @@ export const Configuration = {
         {
             label: '5x5',
             dimension: 5,
-            instantiator: () => new RubiksCube({dimension: 5}),
+            instantiator: () => new RubiksCube({ dimension: 5 }),
             methods: [
                 {
                     key: 'Human',

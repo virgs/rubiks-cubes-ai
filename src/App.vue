@@ -74,10 +74,7 @@ export default defineComponent({
     selectedDimensionIndex() {
       this.refreshTooltips();
       this.reset();
-      // console.log(translator.translateCube(cube!));
-      // console.log(cube!.getHash());
-      // console.log(cube!.translateCubeBits());
-      // console.log('solved', cube.isSolved());
+      translator.translateCube(cube);
     },
     shuffleMovesText() {
       document.querySelector("textarea")!.scrollTop = document.querySelector("textarea")!.scrollHeight;
@@ -105,7 +102,7 @@ export default defineComponent({
           break;
         case 'delete': !this.shuffling && this.reset()
           break;
-        case 'r': !this.shuffling && this.shuffle()
+        case 'p': !this.shuffling && this.shuffle()
           break;
       }
       const layer = Number(event.key.toLowerCase())
@@ -249,20 +246,17 @@ export default defineComponent({
 </script>
 
 <template>
+  <GithubCorner></GithubCorner>
   <div class="container-fluid" style="width: 100%; height: 100%;">
-    <div id="nav-bar" class="row g-4 justify-content-center">
-      <div class="col-12 m-0 p-0">
-        <div class="mt-5" style="text-align: center;">
-          <GithubCorner></GithubCorner>
-          <img class="img-fluid py-2" height="64" width="48" style="max-width: 72px; min-width: 72px; max-height: 96px;"
-            src="/large-icon.png">
-          <h2 class="title">
-            Rubiks Cubes AI</h2>
-        </div>
+    <div id="nav-bar" class="row justify-content-center align-items-center gx-2">
+      <div class="col-12 col-lg-auto mt-2 mt-lg-3">
+        <img class="img-fluid mr-2 pr-2" height="64" width="48"
+          style="max-width: 72px; min-width: 72px; max-height: 96px;display: inline-block; margin-right: 10px;" src="/large-icon.png">
+        <h2 class="title" style="display: inline-block;">
+          Rubiks Cubes AI</h2>
       </div>
-      <div class="w-100 m-0 mt-3">
-      </div>
-      <div class="m-0 col-12 col-md-6 px-3 px-md-5">
+      <div class="w-100"></div>
+      <div class="col-12 col-lg m-0 px-3 my-3">
         <div class="btn-group btn-group-sm" role="group" aria-label="Basic checkbox toggle button group"
           style="width: 100%;">
           <div class="btn-group btn-group-sm" role="group">
@@ -289,9 +283,9 @@ export default defineComponent({
           </template>
         </div>
       </div>
-      <div class="col-12 col-md-6 m-0 mt-3 mt-md-0 px-3 px-md-5">
+      <div class="col-12 col-lg m-0 px-3">
         <div class="row justify-content-between">
-          <div class="col offset-xl-4">
+          <div class="col">
             <button type="button" class="btn btn-sm btn-outline-danger w-100" @click="reset"
               :disabled="shuffling">Reset</button>
           </div>
