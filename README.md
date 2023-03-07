@@ -53,5 +53,8 @@ Meaning...
 
  Meaning first layer move...
 
-Given that for a pocket cube, the God's number is 11. You'll find often times that the path found by these algorithms are not optimal.
+
+God's Number for the 2x2 puzzle (having only 3,674,160 different positions) has been proven to be 11 moves using the half turn metric, or 14 using the quarter turn metric (half turns count as 2 rotations).
+
+Given that for a pocket cube, the God's number is 14. You'll find often times that the path found by these algorithms are not optimal.
  BFS and A* don't find the best answer because they don't look for the best answer to solve the cube. They look for the best answer to solve the cube with a given configuration. As long as one predefined cubelet remains static (usually, the bottom-left-back one). The reason behind it is to keep the branching factor smaller. You see, in this particular cube, you don't have to move all the sides (6) both directions. If the L move basically consists of a R' move and a new cube orientation (which is not a move, technically), you don't need to do the L move at all. The same applies for the other 2 axis. So, instead of having a branching factor of 2\*6, I make it 2\*3. I could even claim that R' is the same 3R, as in fact it is. It would make the branching factor 3\*1, so even smaller. But the solutions found would be even farther from the optimal one,

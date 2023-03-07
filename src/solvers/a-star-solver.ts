@@ -74,18 +74,20 @@ export class AStarSolver implements CubeSolver {
         return new Promise((resolve, reject) => {
             this.measurer.start();
             let current: Candidate;
-            let iterations = 0;
+            let visitedNodes = 0;
+            let differentNodes= 0;
             while (this.measurer.add(Metrics[Metrics.ITERATIONS_COUNTER_INCREMENT], () => this.candidates.size() > 0)) {
                 if (this.measurer.add(Metrics[Metrics.ABORTED_VERIFICATION], () => this.aborted)) {
                     return reject();
                 }
-                this.measurer.add(Metrics[Metrics.ITERATIONS_COUNTER_INCREMENT], () => ++iterations)
+                this.measurer.add(Metrics[Metrics.ITERATIONS_COUNTER_INCREMENT], () => ++visitedNodes)
                 current = this.measurer.add(Metrics[Metrics.POP_CANDIDATE], () => this.candidates.pop());
                 if (this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.visitedChecklist.has(current.hash))) {
                     continue;
                 }
+                ++differentNodes;
                 if (this.measurer.add(Metrics[Metrics.CHECK_SOLUTION], () => current.hash === this.goalStateHash)) {
-                    return resolve((this.measurer.add(Metrics[Metrics.SOLUTION_CREATION], () => this.createSolution(current!, iterations))));
+                    return resolve((this.measurer.add(Metrics[Metrics.SOLUTION_CREATION], () => this.createSolution(current!, visitedNodes, differentNodes))));
                 } else {
                     this.measurer.add(Metrics[Metrics.ADD_TO_VISISTED_LIST_CHECK], () => this.visitedChecklist.set(current.hash, true));
                     this.applyRotations(current!);
@@ -99,7 +101,7 @@ export class AStarSolver implements CubeSolver {
         this.aborted = true;
     }
 
-    private createSolution(candidate: Candidate, iterations: number): Solution {
+    private createSolution(candidate: Candidate, visitedNodes: number, differentNodes: number): Solution {
         this.measurer.finish();
         this.candidates.clear();
         const rotations: FaceRotation[] = [];
@@ -113,7 +115,8 @@ export class AStarSolver implements CubeSolver {
             totalTime: this.measurer.getTotalTime()!,
             data: {
                 metrics: this.measurer.getData({ notMeasuredLabel: Metrics[Metrics.NOT_MEASURED], measurementOverheadLabel: Metrics[Metrics.MEASUREMENT_OVERHEAD] }),
-                iterations: iterations
+                visitedNodes: visitedNodes,
+                differentNodes: differentNodes
             }
         }
     }

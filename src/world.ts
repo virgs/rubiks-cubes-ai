@@ -25,12 +25,12 @@ export class World {
         this.scene = new Scene();
         this.scene.background = new Color(0x111111);
 
-        const light = new DirectionalLight(0xAAAAAA, 7.5);
+        const light = new DirectionalLight(0xAAAAAA, 5);
         light.position.set(10, 10, 10);
         light.castShadow = true;
         this.scene.add(light);
         this.scene.add(new HemisphereLight(
-            0xAAAAAA, // bright sky color
+            0x999999, // bright sky color
             0x4f5f6f, // dim ground color
             4.5, // intensity
         ));

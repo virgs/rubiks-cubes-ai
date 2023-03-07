@@ -38,7 +38,6 @@ export class HumanTranslator {
                 if (colorNameMethod === 'orange') {
                     colorNameMethod = 'redBright'
                 }
-                //@ts-expect-error
                 const colored = color[colorNameMethod](element)
 
                 line += colored;
@@ -151,8 +150,8 @@ export class HumanTranslator {
                     }
                 }
             }
-
-            text += `${prefix}${Sides[rotation.side].substring(0, 1)}${rotation.counterClockwiseDirection ? '\'' : ' '}${layerText}  `;
+            const direction = rotation.counterClockwiseDirection;
+            text += `${prefix}${Sides[rotation.side].substring(0, 1)}${direction ? '\'' : ' '}${layerText}  `;
             if (config?.lineBreak !== undefined && index % config?.lineBreak === config?.lineBreak - 1) {
                 text += '\n'
             }

@@ -116,7 +116,11 @@ export default defineComponent({
           this.shuffling = true;
           cube = cube!.rotateFace(faceRotation);
           await cubeRenderer.rotateFace(faceRotation);
-          this.shuffleMovesText = translator.translateRotations(shuffleMoves, { showNumberOfMoves: true });
+          this.shuffleMovesText = translator.translateRotations(shuffleMoves, {
+            showNumberOfMoves: true,
+            showLayer: this.selectedCubeType.dimension > 3,
+            subscript: true
+          });
           this.shuffled = !cube.isSolved();
           this.shuffling = false;
         }
@@ -196,7 +200,11 @@ export default defineComponent({
         await cubeRenderer!.rotateFace({ ...rotation, duration: Configuration.world.scrambleRotationDuration });
         shuffleMoves.push(rotation);
         cube = cube!.rotateFace(rotation);
-        this.shuffleMovesText = translator.translateRotations(shuffleMoves, { showNumberOfMoves: true });
+        this.shuffleMovesText = translator.translateRotations(shuffleMoves, {
+          showNumberOfMoves: true,
+          showLayer: this.selectedCubeType.dimension > 3,
+          subscript: true
+        });
       }
       this.shuffled = !cube!.isSolved();
       this.shuffling = false;
@@ -251,7 +259,8 @@ export default defineComponent({
     <div id="nav-bar" class="row justify-content-center align-items-center gx-2">
       <div class="col-12 col-lg-auto mt-2 mt-lg-3">
         <img class="img-fluid mr-2 pr-2" height="64" width="48"
-          style="max-width: 72px; min-width: 72px; max-height: 96px;display: inline-block; margin-right: 10px;" src="/large-icon.png">
+          style="max-width: 72px; min-width: 72px; max-height: 96px;display: inline-block; margin-right: 10px;"
+          src="/large-icon.png">
         <h2 class="title" style="display: inline-block;">
           Rubiks Cubes AI</h2>
       </div>

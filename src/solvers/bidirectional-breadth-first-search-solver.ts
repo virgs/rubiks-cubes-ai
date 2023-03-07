@@ -6,13 +6,10 @@ import type { CubeSolver, Solution } from "./cube-solver";
 import type { FaceRotation } from "@/engine/face-rotation";
 import { RubiksCube, type Cubelet } from "@/engine/rubiks-cube";
 import { type Colors, getOppositeColor } from "@/constants/colors";
-import { HumanTranslator } from "@/printers/human-tranlator";
 
 enum Metrics {
     ADD_CANDIDATE,
     POP_CANDIDATE,
-    CHECK_SOLUTION,
-    BREATHING_TIME,
     HASH_CALCULATION,
     VISISTED_LIST_CHECK,
     ADD_TO_VISISTED_LIST_CHECK,
@@ -83,27 +80,30 @@ export class BidirectionalBreadthFirstSearchSolver implements CubeSolver {
             this.measurer.start();
             let forward: Candidate;
             let reverse: Candidate;
-            let iterations = 0;
+            let visitedNodes = 0;
             while (this.forwardSearchToExploreList.length > 0 && this.reverseSearchToExploreList.length > 0) {
+                if (this.aborted) {
+                    return reject();
+                }
                 do {
                     forward = this.measurer.add(Metrics[Metrics.POP_CANDIDATE], () => this.forwardSearchToExploreList.shift());
-                } while (this.forwardSearchExploredMap.has(forward!.cube.getHash()));
+                } while (this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.forwardSearchExploredMap.has(forward!.cube.getHash())));
                 do {
                     reverse = this.measurer.add(Metrics[Metrics.POP_CANDIDATE], () => this.reverseSearchToExploreList.shift());
-                } while (this.reverseSearchExploredMap.has(reverse!.cube.getHash()));
-                ++iterations;
+                } while (this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.reverseSearchExploredMap.has(reverse!.cube.getHash())));
+                ++visitedNodes;
 
-                let meetPoint = this.forwardSearchExploredMap.get(reverse.cube.getHash());
+                let meetPoint = this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.forwardSearchExploredMap.get(reverse.cube.getHash()));
                 if (meetPoint) {
-                    return resolve(this.createSolution(meetPoint, reverse, iterations));
+                    return resolve(this.createSolution(meetPoint, reverse, visitedNodes));
                 }
-                meetPoint = this.reverseSearchExploredMap.get(forward.cube.getHash());
+                meetPoint = this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.reverseSearchExploredMap.get(forward.cube.getHash()));
                 if (meetPoint) {
-                    return resolve(this.createSolution(forward, meetPoint, iterations));
+                    return resolve(this.createSolution(forward, meetPoint, visitedNodes));
                 }
 
-                this.forwardSearchExploredMap.set(forward.cube.getHash(), forward!);
-                this.reverseSearchExploredMap.set(reverse.cube.getHash(), reverse!);
+                this.measurer.add(Metrics[Metrics.ADD_TO_VISISTED_LIST_CHECK], () => this.forwardSearchExploredMap.set(forward.cube.getHash(), forward!));
+                this.measurer.add(Metrics[Metrics.ADD_TO_VISISTED_LIST_CHECK], () => this.reverseSearchExploredMap.set(reverse.cube.getHash(), reverse!));
                 this.applyRotations(this.forwardSearchToExploreList, this.forwardSearchExploredMap, forward);
                 this.applyRotations(this.reverseSearchToExploreList, this.reverseSearchExploredMap, reverse);
             }
@@ -128,7 +128,7 @@ export class BidirectionalBreadthFirstSearchSolver implements CubeSolver {
             });
     }
 
-    private createSolution(forward: Candidate, reverse: Candidate, iterations: number): Solution {
+    private createSolution(forward: Candidate, reverse: Candidate, visitedNodes: number): Solution {
         this.measurer.finish();
         const rotations: FaceRotation[] = [];
         let current: Candidate | undefined = forward;
@@ -138,7 +138,7 @@ export class BidirectionalBreadthFirstSearchSolver implements CubeSolver {
         }
         current = reverse;
         while (current && current.rotation) {
-            const reverseRotation = {...current.rotation};
+            const reverseRotation = { ...current.rotation };
             reverseRotation.counterClockwiseDirection = !reverseRotation.counterClockwiseDirection;
             rotations.push(reverseRotation);
             current = current.parent;
@@ -149,7 +149,7 @@ export class BidirectionalBreadthFirstSearchSolver implements CubeSolver {
             totalTime: this.measurer.getTotalTime()!,
             data: {
                 metrics: this.measurer.getData({ notMeasuredLabel: Metrics[Metrics.NOT_MEASURED] }),
-                iterations: iterations
+                visitedNodes: visitedNodes
             }
         };
     }

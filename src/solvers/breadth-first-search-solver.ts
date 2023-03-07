@@ -53,13 +53,13 @@ export class BreadthFirstSearchSolver implements CubeSolver {
         return new Promise((resolve, reject) => {
             this.measurer.start();
             let current: Candidate;
-            let iterations = 0;
+            let visitedNodes = 0;
             let differentNodes = 0;
             while (this.candidates.length > 0) {
                 if (this.aborted) {
                     return reject();
                 }
-                ++iterations;
+                ++visitedNodes;
                 current = this.measurer.add(Metrics[Metrics.POP_CANDIDATE], () => this.candidates.shift());
                 if (this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.visitedChecklist.has(current!.cube.getHash()))) {
                     continue;
@@ -67,7 +67,7 @@ export class BreadthFirstSearchSolver implements CubeSolver {
                 ++differentNodes;
                 if (this.measurer.add(Metrics[Metrics.CHECK_SOLUTION], () => current!.cube.isSolved())) {
                     this.measurer.finish();
-                    return resolve(this.createSolution(current, iterations, differentNodes));
+                    return resolve(this.createSolution(current, visitedNodes, differentNodes));
                 } else {
                     this.measurer.add(Metrics[Metrics.ADD_TO_VISISTED_LIST_CHECK], () => this.visitedChecklist.set(current!.cube.getHash(), true));
                     this.applyRotations(current!);
@@ -77,7 +77,7 @@ export class BreadthFirstSearchSolver implements CubeSolver {
         });
     }
 
-    private createSolution(candidate: Candidate, iterations: number, differentNodes: number): Solution {
+    private createSolution(candidate: Candidate, visitedNodes: number, differentNodes: number): Solution {
         const rotations: FaceRotation[] = [];
         let current: Candidate | undefined = candidate;
         while (current && current.rotation) {
@@ -89,7 +89,7 @@ export class BreadthFirstSearchSolver implements CubeSolver {
             totalTime: this.measurer.getTotalTime()!,
             data: {
                 metrics: this.measurer.getData({ notMeasuredLabel: Metrics[Metrics.NOT_MEASURED] }),
-                iterations: iterations,
+                visitedNodes: visitedNodes,
                 differentNodes: differentNodes
             }
         };

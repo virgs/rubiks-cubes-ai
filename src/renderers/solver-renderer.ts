@@ -102,7 +102,7 @@ export class SolverRenderer {
                         if (!solution.data.human) {
                             this.movesAnimationsQueue.push(...solution.rotations);
                         }
-                        let text = '     Total time: ' + (Math.trunc(solution.totalTime / 10.0) / 100) + 's\n';
+                        let text = '     Total time: ' + (solution.totalTime / 1000) + 's\n';
                         text += new HumanTranslator().translateRotations(solution.rotations, { lineBreak: 7, showNumberOfMoves: true });
                         this.solutionsText = this.createText(text, .6);
                         this.solutionsText.position.set(this.titleCenter.x - Configuration.renderers.cubeSize,
