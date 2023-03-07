@@ -59,7 +59,7 @@ export class DepthFirstSearchSolver implements CubeSolver {
                     return reject();
                 }
                 ++iterations;
-                current = this.measurer.add(Metrics[Metrics.POP_CANDIDATE], () => this.candidates.shift());
+                current = this.measurer.add(Metrics[Metrics.POP_CANDIDATE], () => this.candidates.pop());
                 if (this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.visitedChecklist.has(current!.cube.getHash()))) {
                     continue;
                 }
@@ -83,7 +83,7 @@ export class DepthFirstSearchSolver implements CubeSolver {
         [xIndex, yIndex, zIndex]
             .map(side => [true, false]
                 .map(direction => {
-                    result.unshift({ side: side, counterClockwiseDirection: direction, layer: 0 });
+                    result.push({ side: side, counterClockwiseDirection: direction, layer: 0 });
                 }));
         return result;
     }

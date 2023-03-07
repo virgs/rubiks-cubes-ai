@@ -6,6 +6,7 @@ import { BreadthFirstSearchSolver } from "./solvers/breadth-first-search-solver"
 import { NeuroEvolutionarySolver } from "./solvers/neuro-evolutionary/neuro-evolutionary-solver";
 import { GeneticAlgorithmSolver } from "./solvers/genetic-algorithm/genetic-algorithm-solver";
 import { DepthFirstSearchSolver } from "./solvers/depth-first-search-solver";
+import { BidirectionalBreadthFirstSearchSolver } from "./solvers/bidirectional-breadth-first-search-solver";
 
 export type CubeTypes = {
     label: string,
@@ -48,7 +49,7 @@ export const Configuration = {
         scrambleRotationDuration: 100,
         cubesCircleRay: 5,
         camera: {
-            closeDistance: 10,
+            closeDistance: 15,
             farDistance: 50
         }
     },
@@ -58,6 +59,7 @@ export const Configuration = {
         titleDistance: 8.5,
         cubeSize: 2.5
     },
+    initiallySelectedCubeTypeIndex: 0,
     cubeTypes: [
         {
             label: '2x2',
@@ -80,6 +82,12 @@ export const Configuration = {
                 instantiator: (configuration: string) => new BreadthFirstSearchSolver(new RubiksCube({ clone: configuration })),
                 checked: false,
                 info: `Breadth-first-search. Brute force`
+            },
+            {
+                key: 'BiBFS',
+                instantiator: (configuration: string) => new BidirectionalBreadthFirstSearchSolver(new RubiksCube({ clone: configuration })),
+                checked: false,
+                info: `BiDirectional Breadth-first-search. Brute force until both searchs meet`
             },
             {
                 key: 'A*',

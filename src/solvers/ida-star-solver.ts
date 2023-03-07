@@ -28,6 +28,7 @@ enum Metrics {
     ABORTED_VERIFICATION
 }
 type Candidate = {
+    level: 0,
     cost: number,
     cube: RubiksCube;
     rotation?: FaceRotation,
@@ -36,21 +37,24 @@ type Candidate = {
 }
 
 
-export class AStarSolver implements CubeSolver {
+export class IdaStarSolver implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
     private readonly candidates: Heap<Candidate>;
     private readonly visitedChecklist: Map<string, boolean>;
     private readonly actions: FaceRotation[];
     private readonly dimension: number;
     private readonly goalStateHash: string;
+    private currentMaxLevel: number;
     private aborted: boolean;
 
     public constructor(cube: RubiksCube) {
         this.aborted = false;
+        this.currentMaxLevel = 0;
         this.dimension = cube.getDimension();
         this.candidates = new Heap((a: Candidate, b: Candidate) => a.cost - b.cost);
         this.visitedChecklist = new Map();
         const current: Candidate = {
+            level: 0,
             cost: 0,
             cube: cube,
             rotation: undefined,

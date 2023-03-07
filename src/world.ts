@@ -81,8 +81,8 @@ export class World {
 
     public async sendCameraAwayFromTheCenter(): Promise<void> {
         return new Promise(resolve => {
-            const from = { length: Math.round(this.camera.position.length()), x: this.camera.position.x, y: this.camera.position.y }
-            const to = { length: Configuration.world.camera.farDistance, x: 0.0, y: 0 }
+            const from = { length: Math.round(this.camera.position.length()), x: this.camera.position.x, y: this.camera.position.y, target: this.camera.lookAt }
+            const to = { length: Configuration.world.camera.farDistance, x: 0.0, y: 0, target: new Vector3(0, 0, 0) }
             new Tween.Tween(from)
                 .to(to, 500)
                 .easing(Tween.Easing.Quadratic.InOut)
@@ -90,11 +90,13 @@ export class World {
                     this.camera.position.setLength(update.length);
                     this.camera.position.x = update.x;
                     this.camera.position.y = update.y;
+                    this.camera.lookAt(update.target)
                 })
-                .onComplete(update => {
+                .onComplete((update: any) => {
                     this.camera.position.setLength(update.length);
                     this.camera.position.x = update.x;
                     this.camera.position.y = update.y;
+                    this.camera.lookAt(update.target)
                     resolve();
                 })
                 .start();
@@ -103,20 +105,22 @@ export class World {
 
     public async bringCameraToTheCenter(): Promise<void> {
         return new Promise(resolve => {
-            const from = { length: Math.round(this.camera.position.length()), x: this.camera.position.x, y: this.camera.position.y }
-            const to = { length: Configuration.world.camera.closeDistance, x: 5.0, y: 5 }
+            const from = { length: Math.round(this.camera.position.length()), x: this.camera.position.x, y: this.camera.position.y, target: this.camera.lookAt }
+            const to = { length: Configuration.world.camera.closeDistance, x: 5.0, y: 5, target: new Vector3(0, 0, 0) }
             new Tween.Tween(from)
                 .to(to, 500)
                 .easing(Tween.Easing.Quadratic.InOut)
-                .onUpdate((update: { length: number, x: number }) => {
+                .onUpdate((update: any) => {
                     this.camera.position.setLength(update.length);
                     this.camera.position.x = update.x;
                     this.camera.position.y = update.y;
+                    this.camera.lookAt(update.target)
                 })
-                .onComplete((update: { length: number, x: number }) => {
+                .onComplete((update: any) => {
                     this.camera.position.setLength(update.length);
                     this.camera.position.x = update.x;
                     this.camera.position.y = update.y;
+                    this.camera.lookAt(update.target)
                     resolve();
                 })
                 .start();

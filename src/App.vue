@@ -39,7 +39,7 @@ export default defineComponent({
     return {
       currentLayer: 1,
       cubeTypes: Configuration.cubeTypes,
-      selectedDimensionIndex: 1,
+      selectedDimensionIndex: Configuration.initiallySelectedCubeTypeIndex,
       solved: false,
       shuffling: false,
       shuffled: false,
@@ -287,11 +287,11 @@ export default defineComponent({
         <div class="row justify-content-between">
           <div class="col">
             <button type="button" class="btn btn-sm btn-outline-danger w-100" @click="reset"
-              :disabled="shuffling">Reset</button>
+              :disabled="shuffling || solving">Reset</button>
           </div>
           <div class="col">
             <button type="button" class="btn btn-sm btn-outline-danger w-100" @click="shuffle"
-              :disabled="shuffling">Shuffle</button>
+              :disabled="shuffling || solving">Shuffle</button>
           </div>
           <div class="col-4">
             <button type="button" class="btn btn-sm btn-success w-100" :disabled="!mainActionButtonEnabled"

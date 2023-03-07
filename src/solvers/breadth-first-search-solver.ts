@@ -52,8 +52,9 @@ export class BreadthFirstSearchSolver implements CubeSolver {
     public async findSolution(): Promise<Solution> {
         return new Promise((resolve, reject) => {
             this.measurer.start();
-            let current: Candidate | undefined;
+            let current: Candidate;
             let iterations = 0;
+            let differentNodes = 0;
             while (this.candidates.length > 0) {
                 if (this.aborted) {
                     return reject();
@@ -63,9 +64,10 @@ export class BreadthFirstSearchSolver implements CubeSolver {
                 if (this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.visitedChecklist.has(current!.cube.getHash()))) {
                     continue;
                 }
+                ++differentNodes;
                 if (this.measurer.add(Metrics[Metrics.CHECK_SOLUTION], () => current!.cube.isSolved())) {
                     this.measurer.finish();
-                    return resolve(this.createSolution(current!, iterations));
+                    return resolve(this.createSolution(current, iterations, differentNodes));
                 } else {
                     this.measurer.add(Metrics[Metrics.ADD_TO_VISISTED_LIST_CHECK], () => this.visitedChecklist.set(current!.cube.getHash(), true));
                     this.applyRotations(current!);
@@ -73,6 +75,24 @@ export class BreadthFirstSearchSolver implements CubeSolver {
             }
             reject(Error(`No more candidates to explore`));
         });
+    }
+
+    private createSolution(candidate: Candidate, iterations: number, differentNodes: number): Solution {
+        const rotations: FaceRotation[] = [];
+        let current: Candidate | undefined = candidate;
+        while (current && current.rotation) {
+            rotations.unshift(current.rotation);
+            current = current.parent;
+        }
+        return {
+            rotations: rotations,
+            totalTime: this.measurer.getTotalTime()!,
+            data: {
+                metrics: this.measurer.getData({ notMeasuredLabel: Metrics[Metrics.NOT_MEASURED] }),
+                iterations: iterations,
+                differentNodes: differentNodes
+            }
+        };
     }
 
     private createActions(): FaceRotation[] {
@@ -86,23 +106,6 @@ export class BreadthFirstSearchSolver implements CubeSolver {
                     result.push({ side: side, counterClockwiseDirection: direction, layer: 0 });
                 }));
         return result;
-    }
-
-    private createSolution(candidate: Candidate, iterations: number): Solution {
-        const rotations: FaceRotation[] = [];
-        let current: Candidate | undefined = candidate;
-        while (current && current.rotation) {
-            rotations.unshift(current.rotation);
-            current = current.parent;
-        }
-        return {
-            rotations: rotations,
-            totalTime: this.measurer.getTotalTime()!,
-            data: {
-                metrics: this.measurer.getData({ notMeasuredLabel: Metrics[Metrics.NOT_MEASURED] }),
-                iterations: iterations
-            }
-        };
     }
 
     private applyRotations(current: Candidate): void {

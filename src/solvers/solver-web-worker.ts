@@ -47,6 +47,7 @@ self.onmessage = async (event: MessageEvent<SolverWorkerRequest>) => {
                     self.postMessage({ solution: JSON.stringify(solution), solverKey: tag });
                 } catch (e) {
                     console.log(`Solver '${event.data.label}.${tag}' aborted`, e)
+                    self.postMessage({ error: `Solver '${event.data.label}.${tag}' aborted`, solverTag: event.data.solverTag } as SolverWorkerResponse);
                 }
             } else if (event.data.keyboardEvent) {
                 if (solver instanceof HumanSolver) {
