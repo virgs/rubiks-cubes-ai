@@ -1,10 +1,10 @@
-
-import { Sides } from "../constants/sides";
-import LinkedList from "double-linked-list";
+import { getOppositeSide, Sides } from "../constants/sides";
 import { ProcedureMeasurer } from "./procedure-measurer";
 import type { CubeSolver, Solution } from "./cube-solver";
 import type { FaceRotation } from "@/engine/face-rotation";
-import type { RubiksCube } from "@/engine/rubiks-cube";
+import { type Cubelet, RubiksCube } from "@/engine/rubiks-cube";
+import { Colors, getOppositeColor } from "@/constants/colors";
+import { RotationsTuner } from "@/printers/rotations-tuner";
 
 enum Metrics {
     ADD_CANDIDATE,
@@ -35,21 +35,26 @@ export class InterativeDeepeningDepthFirstSearchSolver implements CubeSolver {
 
     public constructor(cube: RubiksCube) {
         this.measurer = new ProcedureMeasurer();
-        this.currentMaxDepth = 0;
         this.visitedNodes = 0;
         this.visitedLeaves = 0;
         this.aborted = false;
+
+        this.actions = this.createActions();
+        const fixedCubelet = cube.getCubeletsBySides(Sides.BACK, Sides.LEFT, Sides.DOWN)[0];
+        const goalState = this.buildSolvedPocketCubeFromCornerCubelet(fixedCubelet, cube.getDimension());
+        this.currentMaxDepth = this.calculateDistanceToFinalState(cube, goalState.getConfiguration());
+
         this.root = {
             cube: cube,
             rotation: undefined,
             parent: undefined,
         };
-        this.actions = this.createActions();
     }
 
     public abort(): void {
         this.aborted = true;
     }
+
 
     public async findSolution(): Promise<Solution> {
         return new Promise((resolve, reject) => {
@@ -61,14 +66,16 @@ export class InterativeDeepeningDepthFirstSearchSolver implements CubeSolver {
                     return resolve(this.createSolution(solution));
                 }
                 ++this.currentMaxDepth;
-                console.log(this.currentMaxDepth)
             }
             reject(Error(`Aborted`));
         });
     }
 
-    private beginSearch(candidate: Candidate, depth: number): Candidate {
+    private beginSearch(candidate: Candidate, depth: number): Candidate | undefined {
         ++this.visitedNodes;
+        if (this.aborted) {
+            return undefined;
+        }
         if (depth < this.currentMaxDepth) {
             const children = this.applyRotations(candidate);
             for (let child of children) {
@@ -87,10 +94,7 @@ export class InterativeDeepeningDepthFirstSearchSolver implements CubeSolver {
 
     private createActions(): FaceRotation[] {
         const result: FaceRotation[] = [];
-        const xIndex = [Sides.RIGHT, Sides.LEFT][Math.floor(Math.random() * 2)];
-        const yIndex = [Sides.UP, Sides.DOWN][Math.floor(Math.random() * 2)];
-        const zIndex = [Sides.FRONT, Sides.BACK][Math.floor(Math.random() * 2)];
-        [xIndex, yIndex, zIndex]
+        [Sides.RIGHT, Sides.UP, Sides.FRONT]
             .map(side => [true, false]
                 .map(direction => {
                     result.push({ side: side, counterClockwiseDirection: direction, layer: 0 });
@@ -105,8 +109,9 @@ export class InterativeDeepeningDepthFirstSearchSolver implements CubeSolver {
             rotations.unshift(current.rotation);
             current = current.parent;
         }
+        
         return {
-            rotations: rotations,
+            rotations: new RotationsTuner().tune(rotations),
             totalTime: this.measurer.getTotalTime()!,
             data: {
                 metrics: this.measurer.getData({ notMeasuredLabel: Metrics[Metrics.NOT_MEASURED] }),
@@ -131,4 +136,26 @@ export class InterativeDeepeningDepthFirstSearchSolver implements CubeSolver {
             });
         return result;
     }
+
+
+    //Calcs how many stickers have the same color as they should
+    private calculateDistanceToFinalState(cube: RubiksCube, goalStateHash: string): number {
+        const numberOfStickersMovedInOneTwistInAverage = (cube.getDimension() * cube.getDimension()) + cube.getDimension() * 4;
+        const cubeConfiguration = cube.getConfiguration();
+        return Math.ceil(cubeConfiguration
+            .split('')
+            .filter((char, index) => char !== goalStateHash[index])
+            .length / numberOfStickersMovedInOneTwistInAverage);
+    }
+
+    public buildSolvedPocketCubeFromCornerCubelet(cubelet: Cubelet, dimension: number): RubiksCube {
+        const colorMap: Map<Sides, Colors> = new Map();
+        cubelet.stickers
+            .forEach(sticker => {
+                colorMap.set(sticker.side, sticker.color);
+                colorMap.set(getOppositeSide(sticker.side), getOppositeColor(sticker.color));
+            });
+        return new RubiksCube({ colorMap: colorMap, dimension: dimension });
+    }
+
 }

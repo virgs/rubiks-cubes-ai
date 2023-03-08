@@ -3,7 +3,7 @@ import { getAllSides, type Sides } from "@/constants/sides";
 import type { CubeSolver, Solution } from "../cube-solver";
 import { ProcedureMeasurer } from "../procedure-measurer";
 import { GeneticAlgorithm, type Chromosome } from "./genetic-algorithm";
-import { HumanTranslator } from "@/printers/human-tranlator";
+import { HumanTranslator } from "@/printers/human-translator";
 import { RubiksCube } from "@/engine/rubiks-cube";
 import { RotationsTuner } from "@/printers/rotations-tuner";
 
@@ -63,7 +63,6 @@ const supervisedPermutations = [
 export class GeneticAlgorithmSolver implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
     private readonly initialState: RubiksCube;
-    // private readonly goalStateConfiguration: string;
     private geneticAlgorithm: GeneticAlgorithm;
     private citizens: Chromosome[];
     private aborted: boolean;
@@ -74,7 +73,6 @@ export class GeneticAlgorithmSolver implements CubeSolver {
         this.initialState = cube.clone();
         this.aborted = false;
         this.armageddonCounter = 0;
-        // this.goalStateConfiguration = this.buildSolvedCubeFromCenterCubelets(cube).getConfiguration();
         const translator = new HumanTranslator();
         this.geneticAlgorithm = new GeneticAlgorithm(this.initialState,
             supervisedPermutations
@@ -111,12 +109,7 @@ export class GeneticAlgorithmSolver implements CubeSolver {
 
     private runCitizen(citizen: Chromosome): Chromosome {
         let result: Chromosome;
-        // citizen.genes = citizen.genes.concat(citizen.newGenes);
-        // const currentRotations: FaceRotation[] = [];
-        // let currentCube = this.initialState.clone();
-        // let bestMoment: Chromosome | undefined = undefined;
         for (let rotation of citizen.newGenes) {
-            // if (this.measurer.add(Metrics[Metrics.RUN_CITIZEN_ROTATIONS], () => {
             citizen.genes.push(rotation);
             citizen.cube = citizen.cube.rotateFace(rotation)
             const score = this.calculateCitizenScore(citizen.cube);
@@ -125,39 +118,16 @@ export class GeneticAlgorithmSolver implements CubeSolver {
             }
             citizen.score = score;
             // if (result === undefined || result.score > score) {
-                result = {
-                    genes: citizen.genes.slice(),
-                    score: score,
-                    newGenes: [],
-                    cube: citizen.cube.clone()
-                }
+            result = {
+                genes: citizen.genes.slice(),
+                score: score,
+                newGenes: [],
+                cube: citizen.cube.clone()
+            }
             // }
-            // citizen.genes.push(rotation);
-            // citizen.cube = citizen.cube.rotateFace(rotation);
-            // if (citizen.cube.getConfiguration().toString() === citizen.goalState.toString()) {
             if (score === 0) {
                 return result;
-                // const proof = currentRotations.reduce((cube, rotation) => cube.rotateFace(rotation), this.initialState.clone())
-                // console.log('proof', citizen.genes)
-                // console.log(currentRotations)
-                // console.log(new HumanTranslator().translateCube(proof));
-                // console.log(new HumanTranslator().translateCube(currentCube));
-                // citizen.genes = currentRotations;
             }
-            // return false;
-            // })) {
-            // console.log('score')
-            // return true;
-            // }
-            // if (bestMoment === undefined || bestMoment.score > citizen.score) {
-            //     // console.log('update best')
-            //     bestMoment = {
-            //         score: citizen.score,
-            //         genes: [...citizen.genes],
-            //         cube: citizen.cube.clone(),
-            //         newGenes: []
-            //     }
-            // }
         }
         // if (bestMoment) {
         // citizen.score = bestMoment!.score;
@@ -165,8 +135,7 @@ export class GeneticAlgorithmSolver implements CubeSolver {
         // citizen.cube = bestMoment!.cube.clone();    
         // }
 
-        result!.genes = new RotationsTuner().tune(result!.genes!); 
-
+        result!.genes = new RotationsTuner().tune(result!.genes!);
         return result!;
     }
 
@@ -183,10 +152,7 @@ export class GeneticAlgorithmSolver implements CubeSolver {
 
     private createSolution(solution: Chromosome): Solution {
         const rotations = this.measurer.add(Metrics[Metrics.ROTATIONS_TUNING], () => new RotationsTuner().tune(solution.genes));
-        // const rotations = this.measurer.add(Metrics[Metrics.ROTATIONS_TUNING], () => solution.genes);
         this.measurer.finish();
-        // console.log(new HumanTranslator().translateCube(solution.cube))
-        // console.log(new HumanTranslator().translateCube(new PocketCube({ clone: solution.goalState })))
         return {
             rotations: rotations,
             totalTime: this.measurer.getTotalTime()!,
@@ -199,7 +165,9 @@ export class GeneticAlgorithmSolver implements CubeSolver {
     }
 
     public buildSolvedCubeFromCenterCubelets(cube: RubiksCube): RubiksCube {
-        const centersIndexes = [4, 13, 22, 31, 40, 49];
+        const centersIndexes = cube.getAllColorlessCubelets()
+            .filter(cubelet => cubelet.stickers.length === 1)
+            .map(cubelet => cubelet.stickers[0].id);
         const colorMap: Map<Sides, Colors> = new Map();
         getAllSides()
             .forEach((side, index) => {

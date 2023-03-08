@@ -2,7 +2,6 @@ import { GeneticAlgorithmConfig } from "@/configuration";
 import { CubeScrambler } from "@/engine/cube-scrambler";
 import type { FaceRotation } from "@/engine/face-rotation";
 import type { RubiksCube } from "@/engine/rubiks-cube";
-import { HumanTranslator } from "@/printers/human-tranlator";
 
 export type Chromosome = {
     genes: FaceRotation[],
@@ -16,14 +15,12 @@ export class GeneticAlgorithm {
     private readonly mutationList: FaceRotation[][];
     private readonly original: RubiksCube;
     private generationsCounter: number;
-    private armageddonCounter: number;
 
     constructor(original: RubiksCube, mutationList: FaceRotation[][], orientationList: FaceRotation[][]) {
         this.original = original;
         this.mutationList = mutationList;
         this.orientationList = orientationList;
         this.generationsCounter = 0;
-        this.armageddonCounter = 0;
     }
 
     public createNextGeneration(oldGenerationResults?: Chromosome[]): Chromosome[] {
@@ -40,13 +37,9 @@ export class GeneticAlgorithm {
                 }
                 return diff;
             });
-        // console.log(this.generationsCounter, sorted[0], sorted[oldGenerationResults!.length - 1])
 
         if (this.generationsCounter % GeneticAlgorithmConfig.armageddonThreshold === 0) {
             console.log(`armageddon. best: ${sorted[0].score}/${sorted[sorted.length - 1].score}, moves list: ${sorted[0].genes.length}`)
-            new HumanTranslator().translateCube(sorted[0].cube)
-            ++this.armageddonCounter;
-
             return this.createNewPopulationFromScratch();
         }
 

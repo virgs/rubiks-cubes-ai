@@ -17,15 +17,21 @@ export class NeuroGeneticAlgorithm {
 
     public createNextGeneration(oldGenerationResults: Chromosome[]): Chromosome[] {
         ++this.generationsCounter;
-        const scoreSum = oldGenerationResults
-            .reduce((greatest, citizen) => greatest + citizen.score, 0.0);
-        const scoreNormalizedCitizen = oldGenerationResults
-            .map(citizen => {
+        const sum = oldGenerationResults
+            .reduce((acc, citizen) => {
                 return {
-                    genes: citizen.genes,
-                    score: parseFloat(citizen.score.toString()) / scoreSum
+                    score: acc.score + citizen.score,
+                    movesLength: acc.movesLength + citizen.genes.length
                 }
-            });
+            }, { score: 0.0, movesLength: 0 });
+        if (this.generationsCounter % 10 === 0) {
+            console.log(`${this.generationsCounter} >. score sum: ${sum.score}. avg: ${Math.round(10 * sum.score / oldGenerationResults.length) / 10}. moves ${Math.round(10 * sum.movesLength / oldGenerationResults.length) / 10}`)
+        }
+        const scoreNormalizedCitizen = oldGenerationResults
+            .map(citizen => ({
+                genes: citizen.genes,
+                score: parseFloat(citizen.score.toString()) / sum.score
+            }));
         return Array.from(Array(this.populationPerGeneration))
             .map(() => this.createNewCitizen(this.pickOne(scoreNormalizedCitizen), this.pickOne(scoreNormalizedCitizen)));
     }

@@ -3,7 +3,7 @@ import { defineComponent } from 'vue';
 import { CubeScrambler } from "./engine/cube-scrambler";
 import { World } from "./world";
 import { Vector3 } from "three";
-import { HumanTranslator } from "./printers/human-tranlator";
+import { HumanTranslator } from "./printers/human-translator";
 import { CubeRenderer } from "./renderers/cube-renderer";
 import { SolverRenderer } from "./renderers/solver-renderer";
 import { Font, FontLoader } from "three/examples/jsm/loaders/FontLoader";
@@ -16,6 +16,7 @@ import { RotationsTuner } from "./printers/rotations-tuner";
 import { getAllSides } from "./constants/sides";
 import * as Tween from '@tweenjs/tween.js'
 import type { RubiksCube } from './engine/rubiks-cube';
+import { UrlQueryHandler } from './url-query-handler';
 
 //They have to be non reactive
 const keyboardInterpreter = new KeyboardInterpreter();
@@ -26,7 +27,10 @@ let cubeRenderer: CubeRenderer;
 let solverRenderers: SolverRenderer[] = [];
 let cube: RubiksCube;
 let font: Font;
-let shuffleMoves: FaceRotation[] = [];
+
+
+const urlQueryHandler = new UrlQueryHandler();
+let shuffleMoves: FaceRotation[] = translator.convertStringToFaceRotations(urlQueryHandler.getParameterByName('moves', ''));
 
 new FontLoader().load(fontUrl, (loaded: Font) => {
   font = loaded;
@@ -39,11 +43,15 @@ export default defineComponent({
     return {
       currentLayer: 1,
       cubeTypes: Configuration.cubeTypes,
-      selectedDimensionIndex: Configuration.initiallySelectedCubeTypeIndex,
+      selectedDimensionIndex: parseInt(urlQueryHandler.getParameterByName('cube', Configuration.initiallySelectedCubeTypeIndex)),
       solved: false,
       shuffling: false,
       shuffled: false,
-      shuffleMovesText: '',
+      shuffleMovesText: translator.translateRotations(shuffleMoves, {
+        showNumberOfMoves: true,
+        showLayer: false,
+        subscript: false
+      }),
       solving: false,
     };
   },
@@ -67,7 +75,7 @@ export default defineComponent({
       if (this.solved) {
         return true;
       }
-      return false;
+      return true;
     }
   },
   watch: {
@@ -93,7 +101,17 @@ export default defineComponent({
     world = new World(container);
     world.start();
     await this.reset();
-
+    shuffleMoves = translator.convertStringToFaceRotations(urlQueryHandler.getParameterByName('moves', '').replace(/,/g, ' '));
+    this.shuffleMovesText = translator.translateRotations(shuffleMoves, {
+      showNumberOfMoves: true,
+      showLayer: this.selectedCubeType.dimension > 3,
+      subscript: true
+    });
+    for (let faceRotation of shuffleMoves) {
+      await cubeRenderer.rotateFace(faceRotation);
+      cube = cube.rotateFace(faceRotation);
+      this.shuffled = false;
+    }
     window.addEventListener('keypress', async (event: KeyboardEvent) => {
       solverRenderers
         .forEach(solverRenderer => solverRenderer.keyInput(event));
@@ -255,8 +273,8 @@ export default defineComponent({
 
 <template>
   <GithubCorner></GithubCorner>
-  <div class="container-fluid" style="width: 100%; height: 100%;">
-    <div id="nav-bar" class="row justify-content-center align-items-center gx-2">
+  <div class="container-fluid px-0" style="width: 100%; height: 100%;">
+    <div id="nav-bar" class="row justify-content-center align-items-center gx-2 mx-lg-5 mx-2">
       <div class="col-12 col-lg-auto mt-2 mt-lg-3">
         <img class="img-fluid mr-2 pr-2" height="64" width="48"
           style="max-width: 72px; min-width: 72px; max-height: 96px;display: inline-block; margin-right: 10px;"
@@ -316,7 +334,7 @@ export default defineComponent({
         <textarea rows="2" class="shuffle-moves" readonly v-model="shuffleMovesText"></textarea>
       </div>
     </div>
-    <div class="row" style="background-color: transparent;">
+    <div class="row m-0 p-0 w-100" style="background-color: transparent;">
       <div id="scene-container" style="cursor: move; background-color: transparent;">
       </div>
     </div>

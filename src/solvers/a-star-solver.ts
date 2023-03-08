@@ -1,11 +1,11 @@
 import Heap from 'heap';
-import { getOppositeSide, Sides } from "../constants/sides";
+import { getAllSides, getOppositeSide, Sides } from "../constants/sides";
 import type { CubeSolver, Solution } from "./cube-solver";
 import { ProcedureMeasurer } from "./procedure-measurer";
 import type { FaceRotation } from "@/engine/face-rotation";
 import { Colors, getOppositeColor } from "@/constants/colors";
 import { RubiksCube, type Cubelet } from '@/engine/rubiks-cube';
-import { Configuration } from '@/configuration';
+import { AStarAlgorithmConfig, Configuration } from '@/configuration';
 
 enum Metrics {
     ADD_CANDIDATE,
@@ -75,7 +75,7 @@ export class AStarSolver implements CubeSolver {
             this.measurer.start();
             let current: Candidate;
             let visitedNodes = 0;
-            let differentNodes= 0;
+            let differentNodes = 0;
             while (this.measurer.add(Metrics[Metrics.ITERATIONS_COUNTER_INCREMENT], () => this.candidates.size() > 0)) {
                 if (this.measurer.add(Metrics[Metrics.ABORTED_VERIFICATION], () => this.aborted)) {
                     return reject();
@@ -122,14 +122,14 @@ export class AStarSolver implements CubeSolver {
     }
 
     private applyRotations(parent: Candidate): void {
-        for (let rotation of  this.actions) {
+        for (let rotation of this.actions) {
             const newCandidate: RubiksCube = this.measurer.add(Metrics[Metrics.PERFORM_ROTATION], () => parent.cube.rotateFace(rotation));
             const newCandidateHash = newCandidate.getHash();
             const heuristicFunctionValue = this.measurer.add(Metrics[Metrics.HEURISTIC_CALCULATION], () => this.calculateDistanceToFinalState(newCandidate));
             if (!this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.visitedChecklist.has(newCandidateHash))) {
                 this.measurer.add(Metrics[Metrics.ADD_CANDIDATE], () => {
                     this.candidates.push({
-                        cost: parent.cost + 1 + heuristicFunctionValue,
+                        cost: parent.cost + 1 + heuristicFunctionValue * AStarAlgorithmConfig.weight,
                         cube: newCandidate,
                         rotation: rotation,
                         parent: parent,
@@ -148,6 +148,7 @@ export class AStarSolver implements CubeSolver {
             .split('')
             .filter((char, index) => char !== this.goalStateHash[index])
             .length / numberOfStickersMovedInOneTwistInAverage;
+
     }
 
     public buildSolvedPocketCubeFromCornerCubelet(cubelet: Cubelet): RubiksCube {

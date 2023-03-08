@@ -6,7 +6,7 @@ export class RotationsTuner {
         const result: FaceRotation[] = [];
         let lastRotation: FaceRotation | undefined;
         let modifiedFlag = false;
-        let consecutiveEqualsRotations: number = 0;
+        let consecutiveEqualsRotations: number = 1;
         for (let rotation of rotations) {
             if (lastRotation &&
                 rotationsCancel(rotation, lastRotation)) {
@@ -14,19 +14,20 @@ export class RotationsTuner {
                 modifiedFlag = true;
                 consecutiveEqualsRotations = 0;
             } else {
-                if (lastRotation && rotationsAreEqual(lastRotation, rotation)) {
-                    ++consecutiveEqualsRotations;
-                    if (consecutiveEqualsRotations === 3) {
-                        result.pop();
-                        result.pop();
-                        result.push(getOppositeRotation(rotation));
-                        consecutiveEqualsRotations = 0;
-                        modifiedFlag = true;
-                        continue;
+                if (lastRotation) {
+                    if (rotationsAreEqual(lastRotation, rotation)) {
+                        ++consecutiveEqualsRotations;
+                        if (consecutiveEqualsRotations === 3) {
+                            result.pop();
+                            result.pop();
+                            result.push(getOppositeRotation(rotation));
+                            consecutiveEqualsRotations = 0;
+                            modifiedFlag = true;
+                            continue;
+                        }
+                    } else if (!rotationsAreEqual(lastRotation, rotation)) {
+                        consecutiveEqualsRotations = 1;
                     }
-                }
-                if (!lastRotation) {
-                    ++consecutiveEqualsRotations;
                 }
                 result.push(rotation);
             }

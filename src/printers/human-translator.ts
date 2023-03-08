@@ -81,6 +81,9 @@ export class HumanTranslator {
     }
 
     public convertStringToFaceRotations(humanString: String): FaceRotation[] {
+        if (humanString.length === 0) {
+            return [];
+        }
         return humanString
             .match(/((\d?)(\w)(\d?)('?))\s*/g)!
             .reduce((acc, current) => {

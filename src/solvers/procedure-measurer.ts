@@ -29,12 +29,12 @@ export class ProcedureMeasurer {
     }
 
     public add(label: string, method: () => any): any {
-        const before = new Date().getTime();
+        const before = performance.now();
         if (!this.enabled) {
             return method();
         }
         const result = method();
-        const after = new Date().getTime();
+        const after = performance.now();
         const call = this.map.get(label) || {
             elapsedTime: 0,
             calls: 0,
@@ -44,17 +44,17 @@ export class ProcedureMeasurer {
         call.elapsedTime += after - before;
         ++call.calls;
         this.map.set(label, call);
-        this.measurerOverhead += (new Date().getTime() - after);
+        this.measurerOverhead += (performance.now() - after);
         return result;
     }
 
     public start(): void {
-        this.startTime = Date.now();
+        this.startTime = performance.now();
     }
 
     public finish(): void {
         if (this.startTime) {
-            this.totalTime = Date.now() - this.startTime;
+            this.totalTime = performance.now() - this.startTime;
         }
     }
 

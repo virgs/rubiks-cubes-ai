@@ -8,7 +8,7 @@ import SolversMapWorker from "../solvers/solver-web-worker?worker";
 import type { Solution } from "../solvers/cube-solver";
 import type { SolverWorkerRequest, SolverWorkerResponse } from "../solvers/solver-web-worker";
 import { Configuration } from "@/configuration";
-import { HumanTranslator } from "@/printers/human-tranlator";
+import { HumanTranslator } from "@/printers/human-translator";
 import type { RubiksCube } from "@/engine/rubiks-cube";
 
 export type SolverRendererConfig = {
@@ -102,7 +102,12 @@ export class SolverRenderer {
                         if (!solution.data.human) {
                             this.movesAnimationsQueue.push(...solution.rotations);
                         }
-                        let text = '     Total time: ' + (solution.totalTime / 1000) + 's\n';
+                        const ms = Math.trunc(solution.totalTime * 1000) / 1000;
+                        let time = ms + 'ms';
+                        if (ms > 1000) {
+                            time = (Math.trunc((ms * 1000) / 1000) / 1000) + 's';
+                        }
+                        let text = '     Total time: ' + time + '\n';
                         text += new HumanTranslator().translateRotations(solution.rotations, { lineBreak: 7, showNumberOfMoves: true });
                         this.solutionsText = this.createText(text, .6);
                         this.solutionsText.position.set(this.titleCenter.x - Configuration.renderers.cubeSize,

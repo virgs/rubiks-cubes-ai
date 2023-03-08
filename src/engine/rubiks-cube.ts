@@ -41,7 +41,7 @@ export class RubiksCube {
     private configuration: string;
     private readonly dimension: number;
     private readonly faceRotator: RubiksCubeFaceRotator;
-    private readonly cubelets: ColorlessCubelet[];
+    private readonly colorlessCubelets: ColorlessCubelet[];
 
     public constructor(config?: { clone?: string, colorMap?: Map<Sides, Colors>, dimension?: number }) {
         this.dimension = config?.dimension!;
@@ -60,7 +60,7 @@ export class RubiksCube {
             }
         }
         this.faceRotator = new RubiksCubeFaceRotator(this.dimension);
-        this.cubelets = new CubeletsCreator(this.dimension).create();
+        this.colorlessCubelets = new CubeletsCreator(this.dimension).create();
     }
 
 
@@ -80,42 +80,6 @@ export class RubiksCube {
         return this.configuration;
     }
 
-    public translateCubeBits(): string {
-        return this.configuration;
-    }
-    //     const stickersPerSide = this.dimension * this.dimension;
-    //     let text = getAllSides()
-    //         .map(side => (Sides[side] + new Array(stickersPerSide + 5).fill(' ').join('')).substring(0, stickersPerSide + 2))
-    //         .join('')
-    //         .concat('\n');
-
-    //     const spacing = '-'.repeat(stickersPerSide)
-    //         .concat('  ')
-    //         .repeat(6)
-    //         .concat('\n')
-
-    //     text += spacing;
-    //     this.configuration
-    //         .forEach(config => {
-    //             const bytes = new Uint8Array(config.buffer).slice(0); //clones it
-    //             text += bytes
-    //                 .reverse()
-    //                 .reduce((str, byte) => str + byte.toString(2).padStart(8, '0'), '')
-    //                 .split('').reverse().join('')
-    //                 .match(new RegExp(`.{${stickersPerSide}}`, 'g'))!
-    //                 .join('  ')
-    //                 .concat('\n');
-    //         });
-    //     text += spacing;
-    //     text += Array.from(new Array(stickersPerSide * 6))
-    //         .map((_, index) => Colors[this.getColorOfIndex(index)].substring(0, 1))
-    //         .join('')
-    //         .match(new RegExp(`.{1,${stickersPerSide}}`, 'g'))!
-    //         .join('  ')
-    //         .concat('\n');
-    //     return text;
-    // }
-
     public isSolved(): boolean {
         const stickersPerSide = this.dimension * this.dimension;
         const sides = getAllSides();
@@ -130,22 +94,33 @@ export class RubiksCube {
     }
 
     public getAllCubelets(): Cubelet[] {
-        return this.addColorToCubelets(this.cubelets);
+        return this.addColorToCubelets(this.colorlessCubelets);
     }
 
     public getAllColorlessCubelets(): ColorlessCubelet[] {
-        return this.cubelets;
+        return this.colorlessCubelets;
+    }
+
+    public getSideOfIndex(index: number): Sides {
+        const numberOfSides = getAllSides().length;
+        return index / numberOfSides;
+    }
+
+    public getColorlessCubeletOfIndex(index: number): ColorlessCubelet {
+        return this.colorlessCubelets
+            .find(cubelet => cubelet.stickers
+                .some(sticker => sticker.id === index));
     }
 
     public getCubeletsBySides(...sides: Sides[]): Cubelet[] {
-        const found = this.cubelets
+        const found = this.colorlessCubelets
             .filter(cubelet => cubelet.stickers
                 .every(sticker => sides.includes(sticker.side)));
         return this.addColorToCubelets(found);
     }
 
     public getCubeletsByColor(...colors: Colors[]): Cubelet[] {
-        const found = this.cubelets
+        const found = this.colorlessCubelets
             .filter(cubelet => cubelet
                 .stickers
                 .every(sticker => colors

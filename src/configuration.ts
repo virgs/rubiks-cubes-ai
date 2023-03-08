@@ -5,8 +5,9 @@ import { AStarSolver } from "./solvers/a-star-solver";
 import { BreadthFirstSearchSolver } from "./solvers/breadth-first-search-solver";
 import { NeuroEvolutionarySolver } from "./solvers/neuro-evolutionary/neuro-evolutionary-solver";
 import { GeneticAlgorithmSolver } from "./solvers/genetic-algorithm/genetic-algorithm-solver";
-import { InterativeDeepeningDepthFirstSearchSolver } from "./solvers/iterative-deepening-depth-first-search-solver";
 import { BidirectionalBreadthFirstSearchSolver } from "./solvers/bidirectional-breadth-first-search-solver";
+import { MultiStepSearchSolver } from "./solvers/multi-stage-solver/multi-step-search-solver";
+import { InterativeDeepeningDepthFirstSearchSolver } from "./solvers/iterative-deepening-depth-first-search-solver copy";
 
 export type CubeTypes = {
     label: string,
@@ -20,14 +21,18 @@ export type CubeTypes = {
     }[]
 }
 
+export const AStarAlgorithmConfig = {
+    weight: 100
+}
+
 export const NeuroEvolutionaryConfig = {
     geneticData: {
-        mutationRate: 0.05,
-        populationPerGeneration: 100,
-        armageddonThreshold: 500
+        mutationRate: 0.01,
+        populationPerGeneration: 150,
+        armageddonThreshold: 1500
     },
     neuralNetworkData: {
-        hiddenNeurons: 10,
+        hiddenNeurons: 15,
         iterations: 20
     }
 }
@@ -59,7 +64,7 @@ export const Configuration = {
         titleDistance: 8.5,
         cubeSize: 2.5
     },
-    initiallySelectedCubeTypeIndex: 0,
+    initiallySelectedCubeTypeIndex: 1,
     cubeTypes: [
         {
             label: '2x2',
@@ -88,12 +93,12 @@ export const Configuration = {
                     key: 'A*',
                     instantiator: (configuration: string) => new AStarSolver(new RubiksCube({ clone: configuration })),
                     checked: true,
-                    info: `Astar. Uses number of misplaced stickers as heuristic.`
+                    info: `Weighted ${AStarAlgorithmConfig.weight} A star. Uses number of misplaced stickers as heuristic multipled by a constant weight.`
                 },
                 {
                     key: 'BiBFS',
                     instantiator: (configuration: string) => new BidirectionalBreadthFirstSearchSolver(new RubiksCube({ clone: configuration })),
-                    checked: false,
+                    checked: true,
                     info: `BiDirectional Breadth-first-search. Brute force.`
                 }
             ]
@@ -108,6 +113,12 @@ export const Configuration = {
                     instantiator: (configuration: string) => new HumanSolver(new RubiksCube({ clone: configuration })),
                     checked: true,
                     info: 'Use keys \'WASDFX\' combined with \'shift\' to rotate cube faces'
+                },
+                {
+                    key: 'MultiLayer',
+                    instantiator: (configuration: string) => new MultiStepSearchSolver(new RubiksCube({ clone: configuration })),
+                    checked: false,
+                    info: `Neuro Evolutionary. Uses number of misplaced stickers as fitness function. Internal neurons: ${NeuroEvolutionaryConfig.neuralNetworkData.hiddenNeurons}. Population: ${NeuroEvolutionaryConfig.geneticData.populationPerGeneration}. No elitism`
                 },
                 {
                     key: 'NE',

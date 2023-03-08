@@ -2,6 +2,7 @@ type NeuralNetworkConfig = {
     inputs: number,
     hiddenNeurons: number,
     outputs: number,
+    bias?: number
 };
 
 export class NeuralNetwork {
@@ -14,7 +15,11 @@ export class NeuralNetwork {
         if (weights) {
             this.weights = weights;
         } else {
-            const weightsAmount = (this.config.inputs + this.config.outputs) * this.config.hiddenNeurons;
+            let totalExtremeNodes = this.config.inputs + this.config.outputs;
+            if (this.config.bias !== undefined) {
+                totalExtremeNodes += 1;
+            }
+            const weightsAmount = totalExtremeNodes * this.config.hiddenNeurons;
             this.weights = Array.from(Array(weightsAmount)).map(() => Math.random() * 2 - 1);
         }
     }
@@ -27,8 +32,9 @@ export class NeuralNetwork {
         if (inputValues.length !== this.config.inputs) {
             throw new Error(`Amount of function argument '${inputValues.length}' should match configuration inputs quantity '${this.config.inputs}'`);
         }
+        const inputPlusBias = [...inputValues, this.config.bias];
 
-        const middleLayer = NeuralNetwork.processLayer(inputValues,
+        const middleLayer = NeuralNetwork.processLayer(inputPlusBias,
             this.weights
                 .filter((_, index) => index >= 0 && index < this.config.inputs * this.config.hiddenNeurons),
             this.config.hiddenNeurons);
