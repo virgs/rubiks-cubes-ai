@@ -110,9 +110,9 @@ export class SolverRenderer {
                         let text = '     Total time: ' + time + '\n';
                         text += new HumanTranslator().translateRotations(solution.rotations, { lineBreak: 7, showNumberOfMoves: true });
                         this.solutionsText = this.createText(text, .6);
-                        this.solutionsText.position.set(this.titleCenter.x - Configuration.renderers.cubeSize,
-                            this.titleCenter.y,
-                            this.titleCenter.z + Configuration.renderers.cubeSize);
+                        this.solutionsText.position.set(this.title.position.x,
+                            this.title.position.y - Configuration.renderers.cubeSize,
+                            this.title.position.z + Configuration.renderers.cubeSize * .5);
                         this.config.scene.add(this.solutionsText);
                         this.terminated = true;
                         this.solversMapWorker.terminate();
@@ -171,8 +171,8 @@ export class SolverRenderer {
                     const titlePosition = titleDirection.clone().multiplyScalar(update.value);
 
                     this.cubeRenderer.getMesh().position.set(cubePosition.x, cubePosition.y, cubePosition.z);
-                    this.title!.position.set(titlePosition.x - Configuration.renderers.cubeSize,
-                        titlePosition.y + 2,
+                    this.title!.position.set(titlePosition.x - 2 * Configuration.renderers.cubeSize,
+                        titlePosition.y + 2.5,
                         titlePosition.z + Configuration.renderers.cubeSize);
                 })
                 .onComplete((update: { value: number }) => {
@@ -180,8 +180,8 @@ export class SolverRenderer {
                     const titlePosition = titleDirection.clone().multiplyScalar(update.value);
 
                     this.cubeRenderer.getMesh().position.set(cubePosition.x, cubePosition.y, cubePosition.z);
-                    this.title!.position.set(titlePosition.x - Configuration.renderers.cubeSize,
-                        titlePosition.y + 2,
+                    this.title!.position.set(titlePosition.x - 2 * Configuration.renderers.cubeSize,
+                        titlePosition.y + 2.5,
                         titlePosition.z + Configuration.renderers.cubeSize);
                     resolve();
                 })

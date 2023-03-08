@@ -65,12 +65,15 @@ export default defineComponent({
       return this.cubeTypes[this.selectedDimensionIndex];
     },
     mainActionButtonEnabled() {
+      if (this.selectedCubeType.methods
+        .every(method => !method.checked)) {
+        return false;
+      }
       if (this.shuffling) {
         return false;
       }
-      if (this.shuffled) {
-        return this.selectedCubeType.methods
-          .some(method => method.checked);;
+      if (!this.shuffled && !this.solved) {
+        return false;
       }
       if (this.solved) {
         return true;

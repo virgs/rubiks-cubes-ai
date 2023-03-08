@@ -26,7 +26,7 @@ export class World {
         this.scene.background = new Color(0x111111);
 
         const light = new DirectionalLight(0xAAAAAA, 5);
-        light.position.set(10, 10, 10);
+        light.position.set(-10, 10, 10);
         light.castShadow = true;
         this.scene.add(light);
         this.scene.add(new HemisphereLight(
@@ -82,7 +82,7 @@ export class World {
     public async sendCameraAwayFromTheCenter(): Promise<void> {
         return new Promise(resolve => {
             const from = { length: Math.round(this.camera.position.length()), x: this.camera.position.x, y: this.camera.position.y, target: this.camera.lookAt }
-            const to = { length: Configuration.world.camera.farDistance, x: 0.0, y: 0, target: new Vector3(0, 0, 0) }
+            const to = { length: Configuration.world.camera.farDistance, x: 0.0, y: -5, target: new Vector3(0, 0, 0) }
             new Tween.Tween(from)
                 .to(to, 500)
                 .easing(Tween.Easing.Quadratic.InOut)

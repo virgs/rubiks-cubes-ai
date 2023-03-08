@@ -1,5 +1,5 @@
 import Heap from 'heap';
-import { getAllSides, getOppositeSide, Sides } from "../constants/sides";
+import { getOppositeSide, Sides } from "../constants/sides";
 import type { CubeSolver, Solution } from "./cube-solver";
 import { ProcedureMeasurer } from "./procedure-measurer";
 import type { FaceRotation } from "@/engine/face-rotation";

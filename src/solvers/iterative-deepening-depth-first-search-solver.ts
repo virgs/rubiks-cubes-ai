@@ -4,7 +4,6 @@ import type { CubeSolver, Solution } from "./cube-solver";
 import type { FaceRotation } from "@/engine/face-rotation";
 import { type Cubelet, RubiksCube } from "@/engine/rubiks-cube";
 import { Colors, getOppositeColor } from "@/constants/colors";
-import { RotationsTuner } from "@/printers/rotations-tuner";
 
 enum Metrics {
     ADD_CANDIDATE,
@@ -94,7 +93,7 @@ export class InterativeDeepeningDepthFirstSearchSolver implements CubeSolver {
 
     private createActions(): FaceRotation[] {
         const result: FaceRotation[] = [];
-        [Sides.RIGHT, Sides.UP, Sides.FRONT]
+        [Sides.FRONT, Sides.UP, Sides.RIGHT] //So the fixed cubelet doesn't move
             .map(side => [true, false]
                 .map(direction => {
                     result.push({ side: side, counterClockwiseDirection: direction, layer: 0 });
@@ -109,9 +108,9 @@ export class InterativeDeepeningDepthFirstSearchSolver implements CubeSolver {
             rotations.unshift(current.rotation);
             current = current.parent;
         }
-        
+
         return {
-            rotations: new RotationsTuner().tune(rotations),
+            rotations: rotations,
             totalTime: this.measurer.getTotalTime()!,
             data: {
                 metrics: this.measurer.getData({ notMeasuredLabel: Metrics[Metrics.NOT_MEASURED] }),

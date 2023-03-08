@@ -149,7 +149,7 @@ export class BidirectionalBreadthFirstSearchSolver implements CubeSolver {
             totalTime: this.measurer.getTotalTime()!,
             data: {
                 metrics: this.measurer.getData({ notMeasuredLabel: Metrics[Metrics.NOT_MEASURED] }),
-                visitedNodes: visitedNodes
+                iterations: visitedNodes
             }
         };
     }

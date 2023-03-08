@@ -40,11 +40,12 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
         this.aborted = false;
 
         this.actions = [];
-        [Sides.RIGHT, Sides.UP, Sides.FRONT]
+        [Sides.FRONT, Sides.UP, Sides.RIGHT] //So the fixed cubelet doesn't move
             .map(side => [true, false]
                 .map(direction => {
                     this.actions.push({ side: side, counterClockwiseDirection: direction, layer: 0 });
                 }));
+
         const fixedCubelet = cube.getCubeletsBySides(Sides.BACK, Sides.LEFT, Sides.DOWN)[0];
         const goalState = this.buildSolvedPocketCubeFromCornerCubelet(fixedCubelet, cube.getDimension());
         this.goalStateHash = goalState.getHash();
@@ -68,33 +69,41 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
             this.measurer.start();
             while (!this.aborted) {
                 const solution = this.beginSearch(this.root)
-                if (solution) {
+                if (typeof (solution) === 'number') {
+                    this.threshold = Number(solution);
+                } else {
                     this.measurer.finish();
-                    return resolve(this.createSolution(solution));
+                    return resolve(this.createSolution(solution as Candidate));
                 }
-                ++this.threshold;
             }
             reject(Error(`Aborted`));
         });
     }
 
-    private beginSearch(candidate: Candidate): Candidate | undefined {
+    private beginSearch(candidate: Candidate): Candidate | number {
         ++this.visitedNodes;
         if (this.aborted) {
-            return undefined;
+            return -1;
         }
         if (candidate.cube.isSolved()) {
             return candidate;
         }
-        if (candidate.cost + this.calculateDistanceToFinalState(candidate.cube) < this.threshold) {
+        const heuristicValue = this.calculateDistanceToFinalState(candidate.cube);
+        let minNextThreshold = Infinity;
+        if (candidate.cost + heuristicValue <= this.threshold) {
             const children = this.applyRotations(candidate);
             for (let child of children) {
                 const solution = this.beginSearch(child);
-                if (solution) {
+                if (typeof (solution) === 'number' && solution > this.threshold) {
+                    minNextThreshold = Math.min(solution, minNextThreshold);
+                } else {
                     return solution;
                 }
             }
+        } else {
+            return candidate.cost + heuristicValue
         }
+        return minNextThreshold;
     }
 
     private createSolution(candidate: Candidate): Solution {

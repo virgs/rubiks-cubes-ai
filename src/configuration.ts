@@ -7,7 +7,8 @@ import { NeuroEvolutionarySolver } from "./solvers/neuro-evolutionary/neuro-evol
 import { GeneticAlgorithmSolver } from "./solvers/genetic-algorithm/genetic-algorithm-solver";
 import { BidirectionalBreadthFirstSearchSolver } from "./solvers/bidirectional-breadth-first-search-solver";
 import { MultiStepSearchSolver } from "./solvers/multi-stage-solver/multi-step-search-solver";
-import { InterativeDeepeningDepthFirstSearchSolver } from "./solvers/iterative-deepening-depth-first-search-solver copy";
+import { InterativeDeepeningDepthFirstSearchSolver } from "./solvers/iterative-deepening-depth-first-search-solver";
+import { InterativeDeepeningAStarSolver } from "./solvers/iterative-deepening-a-star-solver";
 
 export type CubeTypes = {
     label: string,
@@ -22,7 +23,7 @@ export type CubeTypes = {
 }
 
 export const AStarAlgorithmConfig = {
-    weight: 100
+    weight: 1
 }
 
 export const NeuroEvolutionaryConfig = {
@@ -50,12 +51,12 @@ export const Configuration = {
     },
     world: {
         debug: false,
-        scrambleMoves: 10,
-        scrambleRotationDuration: 100,
-        cubesCircleRay: 5,
+        scrambleMoves: 15,
+        scrambleRotationDuration: 150,
+        cubesCircleRay: 4.5,
         camera: {
-            closeDistance: 15,
-            farDistance: 50
+            closeDistance: 20,
+            farDistance: 55
         }
     },
     renderers: {
@@ -81,13 +82,19 @@ export const Configuration = {
                     key: 'IDDFS',
                     instantiator: (configuration: string) => new InterativeDeepeningDepthFirstSearchSolver(new RubiksCube({ clone: configuration })),
                     checked: false,
-                    info: `Interative deepening depth-first-search. Brute force`
+                    info: `Interative-deepening depth-first-search. Brute force`
                 },
                 {
                     key: 'BFS',
                     instantiator: (configuration: string) => new BreadthFirstSearchSolver(new RubiksCube({ clone: configuration })),
                     checked: false,
                     info: `Breadth-first-search. Brute force`
+                },
+                {
+                    key: 'IDA*',
+                    instantiator: (configuration: string) => new InterativeDeepeningAStarSolver(new RubiksCube({ clone: configuration })),
+                    checked: true,
+                    info: `Interative-deepening A star. Uses number of misplaced stickers as heuristic.`
                 },
                 {
                     key: 'A*',
