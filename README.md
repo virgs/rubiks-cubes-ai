@@ -9,6 +9,8 @@
 Show average time table. Tell the distinctions of each method. Show gifs.
 Explain they compete for CPU resources
 
+# cite these:
+https://deepcube.igb.uci.edu/
 
 # URL Query params
 /rubiks-cubes-ai?cube=0&moves=F'  2U    B   2D    F'   R'   D'   U    L'   B    L    F    L'   F'   D   2U    L'

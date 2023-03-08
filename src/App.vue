@@ -19,6 +19,7 @@ import type { RubiksCube } from './engine/rubiks-cube';
 import { UrlQueryHandler } from './url-query-handler';
 
 //They have to be non reactive
+const urlQueryHandler = new UrlQueryHandler();
 const keyboardInterpreter = new KeyboardInterpreter();
 const translator = new HumanTranslator();
 const tuner = new RotationsTuner();
@@ -27,14 +28,12 @@ let cubeRenderer: CubeRenderer;
 let solverRenderers: SolverRenderer[] = [];
 let cube: RubiksCube;
 let font: Font;
-
-
-const urlQueryHandler = new UrlQueryHandler();
-let shuffleMoves: FaceRotation[] = translator.convertStringToFaceRotations(urlQueryHandler.getParameterByName('moves', ''));
-
 new FontLoader().load(fontUrl, (loaded: Font) => {
   font = loaded;
 });
+
+
+let shuffleMoves: FaceRotation[] = translator.convertStringToFaceRotations(urlQueryHandler.getParameterByName('moves', ''));
 
 export default defineComponent({
   name: "App",
@@ -151,10 +150,12 @@ export default defineComponent({
   methods: {
     refreshTooltips() {
       const tooltipTriggerList = document.querySelectorAll("[data-bs-toggle=\"tooltip\"]");
-      //@ts-expect-error
-      const tooltipList = [...tooltipTriggerList]
-        //@ts-expect-error
-        .map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl, { delay: { show: 500, hide: 500 } }));
+
+      Array.from(tooltipTriggerList)
+        .forEach(tooltipTriggerEl => {
+          //@ts-expect-error
+          return new bootstrap.Tooltip(tooltipTriggerEl, { delay: { show: 500, hide: 500 } })
+        });
 
     },
     async coolEffect() {
@@ -303,9 +304,10 @@ export default defineComponent({
             </ul>
           </div>
           <template v-for="method, index in selectedCubeType.methods">
-            <input type="checkbox" v-model="method.checked" class="btn-check" :id="'btncheck' + index" autocomplete="off">
-            <label class="btn btn-outline-info fa-solid" :for="'btncheck' + index" data-bs-toggle="tooltip"
-              data-bs-placement="bottom" :data-bs-title="method.info">{{ method.key }}
+            <input type="checkbox" v-model="method.checked" class="btn-check"
+              :id="'btncheck' + selectedCubeType.dimension + index" autocomplete="off">
+            <label class="btn btn-outline-info fa-solid" :for="'btncheck' + selectedCubeType.dimension + index"
+              data-bs-toggle="tooltip" data-bs-placement="bottom" :data-bs-title="method.info">{{ method.key }}
               <span v-if="badgeLayerNumberIsEnabled(method)"
                 style="margin-left: 10px; color: var(--bs-btn-active-color); background-color: var(--color-text) !important;"
                 class="badge bg-secondary">{{ currentLayer }}</span>

@@ -23,7 +23,7 @@ export type CubeTypes = {
 }
 
 export const AStarAlgorithmConfig = {
-    weight: 1
+    costWeight: .85
 }
 
 export const NeuroEvolutionaryConfig = {
@@ -100,7 +100,7 @@ export const Configuration = {
                     key: 'A*',
                     instantiator: (configuration: string) => new AStarSolver(new RubiksCube({ clone: configuration })),
                     checked: true,
-                    info: `Weighted ${AStarAlgorithmConfig.weight} A star. Uses number of misplaced stickers as heuristic multipled by a constant weight.`
+                    info: `Weighted ${AStarAlgorithmConfig.weight} A star. Uses number of misplaced stickers as heuristic and multiplies constant cost by weight.`
                 },
                 {
                     key: 'BiBFS',

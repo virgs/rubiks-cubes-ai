@@ -129,7 +129,7 @@ export class AStarSolver implements CubeSolver {
             if (!this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.visitedChecklist.has(newCandidateHash))) {
                 this.measurer.add(Metrics[Metrics.ADD_CANDIDATE], () => {
                     this.candidates.push({
-                        cost: parent.cost + 1 + heuristicFunctionValue * AStarAlgorithmConfig.weight,
+                        cost: AStarAlgorithmConfig.costWeight * (parent.cost) + 1 + heuristicFunctionValue,
                         cube: newCandidate,
                         rotation: rotation,
                         parent: parent,

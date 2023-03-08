@@ -41,10 +41,9 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
 
         this.actions = [];
         [Sides.FRONT, Sides.UP, Sides.RIGHT] //So the fixed cubelet doesn't move
-            .map(side => [true, false]
-                .map(direction => {
-                    this.actions.push({ side: side, counterClockwiseDirection: direction, layer: 0 });
-                }));
+            .map(side => {
+                this.actions.push({ side: side, layer: 0 });
+            });
 
         const fixedCubelet = cube.getCubeletsBySides(Sides.BACK, Sides.LEFT, Sides.DOWN)[0];
         const goalState = this.buildSolvedPocketCubeFromCornerCubelet(fixedCubelet, cube.getDimension());

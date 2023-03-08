@@ -110,7 +110,7 @@ export class SolverRenderer {
                         let text = '     Total time: ' + time + '\n';
                         text += new HumanTranslator().translateRotations(solution.rotations, { lineBreak: 7, showNumberOfMoves: true });
                         this.solutionsText = this.createText(text, .6);
-                        this.solutionsText.position.set(this.title.position.x,
+                        this.solutionsText.position.set(this.title.position.x + Configuration.renderers.cubeSize * .5,
                             this.title.position.y - Configuration.renderers.cubeSize,
                             this.title.position.z + Configuration.renderers.cubeSize * .5);
                         this.config.scene.add(this.solutionsText);
