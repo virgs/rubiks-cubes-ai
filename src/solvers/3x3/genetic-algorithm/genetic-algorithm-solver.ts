@@ -1,7 +1,7 @@
 import type { Colors } from "@/constants/colors";
 import { getAllSides, type Sides } from "@/constants/sides";
-import type { CubeSolver, Solution } from "../cube-solver";
-import { ProcedureMeasurer } from "../procedure-measurer";
+import type { CubeSolver, Solution } from "../../cube-solver";
+import { ProcedureMeasurer } from "../../procedure-measurer";
 import { GeneticAlgorithm, type Chromosome } from "./genetic-algorithm";
 import { HumanTranslator } from "@/printers/human-translator";
 import { RubiksCube } from "@/engine/rubiks-cube";

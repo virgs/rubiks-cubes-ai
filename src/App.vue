@@ -33,7 +33,8 @@ new FontLoader().load(fontUrl, (loaded: Font) => {
 });
 
 
-let shuffleMoves: FaceRotation[] = translator.convertStringToFaceRotations(urlQueryHandler.getParameterByName('moves', ''));
+let urlShuffleMoves: FaceRotation[] = translator.convertStringToFaceRotations(urlQueryHandler.getParameterByName('moves', ''));
+let shuffleMoves: FaceRotation[] = urlShuffleMoves;
 
 export default defineComponent({
   name: "App",
@@ -46,11 +47,7 @@ export default defineComponent({
       solved: false,
       shuffling: false,
       shuffled: false,
-      shuffleMovesText: translator.translateRotations(shuffleMoves, {
-        showNumberOfMoves: true,
-        showLayer: false,
-        subscript: false
-      }),
+      shuffleMovesText: '',
       solving: false,
     };
   },
@@ -85,6 +82,7 @@ export default defineComponent({
       this.refreshTooltips();
       this.reset();
       translator.translateCube(cube);
+      this.updateUrl();
     },
     shuffleMovesText() {
       document.querySelector("textarea")!.scrollTop = document.querySelector("textarea")!.scrollHeight;
@@ -103,8 +101,9 @@ export default defineComponent({
     world = new World(container);
     world.start();
     await this.reset();
-    shuffleMoves = translator.convertStringToFaceRotations(urlQueryHandler.getParameterByName('moves', '').replace(/,/g, ' '));
-    this.shuffleMovesText = translator.translateRotations(shuffleMoves, {
+
+    shuffleMoves = urlShuffleMoves;
+    this.shuffleMovesText = translator.translateRotations(urlShuffleMoves, {
       showNumberOfMoves: true,
       showLayer: this.selectedCubeType.dimension > 3,
       subscript: true
@@ -114,6 +113,7 @@ export default defineComponent({
       cube = cube.rotateFace(faceRotation);
       this.shuffled = false;
     }
+    this.updateUrl();
     window.addEventListener('keypress', async (event: KeyboardEvent) => {
       solverRenderers
         .forEach(solverRenderer => solverRenderer.keyInput(event));
@@ -145,6 +145,7 @@ export default defineComponent({
           this.shuffling = false;
         }
       }
+      this.updateUrl();
     });
   },
   methods: {
@@ -209,6 +210,7 @@ export default defineComponent({
       this.shuffleMovesText = "";
       shuffleMoves = [];
       this.shuffled = false;
+      this.updateUrl();
     },
     async shuffle() {
       await this.returnCubesToStage();
@@ -227,6 +229,7 @@ export default defineComponent({
           showLayer: this.selectedCubeType.dimension > 3,
           subscript: true
         });
+        this.updateUrl();
       }
       this.shuffled = !cube!.isSolved();
       this.shuffling = false;
@@ -270,7 +273,39 @@ export default defineComponent({
         console.log(e)
       }
     },
-  },
+    updateUrl() {
+
+      let afterMovesNumber = this.shuffleMovesText;
+      if (afterMovesNumber.indexOf(':') > -1) {
+        afterMovesNumber = afterMovesNumber.split(':')[1]
+      }
+      if (afterMovesNumber) {
+        afterMovesNumber = afterMovesNumber.split(/\s+/).join(',')
+        if (afterMovesNumber.startsWith(',')) {
+          afterMovesNumber = afterMovesNumber.substring(1);
+        }
+      } else {
+        afterMovesNumber = ''
+      }
+
+      const params: any = {
+        cube: this.selectedDimensionIndex,
+        moves: afterMovesNumber,
+      }
+      history.replaceState(
+        {},
+        null,
+        '?' +
+        Object.keys(params)
+          .map(key => {
+            return (
+              key + '=' + params[key]
+            )
+          })
+          .join('&')
+      )
+    }
+  }
 })
 
 </script>
