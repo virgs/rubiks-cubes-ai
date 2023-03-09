@@ -1,8 +1,8 @@
 
-import { Sides } from "../constants/sides";
+import { Sides } from "../../constants/sides";
 import LinkedList from "double-linked-list";
-import { ProcedureMeasurer } from "./procedure-measurer";
-import type { CubeSolver, Solution } from "./cube-solver";
+import { ProcedureMeasurer } from "../procedure-measurer";
+import type { CubeSolver, Solution } from "../cube-solver";
 import type { FaceRotation } from "@/engine/face-rotation";
 import type { RubiksCube } from "@/engine/rubiks-cube";
 

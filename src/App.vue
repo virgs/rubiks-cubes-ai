@@ -303,7 +303,7 @@ export default defineComponent({
                   href="#">{{ item.label }}</a></li>
             </ul>
           </div>
-          <template v-for="method, index in selectedCubeType.methods">
+          <template v-for="method, index in selectedCubeType.methods" :key="selectedCubeType.label + method.key">
             <input type="checkbox" v-model="method.checked" class="btn-check"
               :id="'btncheck' + selectedCubeType.dimension + index" autocomplete="off">
             <label class="btn btn-outline-info fa-solid" :for="'btncheck' + selectedCubeType.dimension + index"

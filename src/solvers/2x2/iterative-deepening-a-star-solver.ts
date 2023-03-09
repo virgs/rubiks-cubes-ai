@@ -1,6 +1,6 @@
-import { getOppositeSide, Sides } from "../constants/sides";
-import { ProcedureMeasurer } from "./procedure-measurer";
-import type { CubeSolver, Solution } from "./cube-solver";
+import { getOppositeSide, Sides } from "../../constants/sides";
+import { ProcedureMeasurer } from "../procedure-measurer";
+import type { CubeSolver, Solution } from "../cube-solver";
 import type { FaceRotation } from "@/engine/face-rotation";
 import { type Cubelet, RubiksCube } from "@/engine/rubiks-cube";
 import { Colors, getOppositeColor } from "@/constants/colors";

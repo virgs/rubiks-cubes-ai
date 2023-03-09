@@ -1,14 +1,13 @@
 import { RubiksCube } from "./engine/rubiks-cube";
+import { BidirectionalBreadthFirstSearchSolver } from "./solvers/2x2/bidirectional-breadth-first-search-solver";
+import { BreadthFirstSearchSolver } from "./solvers/2x2/breadth-first-search-solver";
+import { InterativeDeepeningAStarSolver } from "./solvers/2x2/iterative-deepening-a-star-solver";
+import { InterativeDeepeningDepthFirstSearchSolver } from "./solvers/2x2/iterative-deepening-depth-first-search-solver";
+import { WeightedAStarSolver } from "./solvers/2x2/weighted-a-star-solver";
+import { GeneticAlgorithmSolver } from "./solvers/3x3/genetic-algorithm/genetic-algorithm-solver";
+import { NeuroEvolutionarySolver } from "./solvers/3x3/neuro-evolutionary/neuro-evolutionary-solver";
 import type { CubeSolver } from "./solvers/cube-solver";
 import { HumanSolver } from "./solvers/human-solver";
-import { AStarSolver } from "./solvers/a-star-solver";
-import { BreadthFirstSearchSolver } from "./solvers/breadth-first-search-solver";
-import { NeuroEvolutionarySolver } from "./solvers/neuro-evolutionary/neuro-evolutionary-solver";
-import { GeneticAlgorithmSolver } from "./solvers/genetic-algorithm/genetic-algorithm-solver";
-import { BidirectionalBreadthFirstSearchSolver } from "./solvers/bidirectional-breadth-first-search-solver";
-import { MultiStepSearchSolver } from "./solvers/multi-stage-solver/multi-step-search-solver";
-import { InterativeDeepeningDepthFirstSearchSolver } from "./solvers/iterative-deepening-depth-first-search-solver";
-import { InterativeDeepeningAStarSolver } from "./solvers/iterative-deepening-a-star-solver";
 
 export type CubeTypes = {
     label: string,
@@ -22,8 +21,8 @@ export type CubeTypes = {
     }[]
 }
 
-export const AStarAlgorithmConfig = {
-    costWeight: .85
+export const WeightedAStarAlgorithmConfig = {
+    heuristicWeight: 50,
 }
 
 export const NeuroEvolutionaryConfig = {
@@ -97,10 +96,10 @@ export const Configuration = {
                     info: `Interative-deepening A star. Uses number of misplaced stickers as heuristic.`
                 },
                 {
-                    key: 'A*',
-                    instantiator: (configuration: string) => new AStarSolver(new RubiksCube({ clone: configuration })),
+                    key: 'WA*',
+                    instantiator: (configuration: string) => new WeightedAStarSolver(new RubiksCube({ clone: configuration })),
                     checked: true,
-                    info: `Weighted ${AStarAlgorithmConfig.weight} A star. Uses number of misplaced stickers as heuristic and multiplies constant cost by weight.`
+                    info: `Weighted A star. Uses number of misplaced stickers as heuristic and weights the heuristic (${WeightedAStarAlgorithmConfig.heuristicWeight} * h(x)) value.`
                 },
                 {
                     key: 'BiBFS',
@@ -120,12 +119,6 @@ export const Configuration = {
                     instantiator: (configuration: string) => new HumanSolver(new RubiksCube({ clone: configuration })),
                     checked: true,
                     info: 'Use keys \'WASDFX\' combined with \'shift\' to rotate cube faces'
-                },
-                {
-                    key: 'MultiLayer',
-                    instantiator: (configuration: string) => new MultiStepSearchSolver(new RubiksCube({ clone: configuration })),
-                    checked: false,
-                    info: `Neuro Evolutionary. Uses number of misplaced stickers as fitness function. Internal neurons: ${NeuroEvolutionaryConfig.neuralNetworkData.hiddenNeurons}. Population: ${NeuroEvolutionaryConfig.geneticData.populationPerGeneration}. No elitism`
                 },
                 {
                     key: 'NE',

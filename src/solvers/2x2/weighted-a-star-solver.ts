@@ -1,11 +1,11 @@
 import Heap from 'heap';
-import { getOppositeSide, Sides } from "../constants/sides";
-import type { CubeSolver, Solution } from "./cube-solver";
-import { ProcedureMeasurer } from "./procedure-measurer";
+import { getOppositeSide, Sides } from "../../constants/sides";
+import type { CubeSolver, Solution } from "../cube-solver";
+import { ProcedureMeasurer } from "../procedure-measurer";
 import type { FaceRotation } from "@/engine/face-rotation";
 import { Colors, getOppositeColor } from "@/constants/colors";
 import { RubiksCube, type Cubelet } from '@/engine/rubiks-cube';
-import { AStarAlgorithmConfig, Configuration } from '@/configuration';
+import { WeightedAStarAlgorithmConfig, Configuration } from '@/configuration';
 
 enum Metrics {
     ADD_CANDIDATE,
@@ -25,21 +25,22 @@ enum Metrics {
     SOLUTION_CREATION,
     MEASUREMENT_OVERHEAD,
     ITERATIONS_COUNTER_INCREMENT,
-    ABORTED_VERIFICATION
+    ABORTED_VERIFICATION,
+    BUILD_SOLUTION
 }
 type Candidate = {
     cost: number,
     cube: RubiksCube;
     rotation?: FaceRotation,
-    parent?: Candidate;
+    parentHash?: string;
     hash: string;
 }
 
-
-export class AStarSolver implements CubeSolver {
+// https://theory.stanford.edu/~amitp/GameProgramming/Variations.html#weighted-a-star
+export class WeightedAStarSolver implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
     private readonly candidates: Heap<Candidate>;
-    private readonly visitedChecklist: Map<string, boolean>;
+    private readonly visitedChecklist: Map<string, Candidate>;
     private readonly actions: FaceRotation[];
     private readonly dimension: number;
     private readonly goalStateHash: string;
@@ -54,7 +55,7 @@ export class AStarSolver implements CubeSolver {
             cost: 0,
             cube: cube,
             rotation: undefined,
-            parent: undefined,
+            parentHash: undefined,
             hash: cube.getHash()
         };
         this.candidates.push(current);
@@ -89,7 +90,7 @@ export class AStarSolver implements CubeSolver {
                 if (this.measurer.add(Metrics[Metrics.CHECK_SOLUTION], () => current.hash === this.goalStateHash)) {
                     return resolve((this.measurer.add(Metrics[Metrics.SOLUTION_CREATION], () => this.createSolution(current!, visitedNodes, differentNodes))));
                 } else {
-                    this.measurer.add(Metrics[Metrics.ADD_TO_VISISTED_LIST_CHECK], () => this.visitedChecklist.set(current.hash, true));
+                    this.measurer.add(Metrics[Metrics.ADD_TO_VISISTED_LIST_CHECK], () => this.visitedChecklist.set(current.hash, current));
                     this.applyRotations(current!);
                 }
             }
@@ -102,14 +103,16 @@ export class AStarSolver implements CubeSolver {
     }
 
     private createSolution(candidate: Candidate, visitedNodes: number, differentNodes: number): Solution {
-        this.measurer.finish();
-        this.candidates.clear();
         const rotations: FaceRotation[] = [];
         let current: Candidate | undefined = candidate;
-        while (current && current.rotation) {
-            rotations.unshift(current.rotation);
-            current = current.parent;
-        }
+        this.measurer.add(Metrics[Metrics.BUILD_SOLUTION], () => {
+            while (current && current.rotation) {
+                rotations.unshift(current.rotation);
+                current = this.visitedChecklist.get(current.parentHash);
+            }
+        })
+        this.measurer.finish();
+        this.candidates.clear();
         return {
             rotations: rotations,
             totalTime: this.measurer.getTotalTime()!,
@@ -123,20 +126,28 @@ export class AStarSolver implements CubeSolver {
 
     private applyRotations(parent: Candidate): void {
         for (let rotation of this.actions) {
-            const newCandidate: RubiksCube = this.measurer.add(Metrics[Metrics.PERFORM_ROTATION], () => parent.cube.rotateFace(rotation));
-            const newCandidateHash = newCandidate.getHash();
-            const heuristicFunctionValue = this.measurer.add(Metrics[Metrics.HEURISTIC_CALCULATION], () => this.calculateDistanceToFinalState(newCandidate));
-            if (!this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.visitedChecklist.has(newCandidateHash))) {
+            const newCubeConfiguration: RubiksCube = this.measurer.add(Metrics[Metrics.PERFORM_ROTATION], () => parent.cube.rotateFace(rotation));
+            const newCubeHash = newCubeConfiguration.getHash();
+            const heuristicFunctionValue = this.measurer.add(Metrics[Metrics.HEURISTIC_CALCULATION], () => this.calculateDistanceToFinalState(newCubeConfiguration));
+            const newCandidateCost = parent.cost + 1 + WeightedAStarAlgorithmConfig.heuristicWeight * heuristicFunctionValue;
+            const newCandidate: Candidate = {
+                cost: newCandidateCost,
+                cube: newCubeConfiguration,
+                rotation: rotation,
+                parentHash: parent.hash,
+                hash: newCubeHash
+            };
+            const alreadyVisited = this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.visitedChecklist.get(newCubeHash));
+            if (!alreadyVisited) {
                 this.measurer.add(Metrics[Metrics.ADD_CANDIDATE], () => {
-                    this.candidates.push({
-                        cost: AStarAlgorithmConfig.costWeight * (parent.cost) + 1 + heuristicFunctionValue,
-                        cube: newCandidate,
-                        rotation: rotation,
-                        parent: parent,
-                        hash: newCandidateHash
-                    } as Candidate);
+                    this.candidates.push(newCandidate);
                 });
             }
+            //  else { //it wouldnt work. its children nodes would have to have their costs updated as well.
+            //     if (WeightedAStarAlgorithmConfig.optimal && newCandidateCost < alreadyVisited.cost) {
+            //         this.measurer.add(Metrics[Metrics.ADD_TO_VISISTED_LIST_CHECK], () => this.visitedChecklist.set(newCubeHash, newCandidate))
+            //     }
+            // }
         }
     }
 

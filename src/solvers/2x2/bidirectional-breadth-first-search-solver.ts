@@ -1,8 +1,8 @@
 
-import { getOppositeSide, Sides } from "../constants/sides";
+import { getOppositeSide, Sides } from "../../constants/sides";
 import LinkedList from "double-linked-list";
-import { ProcedureMeasurer } from "./procedure-measurer";
-import type { CubeSolver, Solution } from "./cube-solver";
+import { ProcedureMeasurer } from "../procedure-measurer";
+import type { CubeSolver, Solution } from "../cube-solver";
 import type { FaceRotation } from "@/engine/face-rotation";
 import { RubiksCube, type Cubelet } from "@/engine/rubiks-cube";
 import { type Colors, getOppositeColor } from "@/constants/colors";
@@ -23,6 +23,7 @@ type Candidate = {
     parent?: Candidate
 }
 
+//https://theory.stanford.edu/~amitp/GameProgramming/Variations.html#bidirectional-search
 export class BidirectionalBreadthFirstSearchSolver implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
     private readonly forwardSearchToExploreList: LinkedList;
@@ -30,12 +31,14 @@ export class BidirectionalBreadthFirstSearchSolver implements CubeSolver {
     private readonly reverseSearchToExploreList: LinkedList;
     private readonly reverseSearchExploredMap: Map<string, Candidate>;
     private readonly actions: FaceRotation[];
+    private iterations: any;
     private aborted: boolean;
 
     public constructor(cube: RubiksCube) {
         this.forwardSearchToExploreList = new LinkedList();
         this.reverseSearchToExploreList = new LinkedList();
         this.actions = [];
+        this.iterations = 0;
         this.measurer = new ProcedureMeasurer();
         this.forwardSearchExploredMap = new Map();
         this.reverseSearchExploredMap = new Map();
@@ -82,6 +85,7 @@ export class BidirectionalBreadthFirstSearchSolver implements CubeSolver {
             let reverse: Candidate;
             let visitedNodes = 0;
             while (this.forwardSearchToExploreList.length > 0 && this.reverseSearchToExploreList.length > 0) {
+                ++this.iterations;
                 if (this.aborted) {
                     return reject();
                 }
@@ -149,7 +153,8 @@ export class BidirectionalBreadthFirstSearchSolver implements CubeSolver {
             totalTime: this.measurer.getTotalTime()!,
             data: {
                 metrics: this.measurer.getData({ notMeasuredLabel: Metrics[Metrics.NOT_MEASURED] }),
-                iterations: visitedNodes
+                iterations: this.iterations,
+                visitedNodes: visitedNodes
             }
         };
     }
