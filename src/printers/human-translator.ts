@@ -80,7 +80,7 @@ export class HumanTranslator {
         console.log(text);
     }
 
-    public convertStringToFaceRotations(humanString: String): FaceRotation[] {
+    public convertStringToFaceRotations(humanString: String): FaceRotation[][] {
         if (humanString.length === 0) {
             return [];
         }
@@ -110,11 +110,12 @@ export class HumanTranslator {
                         return acc;
                 }
                 if (duplicated?.length > 0) {
-                    acc.push(rotation);
+                    acc.push([rotation, rotation]);
+                } else {
+                    acc.push([rotation]);
                 }
-                acc.push(rotation);
                 return acc;
-            }, [] as FaceRotation[]);
+            }, [] as FaceRotation[][]);
     }
 
     public translateRotations(rotationsToPrint: FaceRotation[], config?: {

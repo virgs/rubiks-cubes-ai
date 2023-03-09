@@ -30,7 +30,7 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
     private readonly actions: FaceRotation[];
     private readonly goalStateHash: string;
     private readonly root: Candidate;
-    private threshold: number;
+    private bound: number;
     private visitedNodes: number;
     private aborted: boolean;
 
@@ -48,7 +48,7 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
         const fixedCubelet = cube.getCubeletsBySides(Sides.BACK, Sides.LEFT, Sides.DOWN)[0];
         const goalState = this.buildSolvedPocketCubeFromCornerCubelet(fixedCubelet, cube.getDimension());
         this.goalStateHash = goalState.getHash();
-        this.threshold = this.calculateDistanceToFinalState(cube);
+        this.bound = this.calculateDistanceToFinalState(cube);
 
         this.root = {
             cube: cube,
@@ -62,14 +62,13 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
         this.aborted = true;
     }
 
-
     public async findSolution(): Promise<Solution> {
         return new Promise((resolve, reject) => {
             this.measurer.start();
             while (!this.aborted) {
-                const solution = this.beginSearch(this.root)
+                const solution = this.beginSearch(this.root, 0)
                 if (typeof (solution) === 'number') {
-                    this.threshold = Number(solution);
+                    this.bound = Number(solution);
                 } else {
                     this.measurer.finish();
                     return resolve(this.createSolution(solution as Candidate));
@@ -79,30 +78,33 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
         });
     }
 
-    private beginSearch(candidate: Candidate): Candidate | number {
+    private beginSearch(candidate: Candidate, depth: number): Candidate | number {
         ++this.visitedNodes;
         if (this.aborted) {
             return -1;
         }
+        const heuristicValue = this.calculateDistanceToFinalState(candidate.cube);
+        const predictedCost = candidate.cost + heuristicValue;
+        if (predictedCost > this.bound) {
+            return predictedCost;
+        }
+
         if (candidate.cube.isSolved()) {
             return candidate;
         }
-        const heuristicValue = this.calculateDistanceToFinalState(candidate.cube);
-        let minNextThreshold = Infinity;
-        if (candidate.cost + heuristicValue <= this.threshold) {
-            const children = this.applyRotations(candidate);
-            for (let child of children) {
-                const solution = this.beginSearch(child);
-                if (typeof (solution) === 'number' && solution > this.threshold) {
-                    minNextThreshold = Math.min(solution, minNextThreshold);
-                } else {
-                    return solution;
-                }
+
+        let minGreaterValue = Infinity;
+        const children = this.applyRotations(candidate);
+        for (let child of children) {
+            const foundOrCost = this.beginSearch(child, depth + 1);
+            if (typeof (foundOrCost) === 'number') {
+                minGreaterValue = Math.min(foundOrCost, minGreaterValue);
+            } else {
+                return foundOrCost as Candidate;
             }
-        } else {
-            return candidate.cost + heuristicValue
         }
-        return minNextThreshold;
+
+        return minGreaterValue as number;
     }
 
     private createSolution(candidate: Candidate): Solution {
@@ -139,7 +141,6 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
             });
         return result;
     }
-
 
     //Calcs how many stickers have the same color as they should
     private calculateDistanceToFinalState(cube: RubiksCube): number {

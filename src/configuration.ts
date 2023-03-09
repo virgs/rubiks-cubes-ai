@@ -6,7 +6,7 @@ import { InterativeDeepeningDepthFirstSearchSolver } from "./solvers/2x2/iterati
 import { WeightedAStarSolver } from "./solvers/2x2/weighted-a-star-solver";
 import { GeneticAlgorithmSolver } from "./solvers/3x3/genetic-algorithm/genetic-algorithm-solver";
 import { NeuroEvolutionarySolver } from "./solvers/3x3/neuro-evolutionary/neuro-evolutionary-solver";
-import { ThistlethwaiteSolver } from "./solvers/3x3/thistlethwaite-solver";
+import { ThistlethwaiteSolver } from "./solvers/3x3/thistlethwaite/thistlethwaite-solver";
 import type { CubeSolver } from "./solvers/cube-solver";
 import { HumanSolver } from "./solvers/human-solver";
 
@@ -93,14 +93,14 @@ export const Configuration = {
                 {
                     key: 'IDA*',
                     instantiator: (configuration: string) => new InterativeDeepeningAStarSolver(new RubiksCube({ clone: configuration })),
-                    checked: false,
+                    checked: true,
                     info: `Interative-deepening A star. Uses number of misplaced stickers as heuristic.`
                 },
                 {
                     key: 'WA*',
                     instantiator: (configuration: string) => new WeightedAStarSolver(new RubiksCube({ clone: configuration })),
                     checked: true,
-                    info: `Weighted A star. Uses number of misplaced stickers as heuristic and weights the heuristic (${WeightedAStarAlgorithmConfig.heuristicWeight} * h(x)) value.`
+                    info: `Weighted A star. No re-expansions. Uses number of misplaced stickers as heuristic and weights the heuristic (${WeightedAStarAlgorithmConfig.heuristicWeight} * h(x)) value.`
                 },
                 {
                     key: 'BiBFS',

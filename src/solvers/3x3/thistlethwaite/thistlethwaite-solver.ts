@@ -1,10 +1,11 @@
-import { getOppositeSide, Sides } from "../../constants/sides";
-import { ProcedureMeasurer } from "../procedure-measurer";
-import type { CubeSolver, Solution } from "../cube-solver";
+import { getOppositeSide, Sides } from "../../../constants/sides";
+import { ProcedureMeasurer } from "../../procedure-measurer";
+import type { CubeSolver, Solution } from "../../cube-solver";
 import type { FaceRotation } from "@/engine/face-rotation";
 import { RubiksCube } from "@/engine/rubiks-cube";
 import { Colors, getOppositeColor } from "@/constants/colors";
-import { HumanTranslator } from "@/printers/human-translator";
+import { type ThistlethwaiteStep } from "./thistlethwait-step";
+import { GoodEdgesStep } from "./good-edges-step";
 
 enum Metrics {
     ADD_CANDIDATE,
@@ -18,8 +19,6 @@ enum Metrics {
     NOT_MEASURED
 }
 
-
-
 enum StepsGroup {
     SCRAMBLED,
     GOOD_EDGES,
@@ -29,53 +28,51 @@ enum StepsGroup {
 
 type Candidate = {
     cube: RubiksCube;
-    rotation?: FaceRotation,
+    rotations: FaceRotation[],
     parent?: Candidate
 }
 
-const groupPremutations = [
-    "L R F B U D",
-    "L R F B 2U 2D",
-    "L R 2F 2B 2U 2D",
-    "2L 2R 2F 2B 2U 2D",
-]
 
-const translator = new HumanTranslator();
-const stepsRotationMap: Map<StepsGroup, FaceRotation[]> = new Map();
-groupPremutations
-    .forEach((rotationsString, step) => stepsRotationMap.set(step, translator.convertStringToFaceRotations(rotationsString)))
+// console.log(JSON.stringify(new RubiksCube({ dimension: 3 }).getAllCubelets()
+//     .filter(cubelet => cubelet.stickers.length === 2)
+//     .map(cubelet => cubelet.stickers.map(s => ({side: Sides[s.side], id: s.id, color: Colors[s.color]})))));
 
-
-const edgesIndexes: number[] = new RubiksCube({ dimension: 3 }).getAllColorlessCubelets()
-    .filter(cubelet => cubelet.stickers.length === 2)
-    .flatMap(cubelet => cubelet.stickers
-        .map(sticker => sticker.id));
+// const groupPremutations = [
+//     "L R F B U D L' R' F' B' U' D'",
+//     "L R F B L' R' F' B' 2U 2D",
+//     "L R L' R' 2F 2B 2U 2D",
+//     "2L 2R 2F 2B 2U 2D",
+// ]
 
 //https://www.jaapsch.net/puzzles/thistle.htm
 //https://medium.com/@benjamin.botto/implementing-an-optimal-rubiks-cube-solver-using-korf-s-algorithm-bf750b332cf9
 export class ThistlethwaiteSolver implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
-    private readonly root: Candidate;
+    private readonly initialState: Candidate;
+    private readonly goalState: RubiksCube;
     private currentMaxDepth: number;
     private visitedNodes: number;
-    private visitedLeaves: number;
     private aborted: boolean;
     private currentStep: StepsGroup;
-    private readonly goalState: RubiksCube;
+    private readonly stepsSolvers: Map<StepsGroup, ThistlethwaiteStep>;
+    private currentSolver: ThistlethwaiteStep;
 
     public constructor(cube: RubiksCube) {
         this.measurer = new ProcedureMeasurer();
         this.visitedNodes = 0;
-        this.visitedLeaves = 0;
         this.aborted = false;
-        this.currentStep = StepsGroup.GOOD_EDGES;
+        this.goalState = this.buildSolvedCubeFromCentersCubelets(cube);
+        this.stepsSolvers = new Map();
+        this.stepsSolvers.set(StepsGroup.SCRAMBLED, new GoodEdgesStep(this.goalState));
 
-        this.goalState = this.buildSolvedCubeFromCentersCubelet(cube);
-        this.currentMaxDepth = 0;
+        this.currentStep = StepsGroup.SCRAMBLED;
+        this.currentSolver = this.stepsSolvers.get(this.currentStep)!;
 
-        this.root = {
+        this.currentMaxDepth = 1;
+
+        this.initialState = {
             cube: cube,
-            rotation: undefined,
+            rotations: [],
             parent: undefined,
         };
     }
@@ -84,12 +81,11 @@ export class ThistlethwaiteSolver implements CubeSolver {
         this.aborted = true;
     }
 
-
     public async findSolution(): Promise<Solution> {
         return new Promise((resolve, reject) => {
             this.measurer.start();
             while (!this.aborted) {
-                const solution = this.beginSearch(this.root, 0)
+                const solution = this.beginSearch(this.initialState, 0)
                 if (solution) {
                     this.measurer.finish();
                     return resolve(this.createSolution(solution));
@@ -107,6 +103,10 @@ export class ThistlethwaiteSolver implements CubeSolver {
             return undefined;
         }
         if (depth <= this.currentMaxDepth) {
+            if (this.solvesCurrentStep(candidate)) {
+                console.log('indexes are found')
+                return candidate;
+            }
             const children = this.applyRotations(candidate);
             for (let child of children) {
                 const solution = this.beginSearch(child, depth + 1);
@@ -114,28 +114,18 @@ export class ThistlethwaiteSolver implements CubeSolver {
                     return solution;
                 }
             }
-        } else if (depth === this.currentMaxDepth) {
-            ++this.visitedLeaves;
-            if (this.solvesCurrentStep(candidate)) {
-                console.log('indexes are found')
-                return candidate;
-            }
         }
     }
 
     private solvesCurrentStep(candidate: Candidate): boolean {
-        const configuration = candidate.cube.getConfiguration();
-        switch (this.currentStep) {
-            case StepsGroup.GOOD_EDGES:
-                return edgesIndexes.every(index => configuration[index] === this.goalState[index]);
-        }
+        return this.currentSolver.calculateDistanceToGoal(candidate.cube)
     }
 
     private createSolution(candidate: Candidate): Solution {
         const rotations: FaceRotation[] = [];
         let current: Candidate | undefined = candidate;
-        while (current && current.rotation) {
-            rotations.unshift(current.rotation);
+        while (current && current.rotations.length > 0) {
+            rotations.unshift(...current.rotations);
             current = current.parent;
         }
 
@@ -145,20 +135,21 @@ export class ThistlethwaiteSolver implements CubeSolver {
             data: {
                 metrics: this.measurer.getData({ notMeasuredLabel: Metrics[Metrics.NOT_MEASURED] }),
                 visitedNodes: this.visitedNodes,
-                visitedLeaves: this.visitedLeaves
             }
         };
     }
 
     private applyRotations(current: Candidate): Candidate[] {
         const result: Candidate[] = [];
-        stepsRotationMap.get(this.currentStep)!
-            .forEach(rotation => {
-                const newCandidate: RubiksCube = this.measurer.add(Metrics[Metrics.PERFORM_ROTATION], () => current.cube.rotateFace(rotation));
+        const moves = this.currentSolver.getAllowedMoves(current.rotations);
+        moves
+            .forEach(move => {
+                const newCandidate: RubiksCube = move
+                    .reduce((cube, rotation) => cube.rotateFace(rotation), current.cube);
                 this.measurer.add(Metrics[Metrics.ADD_CANDIDATE], () => {
                     result.push({
                         cube: newCandidate,
-                        rotation: rotation,
+                        rotations: move,
                         parent: current
                     });
                 })
@@ -166,7 +157,7 @@ export class ThistlethwaiteSolver implements CubeSolver {
         return result;
     }
 
-    private buildSolvedCubeFromCentersCubelet(cube: RubiksCube): RubiksCube {
+    private buildSolvedCubeFromCentersCubelets(cube: RubiksCube): RubiksCube {
         const centers = cube.getAllCubelets()
             .filter(cubelet => cubelet.stickers.length === 1)
 

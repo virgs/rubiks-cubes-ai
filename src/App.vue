@@ -33,7 +33,9 @@ new FontLoader().load(fontUrl, (loaded: Font) => {
 });
 
 
-let urlShuffleMoves: FaceRotation[] = translator.convertStringToFaceRotations(urlQueryHandler.getParameterByName('moves', ''));
+let urlShuffleMoves: FaceRotation[] = translator
+  .convertStringToFaceRotations(urlQueryHandler.getParameterByName('moves', ''))
+  .flat();
 let shuffleMoves: FaceRotation[] = urlShuffleMoves;
 
 export default defineComponent({
@@ -46,7 +48,7 @@ export default defineComponent({
       selectedDimensionIndex: parseInt(urlQueryHandler.getParameterByName('cube', Configuration.initiallySelectedCubeTypeIndex)),
       solved: false,
       shuffling: false,
-      shuffled: false,
+      shuffled: urlShuffleMoves.length > 0,
       shuffleMovesText: '',
       solving: false,
     };
@@ -108,11 +110,13 @@ export default defineComponent({
       showLayer: this.selectedCubeType.dimension > 3,
       subscript: true
     });
+    this.shuffling = true;
     for (let faceRotation of shuffleMoves) {
       await cubeRenderer.rotateFace(faceRotation);
       cube = cube.rotateFace(faceRotation);
-      this.shuffled = false;
+      this.shuffled = true;
     }
+    this.shuffling = false;
     this.updateUrl();
     window.addEventListener('keypress', async (event: KeyboardEvent) => {
       solverRenderers
@@ -192,12 +196,14 @@ export default defineComponent({
     async returnCubesToStage() {
       this.solved = false;
       this.solving = false;
+      this.shuffling = true;
       await Promise.all(solverRenderers
         .map(solver => solver.remove()));
       solverRenderers
         .forEach(sr => {
           world.getScene().remove(sr.getCubeMesh())
         });
+      this.shuffling = false;
       solverRenderers = [];
       await this.createCubeRenderer();
       this.shuffled = !cube!.isSolved();

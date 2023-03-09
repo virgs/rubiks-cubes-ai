@@ -30,6 +30,7 @@ enum Metrics {
 }
 type Candidate = {
     cost: number,
+    heuristicValue: number,
     cube: RubiksCube;
     rotation?: FaceRotation,
     parentHash?: string;
@@ -49,10 +50,14 @@ export class WeightedAStarSolver implements CubeSolver {
     public constructor(cube: RubiksCube) {
         this.aborted = false;
         this.dimension = cube.getDimension();
-        this.candidates = new Heap((a: Candidate, b: Candidate) => a.cost - b.cost);
+        this.candidates = new Heap((a: Candidate, b: Candidate) => {
+            return (a.cost + WeightedAStarAlgorithmConfig.heuristicWeight * a.heuristicValue) -
+                (b.cost + WeightedAStarAlgorithmConfig.heuristicWeight * b.heuristicValue);
+        });
         this.visitedChecklist = new Map();
         const current: Candidate = {
             cost: 0,
+            heuristicValue: 0,
             cube: cube,
             rotation: undefined,
             parentHash: undefined,
@@ -129,11 +134,11 @@ export class WeightedAStarSolver implements CubeSolver {
             const newCubeConfiguration: RubiksCube = this.measurer.add(Metrics[Metrics.PERFORM_ROTATION], () => parent.cube.rotateFace(rotation));
             const newCubeHash = newCubeConfiguration.getHash();
             const heuristicFunctionValue = this.measurer.add(Metrics[Metrics.HEURISTIC_CALCULATION], () => this.calculateDistanceToFinalState(newCubeConfiguration));
-            const newCandidateCost = parent.cost + 1 + WeightedAStarAlgorithmConfig.heuristicWeight * heuristicFunctionValue;
             const newCandidate: Candidate = {
-                cost: newCandidateCost,
+                cost: parent.cost + 1,
                 cube: newCubeConfiguration,
                 rotation: rotation,
+                heuristicValue: heuristicFunctionValue,
                 parentHash: parent.hash,
                 hash: newCubeHash
             };
