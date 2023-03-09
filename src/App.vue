@@ -66,14 +66,16 @@ export default defineComponent({
       return this.cubeTypes[this.selectedDimensionIndex];
     },
     mainButtonLabel() {
-      const timeLabel = ` ${Math.trunc(this.timer / 100) / 10}s`;
+      const timeLabel = ` ${(this.timer / 1000).toFixed(1)}s`;
       if (this.solving) {
         return `Abort ${timeLabel}`;
       }
       if (!this.finishedSolving) {
         return 'Solve';
       }
-      return `Return ${timeLabel}`;
+      if (this.finishedSolving) {
+        return `Return ${timeLabel}`;
+      }
     },
     mainActionButtonEnabled() {
       if (this.selectedCubeType.methods
@@ -130,15 +132,15 @@ export default defineComponent({
       showLayer: this.selectedCubeType.dimension > 3,
       subscript: true
     });
+    this.selectedCubeType.methods
+      .forEach(method => method.checked = initialMethods.includes(method.key));
     this.shuffling = true;
     for (let faceRotation of shuffleMoves) {
-      await cubeRenderer.rotateFace(faceRotation);
+      await cubeRenderer.rotateFace({...faceRotation, duration: Configuration.world.scrambleRotationDuration});
       cube = cube.rotateFace(faceRotation);
       this.shuffled = true;
     }
     this.shuffling = false;
-    this.selectedCubeType.methods
-      .forEach(method => method.checked = initialMethods.includes(method.key));
     this.updateUrl();
     window.addEventListener('keypress', async (event: KeyboardEvent) => {
       solverRenderers
@@ -291,7 +293,7 @@ export default defineComponent({
       world.sendCameraAwayFromTheCenter();
       this.solving = true;
       const startTime = Date.now();
-      const interval = setInterval(() => this.timer += Date.now() - startTime, 100);
+      const interval = setInterval(() => this.timer = Date.now() - startTime, 100);
       try {
         const results = await Promise.allSettled(solverRenderers
           .map(solver => solver.start()));
@@ -397,7 +399,7 @@ export default defineComponent({
               :disabled="shuffling || solving">Shuffle</button>
           </div>
           <div class="col-4">
-            <button type="button" class="btn btn-sm btn-success w-100" :disabled="!mainActionButtonEnabled"
+            <button type="button" :class="[`btn w-100 btn-sm ${solving ? 'btn-danger': 'btn-success'}`]" :disabled="!mainActionButtonEnabled"
               @click="mainActionButtonClick">
               <span v-if="solving" class="spinner-grow spinner-grow-sm" style="margin-right: 10px; top: 2px" role="status"
                 aria-hidden="true"></span>

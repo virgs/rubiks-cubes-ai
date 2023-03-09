@@ -11,6 +11,11 @@ export const getAllSides = () => Object.keys(Sides)
     .filter(key => !isNaN(Number(key)))
     .map(key => Number(key) as Sides);
 
+export const getAdjacentSides = (side: Sides) => Object.keys(Sides)
+    .filter(key => !isNaN(Number(key)))
+    .map(key => Number(key) as Sides)
+    .filter(item => item !== side && item !== getOppositeSide(side));
+
 export const getOppositeSide = (side: Sides): Sides => {
     switch (side) {
         case Sides.UP: return Sides.DOWN;

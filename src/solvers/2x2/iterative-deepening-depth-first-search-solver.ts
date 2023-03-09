@@ -29,13 +29,11 @@ export class InterativeDeepeningDepthFirstSearchSolver implements CubeSolver {
     private readonly root: Candidate;
     private currentMaxDepth: number;
     private visitedNodes: number;
-    private visitedLeaves: number;
     private aborted: boolean;
 
     public constructor(cube: RubiksCube) {
         this.measurer = new ProcedureMeasurer();
         this.visitedNodes = 0;
-        this.visitedLeaves = 0;
         this.aborted = false;
 
         this.actions = this.createActions();
@@ -84,7 +82,6 @@ export class InterativeDeepeningDepthFirstSearchSolver implements CubeSolver {
                 }
             }
         } else if (depth === this.currentMaxDepth) {
-            ++this.visitedLeaves;
             if (candidate.cube.isSolved()) {
                 return candidate;
             }
@@ -114,8 +111,7 @@ export class InterativeDeepeningDepthFirstSearchSolver implements CubeSolver {
             totalTime: this.measurer.getTotalTime()!,
             data: {
                 metrics: this.measurer.getData({ notMeasuredLabel: Metrics[Metrics.NOT_MEASURED] }),
-                visitedNodes: this.visitedNodes,
-                visitedLeaves: this.visitedLeaves
+                visitedNodes: this.visitedNodes
             }
         };
     }

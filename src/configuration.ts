@@ -52,7 +52,7 @@ export const Configuration = {
     world: {
         debug: false,
         scrambleMoves: 15,
-        scrambleRotationDuration: 150,
+        scrambleRotationDuration: 100,
         cubesCircleRay: 4.5,
         camera: {
             closeDistance: 20,

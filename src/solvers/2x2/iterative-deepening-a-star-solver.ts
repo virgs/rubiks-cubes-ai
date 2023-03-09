@@ -2,7 +2,7 @@ import { Colors, getOppositeColor } from "@/constants/colors";
 import type { FaceRotation } from "@/engine/face-rotation";
 import { RubiksCube, type Cubelet } from "@/engine/rubiks-cube";
 import { RotationsTuner } from "@/printers/rotations-tuner";
-import { getOppositeSide, Sides } from "../../constants/sides";
+import { getAdjacentSides, getAllSides, getOppositeSide, Sides } from "../../constants/sides";
 import type { CubeSolver, Solution } from "../cube-solver";
 import { ProcedureMeasurer } from "../procedure-measurer";
 
@@ -22,7 +22,6 @@ type Candidate = {
     cube: RubiksCube;
     rotation?: FaceRotation,
     parent?: Candidate
-    cost: number
 }
 
 interface SearchResult {
@@ -36,31 +35,36 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
     private readonly actions: FaceRotation[];
     private readonly goalStateHash: string;
     private readonly root: Candidate;
+    private readonly numberOfStickersMovedInOneTwistInAverage: number;
+    private currentPath: string[];
     private bound: number;
     private visitedNodes: number;
     private aborted: boolean;
 
     public constructor(cube: RubiksCube) {
         this.measurer = new ProcedureMeasurer();
+        this.currentPath = [];
         this.visitedNodes = 0;
         this.aborted = false;
 
         this.actions = [];
         [Sides.FRONT, Sides.UP, Sides.RIGHT] //So the fixed cubelet doesn't move
-            .map(side => {
-                this.actions.push({ side: side, layer: 0 });
-            });
+            .map(side => [true, false]
+                .map(direction => {
+                    this.actions.push({ side: side, counterClockwiseDirection: direction, layer: 0 });
+                }));
 
         const fixedCubelet = cube.getCubeletsBySides(Sides.BACK, Sides.LEFT, Sides.DOWN)[0];
         const goalState = this.buildSolvedPocketCubeFromCornerCubelet(fixedCubelet, cube.getDimension());
         this.goalStateHash = goalState.getHash();
+        const dimension = cube.getDimension();
+        this.numberOfStickersMovedInOneTwistInAverage = dimension * dimension + dimension * getAdjacentSides(Sides.UP).length; //any side would do
         this.bound = this.calculateDistanceToFinalState(cube);
 
         this.root = {
             cube: cube,
             rotation: undefined,
-            parent: undefined,
-            cost: 0
+            parent: undefined
         };
     }
 
@@ -73,6 +77,8 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
         return new Promise((resolve, reject) => {
             this.measurer.start();
             while (!this.aborted) {
+                this.currentPath = [this.root.cube.getHash()];
+
                 const searchResult = this.beginSearch(this.root, 0)
                 if (searchResult.solution) {
                     return resolve(this.createSolution(searchResult.solution));
@@ -92,24 +98,29 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
         if (this.aborted) {
             return { aborted: true };
         }
-        const heuristicValue = this.calculateDistanceToFinalState(candidate.cube);
-        const priorityValue = candidate.cost + heuristicValue;
-        if (priorityValue > this.bound) {
-            return { cost: priorityValue };
+        const estimatedCost = this.calculateDistanceToFinalState(candidate.cube);
+        const sum = depth + estimatedCost;
+        if (sum > this.bound) {
+            return { cost: sum };
         }
 
-        if (heuristicValue === 0) {
+        if (candidate.cube.isSolved()) {
             return { solution: candidate };
         }
 
         let minGreaterValue = Infinity;
         const children = this.applyRotations(candidate);
         for (let child of children) {
-            const searchResult = this.beginSearch(child, depth + 1);
-            if (searchResult.solution || searchResult.aborted) {
-                return searchResult;
-            } else {
-                minGreaterValue = Math.min(searchResult.cost, minGreaterValue);
+            if (this.currentPath
+                .every(hash => hash !== child.cube.getHash())) {// avoid cycles
+                this.currentPath.push(child.cube.getHash());
+                const searchResult = this.beginSearch(child, depth + 1);
+                if (searchResult.solution || searchResult.aborted) {
+                    return searchResult;
+                } else {
+                    minGreaterValue = Math.min(searchResult.cost, minGreaterValue);
+                }
+                this.currentPath.pop();
             }
         }
 
@@ -144,8 +155,7 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
                     result.push({
                         cube: newCandidate,
                         rotation: rotation,
-                        parent: current,
-                        cost: current.cost + 1
+                        parent: current
                     });
                 })
             });
@@ -154,12 +164,11 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
 
     //Calcs how many stickers have the same color as they should
     private calculateDistanceToFinalState(cube: RubiksCube): number {
-        const numberOfStickersMovedInOneTwistInAverage = (cube.getDimension() * cube.getDimension()) + cube.getDimension() * 4;
         const cubeConfiguration = cube.getConfiguration();
         return cubeConfiguration
             .split('')
             .filter((char, index) => char !== this.goalStateHash[index])
-            .length / numberOfStickersMovedInOneTwistInAverage;
+            .length / this.numberOfStickersMovedInOneTwistInAverage;
     }
 
     public buildSolvedPocketCubeFromCornerCubelet(cubelet: Cubelet, dimension: number): RubiksCube {
