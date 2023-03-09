@@ -33,6 +33,8 @@ new FontLoader().load(fontUrl, (loaded: Font) => {
 });
 
 
+let initialMethods: string[] = urlQueryHandler.getParameterByName('methods', '')
+  .split(',');
 let urlShuffleMoves: FaceRotation[] = translator
   .convertStringToFaceRotations(urlQueryHandler.getParameterByName('moves', ''))
   .flat();
@@ -46,11 +48,12 @@ export default defineComponent({
       currentLayer: 1,
       cubeTypes: Configuration.cubeTypes,
       selectedDimensionIndex: parseInt(urlQueryHandler.getParameterByName('cube', Configuration.initiallySelectedCubeTypeIndex)),
-      solved: false,
+      finishedSolving: false,
       shuffling: false,
       shuffled: urlShuffleMoves.length > 0,
       shuffleMovesText: '',
       solving: false,
+      timer: 0
     };
   },
   computed: {
@@ -62,6 +65,16 @@ export default defineComponent({
     selectedCubeType() {
       return this.cubeTypes[this.selectedDimensionIndex];
     },
+    mainButtonLabel() {
+      const timeLabel = ` ${Math.trunc(this.timer / 100) / 10}s`;
+      if (this.solving) {
+        return `Abort ${timeLabel}`;
+      }
+      if (!this.finishedSolving) {
+        return 'Solve';
+      }
+      return `Return ${timeLabel}`;
+    },
     mainActionButtonEnabled() {
       if (this.selectedCubeType.methods
         .every(method => !method.checked)) {
@@ -70,16 +83,23 @@ export default defineComponent({
       if (this.shuffling) {
         return false;
       }
-      if (!this.shuffled && !this.solved) {
+      if (!this.shuffled && !this.finishedSolving) {
         return false;
       }
-      if (this.solved) {
+      if (this.finishedSolving) {
         return true;
       }
       return true;
     }
   },
   watch: {
+    selectedCubeType: {
+      handler() {
+        //updates the methods being used
+        this.updateUrl();
+      },
+      deep: true
+    },
     selectedDimensionIndex() {
       this.refreshTooltips();
       this.reset();
@@ -117,6 +137,8 @@ export default defineComponent({
       this.shuffled = true;
     }
     this.shuffling = false;
+    this.selectedCubeType.methods
+      .forEach(method => method.checked = initialMethods.includes(method.key));
     this.updateUrl();
     window.addEventListener('keypress', async (event: KeyboardEvent) => {
       solverRenderers
@@ -194,8 +216,6 @@ export default defineComponent({
       world.bringCameraToTheCenter();
     },
     async returnCubesToStage() {
-      this.solved = false;
-      this.solving = false;
       this.shuffling = true;
       await Promise.all(solverRenderers
         .map(solver => solver.remove()));
@@ -206,7 +226,10 @@ export default defineComponent({
       this.shuffling = false;
       solverRenderers = [];
       await this.createCubeRenderer();
-      this.shuffled = !cube!.isSolved();
+      this.shuffled = !cube.isSolved();
+      this.timer = 0;
+      this.solving = false;
+      this.finishedSolving = false;
     },
     async reset() {
       cube = this.selectedCubeType!.instantiator!();
@@ -241,10 +264,8 @@ export default defineComponent({
       this.shuffling = false;
     },
     async mainActionButtonClick() {
-      if (this.solving || this.solved) {
-        this.returnCubesToStage();
-        this.solving = false;
-        return;
+      if (this.solving || this.finishedSolving) {
+        return this.returnCubesToStage();
       }
       const solverKeys: string[] = this.selectedCubeType.methods
         .filter(method => method.checked)
@@ -269,18 +290,24 @@ export default defineComponent({
       world!.getScene().remove(cubeRenderer.getMesh());
       world.sendCameraAwayFromTheCenter();
       this.solving = true;
+      const startTime = Date.now();
+      const interval = setInterval(() => this.timer += Date.now() - startTime, 100);
       try {
-        await Promise.all(solverRenderers
+        const results = await Promise.allSettled(solverRenderers
           .map(solver => solver.start()));
-        this.shuffled = false;
-        this.solving = false;
-        this.solved = true;
+        results
+          .filter(result => result.status === 'rejected')
+          .map(result => result as PromiseRejectedResult)
+          .forEach(result => console.log(result.reason))
       } catch (e) {
         console.log(e)
       }
+      this.finishedSolving = true;
+      this.shuffled = false;
+      this.solving = false;
+      clearInterval(interval);
     },
     updateUrl() {
-
       let afterMovesNumber = this.shuffleMovesText;
       if (afterMovesNumber.indexOf(':') > -1) {
         afterMovesNumber = afterMovesNumber.split(':')[1]
@@ -296,6 +323,9 @@ export default defineComponent({
 
       const params: any = {
         cube: this.selectedDimensionIndex,
+        methods: this.selectedCubeType.methods
+          .filter(method => method.checked)
+          .map(method => method.key),
         moves: afterMovesNumber,
       }
       history.replaceState(
@@ -371,7 +401,7 @@ export default defineComponent({
               @click="mainActionButtonClick">
               <span v-if="solving" class="spinner-grow spinner-grow-sm" style="margin-right: 10px; top: 2px" role="status"
                 aria-hidden="true"></span>
-              {{ solved ? 'Return' : (solving ? 'Abort' : 'Solve') }}
+              {{ mainButtonLabel }}
             </button>
           </div>
         </div>

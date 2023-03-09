@@ -148,11 +148,6 @@ export class WeightedAStarSolver implements CubeSolver {
                     this.candidates.push(newCandidate);
                 });
             }
-            //  else { //it wouldnt work. its children nodes would have to have their costs updated as well.
-            //     if (WeightedAStarAlgorithmConfig.optimal && newCandidateCost < alreadyVisited.cost) {
-            //         this.measurer.add(Metrics[Metrics.ADD_TO_VISISTED_LIST_CHECK], () => this.visitedChecklist.set(newCubeHash, newCandidate))
-            //     }
-            // }
         }
     }
 

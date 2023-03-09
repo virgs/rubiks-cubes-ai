@@ -1,10 +1,10 @@
-import { getOppositeSide, Sides } from "../../constants/sides";
-import { ProcedureMeasurer } from "../procedure-measurer";
-import type { CubeSolver, Solution } from "../cube-solver";
-import type { FaceRotation } from "@/engine/face-rotation";
-import { type Cubelet, RubiksCube } from "@/engine/rubiks-cube";
 import { Colors, getOppositeColor } from "@/constants/colors";
+import type { FaceRotation } from "@/engine/face-rotation";
+import { RubiksCube, type Cubelet } from "@/engine/rubiks-cube";
 import { RotationsTuner } from "@/printers/rotations-tuner";
+import { getOppositeSide, Sides } from "../../constants/sides";
+import type { CubeSolver, Solution } from "../cube-solver";
+import { ProcedureMeasurer } from "../procedure-measurer";
 
 enum Metrics {
     ADD_CANDIDATE,
@@ -23,6 +23,12 @@ type Candidate = {
     rotation?: FaceRotation,
     parent?: Candidate
     cost: number
+}
+
+interface SearchResult {
+    aborted?: boolean;
+    solution?: Candidate;
+    cost?: number;
 }
 
 export class InterativeDeepeningAStarSolver implements CubeSolver {
@@ -63,51 +69,55 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
     }
 
     public async findSolution(): Promise<Solution> {
+        console.log('start')
         return new Promise((resolve, reject) => {
             this.measurer.start();
             while (!this.aborted) {
-                const solution = this.beginSearch(this.root, 0)
-                if (typeof (solution) === 'number') {
-                    this.bound = Number(solution);
+                const searchResult = this.beginSearch(this.root, 0)
+                if (searchResult.solution) {
+                    return resolve(this.createSolution(searchResult.solution));
+                } else if (searchResult.aborted) {
+                    break;
                 } else {
-                    this.measurer.finish();
-                    return resolve(this.createSolution(solution as Candidate));
+                    this.bound = searchResult.cost;
+                    console.log(this.bound)
                 }
             }
             reject(Error(`Aborted`));
         });
     }
 
-    private beginSearch(candidate: Candidate, depth: number): Candidate | number {
+    private beginSearch(candidate: Candidate, depth: number): SearchResult {
         ++this.visitedNodes;
         if (this.aborted) {
-            return -1;
+            return { aborted: true };
         }
         const heuristicValue = this.calculateDistanceToFinalState(candidate.cube);
-        const predictedCost = candidate.cost + heuristicValue;
-        if (predictedCost > this.bound) {
-            return predictedCost;
+        const priorityValue = candidate.cost + heuristicValue;
+        if (priorityValue > this.bound) {
+            return { cost: priorityValue };
         }
 
-        if (candidate.cube.isSolved()) {
-            return candidate;
+        if (heuristicValue === 0) {
+            return { solution: candidate };
         }
 
         let minGreaterValue = Infinity;
         const children = this.applyRotations(candidate);
         for (let child of children) {
-            const foundOrCost = this.beginSearch(child, depth + 1);
-            if (typeof (foundOrCost) === 'number') {
-                minGreaterValue = Math.min(foundOrCost, minGreaterValue);
+            const searchResult = this.beginSearch(child, depth + 1);
+            if (searchResult.solution || searchResult.aborted) {
+                return searchResult;
             } else {
-                return foundOrCost as Candidate;
+                minGreaterValue = Math.min(searchResult.cost, minGreaterValue);
             }
         }
 
-        return minGreaterValue as number;
+        return { cost: minGreaterValue };
     }
 
     private createSolution(candidate: Candidate): Solution {
+        this.measurer.finish();
         const rotations: FaceRotation[] = [];
         let current: Candidate | undefined = candidate;
         while (current && current.rotation) {
@@ -146,10 +156,10 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
     private calculateDistanceToFinalState(cube: RubiksCube): number {
         const numberOfStickersMovedInOneTwistInAverage = (cube.getDimension() * cube.getDimension()) + cube.getDimension() * 4;
         const cubeConfiguration = cube.getConfiguration();
-        return Math.ceil(cubeConfiguration
+        return cubeConfiguration
             .split('')
             .filter((char, index) => char !== this.goalStateHash[index])
-            .length / numberOfStickersMovedInOneTwistInAverage);
+            .length / numberOfStickersMovedInOneTwistInAverage;
     }
 
     public buildSolvedPocketCubeFromCornerCubelet(cubelet: Cubelet, dimension: number): RubiksCube {

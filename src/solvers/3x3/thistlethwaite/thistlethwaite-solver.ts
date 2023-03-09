@@ -54,7 +54,7 @@ export class ThistlethwaiteSolver implements CubeSolver {
     private visitedNodes: number;
     private aborted: boolean;
     private currentStep: StepsGroup;
-    private readonly stepsSolvers: Map<StepsGroup, ThistlethwaiteStep>;
+    private readonly stepsSolversMap: Map<StepsGroup, ThistlethwaiteStep>;
     private currentSolver: ThistlethwaiteStep;
 
     public constructor(cube: RubiksCube) {
@@ -62,11 +62,11 @@ export class ThistlethwaiteSolver implements CubeSolver {
         this.visitedNodes = 0;
         this.aborted = false;
         this.goalState = this.buildSolvedCubeFromCentersCubelets(cube);
-        this.stepsSolvers = new Map();
-        this.stepsSolvers.set(StepsGroup.SCRAMBLED, new GoodEdgesStep(this.goalState));
+        this.stepsSolversMap = new Map();
+        this.stepsSolversMap.set(StepsGroup.SCRAMBLED, new GoodEdgesStep(this.goalState));
 
         this.currentStep = StepsGroup.SCRAMBLED;
-        this.currentSolver = this.stepsSolvers.get(this.currentStep)!;
+        this.currentSolver = this.stepsSolversMap.get(this.currentStep)!;
 
         this.currentMaxDepth = 1;
 
