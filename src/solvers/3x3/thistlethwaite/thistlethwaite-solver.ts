@@ -5,7 +5,7 @@ import type { FaceRotation } from "@/engine/face-rotation";
 import { RubiksCube } from "@/engine/rubiks-cube";
 import { Colors, getOppositeColor } from "@/constants/colors";
 import { type ThistlethwaiteStep } from "./thistlethwait-step";
-import { GoodEdgesStep } from "./good-edges-step";
+import { EdgesInOrbitStep } from "./edges-in-orbit-step";
 
 enum Metrics {
     ADD_CANDIDATE,
@@ -19,19 +19,17 @@ enum Metrics {
     NOT_MEASURED
 }
 
-enum StepsGroup {
-    SCRAMBLED,
-    GOOD_EDGES,
-    GOOD_CORNERS_AND_HORIZONTAL_EDGES,
-    CORNERS_ORBIT
-}
-
 type Candidate = {
     cube: RubiksCube;
     rotations: FaceRotation[],
     parent?: Candidate
 }
 
+interface SearchResult {
+    aborted?: boolean;
+    candidate?: Candidate;
+    data?: any
+}
 
 // console.log(JSON.stringify(new RubiksCube({ dimension: 3 }).getAllCubelets()
 //     .filter(cubelet => cubelet.stickers.length === 2)
@@ -53,20 +51,15 @@ export class ThistlethwaiteSolver implements CubeSolver {
     private currentMaxDepth: number;
     private visitedNodes: number;
     private aborted: boolean;
-    private currentStep: StepsGroup;
-    private readonly stepsSolversMap: Map<StepsGroup, ThistlethwaiteStep>;
     private currentSolver: ThistlethwaiteStep;
+    private data: any;
 
     public constructor(cube: RubiksCube) {
         this.measurer = new ProcedureMeasurer();
         this.visitedNodes = 0;
         this.aborted = false;
         this.goalState = this.buildSolvedCubeFromCentersCubelets(cube);
-        this.stepsSolversMap = new Map();
-        this.stepsSolversMap.set(StepsGroup.SCRAMBLED, new GoodEdgesStep(this.goalState));
-
-        this.currentStep = StepsGroup.SCRAMBLED;
-        this.currentSolver = this.stepsSolversMap.get(this.currentStep)!;
+        this.currentSolver = new EdgesInOrbitStep(this.goalState);
 
         this.currentMaxDepth = 1;
 
@@ -85,40 +78,44 @@ export class ThistlethwaiteSolver implements CubeSolver {
         return new Promise((resolve, reject) => {
             this.measurer.start();
             while (!this.aborted) {
-                const solution = this.beginSearch(this.initialState, 0)
-                if (solution) {
-                    this.measurer.finish();
-                    return resolve(this.createSolution(solution));
+                const result = this.beginSearch(this.initialState, 0);
+                console.log(result)
+                if (result.aborted) {
+                    break;
+                } else if (result.candidate) {
+                    console.log('next step. is solved: ' + result.candidate.cube.isSolved())
+                    this.currentMaxDepth = 0;
+                    // if (result.candidate.cube.isSolved()) {
+                        return resolve(this.createSolution(result.candidate));
+                    // }
+                } else {
+                    ++this.currentMaxDepth;
                 }
-                ++this.currentMaxDepth;
-                console.log(this.currentMaxDepth)
             }
             reject(Error(`Aborted`));
         });
     }
 
-    private beginSearch(candidate: Candidate, depth: number): Candidate | undefined {
+    private beginSearch(candidate: Candidate, depth: number): SearchResult {
         ++this.visitedNodes;
         if (this.aborted) {
-            return undefined;
+            return { aborted: true };
         }
         if (depth <= this.currentMaxDepth) {
-            if (this.solvesCurrentStep(candidate)) {
-                console.log('indexes are found')
-                return candidate;
+            const iterationResult = this.currentSolver.iterate(candidate.cube);
+            if (iterationResult.stepFinished) {
+                this.currentSolver = iterationResult.nextStepSolver;
+                return { candidate: candidate, data: iterationResult.data };
             }
             const children = this.applyRotations(candidate);
             for (let child of children) {
                 const solution = this.beginSearch(child, depth + 1);
-                if (solution) {
+                if (solution.candidate) {
                     return solution;
                 }
             }
         }
-    }
-
-    private solvesCurrentStep(candidate: Candidate): boolean {
-        return this.currentSolver.calculateDistanceToGoal(candidate.cube)
+        return { aborted: false, candidate: undefined, data: undefined }
     }
 
     private createSolution(candidate: Candidate): Solution {
@@ -128,6 +125,7 @@ export class ThistlethwaiteSolver implements CubeSolver {
             rotations.unshift(...current.rotations);
             current = current.parent;
         }
+        this.measurer.finish();
 
         return {
             rotations: rotations,
@@ -141,7 +139,7 @@ export class ThistlethwaiteSolver implements CubeSolver {
 
     private applyRotations(current: Candidate): Candidate[] {
         const result: Candidate[] = [];
-        const moves = this.currentSolver.getAllowedMoves(current.rotations);
+        const moves = this.currentSolver.getAllowedMoves();
         moves
             .forEach(move => {
                 const newCandidate: RubiksCube = move

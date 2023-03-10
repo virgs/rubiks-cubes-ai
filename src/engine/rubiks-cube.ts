@@ -25,11 +25,13 @@ export type Sticker = ColorlessSticker & {
 };
 
 export type ColorlessCubelet = {
-    stickers: ColorlessSticker[]
+    stickers: ColorlessSticker[],
+    id: number
 }
 
 export type Cubelet = {
-    stickers: Sticker[]
+    stickers: Sticker[],
+    id: number
 }
 
 export type ColorPermutation = {
@@ -119,7 +121,7 @@ export class RubiksCube {
         return this.addColorToCubelets(found);
     }
 
-    public getCubeletsByColor(...colors: Colors[]): Cubelet[] {
+    public getCubeletsByColors(...colors: Colors[]): Cubelet[] {
         const found = this.colorlessCubelets
             .filter(cubelet => cubelet
                 .stickers

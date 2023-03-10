@@ -86,7 +86,6 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
                     break;
                 } else {
                     this.bound = searchResult.cost;
-                    console.log(this.bound)
                 }
             }
             reject(Error(`Aborted`));

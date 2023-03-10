@@ -6,10 +6,12 @@ export class CubeletsCreator {
 
     private readonly dimension: number;
     private readonly stickers: ColorlessSticker[];
+    private cubeletCounter: number;
 
     public constructor(dimension: number) {
         this.dimension = dimension;
         this.stickers = [];
+        this.cubeletCounter = 0;
     }
 
     public create(): ColorlessCubelet[] {
@@ -36,7 +38,7 @@ export class CubeletsCreator {
     }
 
     private cubeletsMerger(cubelets: { side: Sides, x: number, y: number }[]): ColorlessCubelet {
-        const result: ColorlessCubelet = { stickers: [] };
+        const result: ColorlessCubelet = { stickers: [], id: ++this.cubeletCounter };
         cubelets
             .forEach(cubelet => {
                 this.stickers
@@ -105,7 +107,7 @@ export class CubeletsCreator {
         this.stickers
             .filter(item => item.x !== 0 && item.x !== end && item.y !== 0 && item.y !== end)
             .forEach(item => {
-                centers.push({ stickers: [item] });
+                centers.push({ stickers: [item], id: ++this.cubeletCounter });
             });
 
         return centers;
