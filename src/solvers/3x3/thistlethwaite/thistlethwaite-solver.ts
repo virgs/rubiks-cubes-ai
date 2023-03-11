@@ -4,8 +4,10 @@ import type { CubeSolver, Solution } from "../../cube-solver";
 import type { FaceRotation } from "@/engine/face-rotation";
 import { RubiksCube } from "@/engine/rubiks-cube";
 import { Colors, getOppositeColor } from "@/constants/colors";
-import { type ThistlethwaiteStep } from "./thistlethwait-step";
 import { EdgesInOrbitStep } from "./edges-in-orbit-step";
+import type { ThistlethwaiteResult, ThistlethwaiteStep } from "./thistlethwait-step";
+import { HumanTranslator } from "@/printers/human-translator";
+import { RotationsTuner } from "@/printers/rotations-tuner";
 
 enum Metrics {
     ADD_CANDIDATE,
@@ -28,7 +30,7 @@ type Candidate = {
 interface SearchResult {
     aborted?: boolean;
     candidate?: Candidate;
-    data?: any
+    stepOutput?: ThistlethwaiteResult;
 }
 
 // console.log(JSON.stringify(new RubiksCube({ dimension: 3 }).getAllCubelets()
@@ -51,7 +53,7 @@ export class ThistlethwaiteSolver implements CubeSolver {
     private currentMaxDepth: number;
     private visitedNodes: number;
     private aborted: boolean;
-    private currentSolver: ThistlethwaiteStep;
+    private currentSolver?: ThistlethwaiteStep;
     private data: any;
 
     public constructor(cube: RubiksCube) {
@@ -77,19 +79,26 @@ export class ThistlethwaiteSolver implements CubeSolver {
     public async findSolution(): Promise<Solution> {
         return new Promise((resolve, reject) => {
             this.measurer.start();
+            let candidate = this.initialState;
             while (!this.aborted) {
-                const result = this.beginSearch(this.initialState, 0);
-                console.log(result)
-                if (result.aborted) {
+                const searchResult = this.beginSearch(candidate, 0);
+                if (searchResult.aborted) {
                     break;
-                } else if (result.candidate) {
-                    console.log('next step. is solved: ' + result.candidate.cube.isSolved())
-                    this.currentMaxDepth = 0;
-                    // if (result.candidate.cube.isSolved()) {
-                        return resolve(this.createSolution(result.candidate));
-                    // }
+                } else if (searchResult.stepOutput) {
+                    console.log('next step. is solved: ' + searchResult.candidate!.cube.isSolved())
+                    if (searchResult.stepOutput.nextStepSolver) {
+                        console.log(searchResult.stepOutput.nextStepSolver.constructor.name)
+                        this.currentMaxDepth = 0;
+                        this.currentSolver = searchResult.stepOutput.nextStepSolver
+                        candidate = searchResult.candidate!;
+                        new HumanTranslator().printCube(candidate.cube)
+
+                    } else {
+                        return resolve(this.createSolution(searchResult.candidate!));
+                    }
                 } else {
                     ++this.currentMaxDepth;
+                    console.log(this.currentMaxDepth)
                 }
             }
             reject(Error(`Aborted`));
@@ -102,10 +111,14 @@ export class ThistlethwaiteSolver implements CubeSolver {
             return { aborted: true };
         }
         if (depth <= this.currentMaxDepth) {
-            const iterationResult = this.currentSolver.iterate(candidate.cube);
+            const iterationResult = this.currentSolver!.iterate(candidate.cube);
             if (iterationResult.stepFinished) {
                 this.currentSolver = iterationResult.nextStepSolver;
-                return { candidate: candidate, data: iterationResult.data };
+                console.log('step is over')
+                return { candidate: candidate, stepOutput: iterationResult };
+            } else {
+                //Use it as A* heuristic
+                // console.log(iterationResult.minMovesToFinishSteps);
             }
             const children = this.applyRotations(candidate);
             for (let child of children) {
@@ -115,7 +128,7 @@ export class ThistlethwaiteSolver implements CubeSolver {
                 }
             }
         }
-        return { aborted: false, candidate: undefined, data: undefined }
+        return { aborted: false, candidate: undefined }
     }
 
     private createSolution(candidate: Candidate): Solution {
@@ -128,7 +141,7 @@ export class ThistlethwaiteSolver implements CubeSolver {
         this.measurer.finish();
 
         return {
-            rotations: rotations,
+            rotations: new RotationsTuner().tune(rotations),
             totalTime: this.measurer.getTotalTime()!,
             data: {
                 metrics: this.measurer.getData({ notMeasuredLabel: Metrics[Metrics.NOT_MEASURED] }),
@@ -139,7 +152,7 @@ export class ThistlethwaiteSolver implements CubeSolver {
 
     private applyRotations(current: Candidate): Candidate[] {
         const result: Candidate[] = [];
-        const moves = this.currentSolver.getAllowedMoves();
+        const moves = this.currentSolver!.getAllowedMoves();
         moves
             .forEach(move => {
                 const newCandidate: RubiksCube = move

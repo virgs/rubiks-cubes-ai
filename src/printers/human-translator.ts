@@ -47,7 +47,7 @@ export class HumanTranslator {
         return text;
     }
 
-    public translateCube(cube: RubiksCube): void {
+    public printCube(cube: RubiksCube): void {
         const dimension = cube.getDimension();
 
         const up = this.translateSide(Sides.UP, cube);

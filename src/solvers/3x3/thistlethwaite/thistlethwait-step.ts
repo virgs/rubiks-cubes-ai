@@ -1,9 +1,10 @@
-import { type FaceRotation } from "@/engine/face-rotation";
-import { type RubiksCube } from "@/engine/rubiks-cube";
+import type { FaceRotation } from "@/engine/face-rotation";
+import type { RubiksCube } from "@/engine/rubiks-cube";
 
 export interface ThistlethwaiteResult {
     stepFinished: boolean;
-    nextStepSolver: ThistlethwaiteStep;
+    nextStepSolver?: ThistlethwaiteStep;
+    minMovesToFinishSteps?: number;
     data: any;
 }
 

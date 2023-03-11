@@ -105,7 +105,7 @@ export default defineComponent({
     selectedDimensionIndex() {
       this.refreshTooltips();
       this.reset();
-      translator.translateCube(cube);
+      translator.printCube(cube);
       this.updateUrl();
     },
     shuffleMovesText() {
@@ -136,7 +136,7 @@ export default defineComponent({
       .forEach(method => method.checked = initialMethods.includes(method.key));
     this.shuffling = true;
     for (let faceRotation of shuffleMoves) {
-      await cubeRenderer.rotateFace({...faceRotation, duration: Configuration.world.scrambleRotationDuration});
+      await cubeRenderer.rotateFace({ ...faceRotation, duration: Configuration.world.scrambleRotationDuration });
       cube = cube.rotateFace(faceRotation);
       this.shuffled = true;
     }
@@ -365,15 +365,18 @@ export default defineComponent({
           style="width: 100%;">
           <div class="btn-group btn-group-sm" role="group">
 
-            <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            <button type="button" class="btn btn-success dropdown-toggle" :disabled="shuffling" data-bs-toggle="dropdown"
+              aria-expanded="false">
               <i class="fa-solid fa-caret-down"></i>
               <span class="mx-2">
                 {{ selectedCubeType.label }}
               </span>
             </button>
             <ul class="dropdown-menu">
-              <li v-for="item, index in cubeTypes" @click="selectedDimensionIndex = index"><a class="dropdown-item"
-                  href="#">{{ item.label }}</a></li>
+              <li v-for="item, index in cubeTypes"
+                @click="selectedDimensionIndex = (shuffling ? selectedDimensionIndex : index)">
+                <a class="dropdown-item" href="#">{{ item.label }}</a>
+              </li>
             </ul>
           </div>
           <template v-for="method, index in selectedCubeType.methods" :key="selectedCubeType.label + method.key">
@@ -399,8 +402,8 @@ export default defineComponent({
               :disabled="shuffling || solving">Shuffle</button>
           </div>
           <div class="col-4">
-            <button type="button" :class="[`btn w-100 btn-sm ${solving ? 'btn-danger': 'btn-success'}`]" :disabled="!mainActionButtonEnabled"
-              @click="mainActionButtonClick">
+            <button type="button" :class="[`btn w-100 btn-sm ${solving ? 'btn-danger' : 'btn-success'}`]"
+              :disabled="!mainActionButtonEnabled" @click="mainActionButtonClick">
               <span v-if="solving" class="spinner-grow spinner-grow-sm" style="margin-right: 10px; top: 2px" role="status"
                 aria-hidden="true"></span>
               {{ mainButtonLabel }}
