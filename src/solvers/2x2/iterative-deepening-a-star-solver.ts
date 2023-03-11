@@ -90,9 +90,7 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
                     const newNodesVisited = this.visitedNodes - nodesTouchedLastIteration;
                     this.iterations.push({ newNodesVisited: newNodesVisited, bound: this.bound });
                     nodesTouchedLastIteration = this.visitedNodes;
-                    const newBound = Math.max(searchResult.cost!, this.bound + this.minBoundGrow);
-                    console.log(this.bound, newBound - this.bound, newNodesVisited)
-                    this.bound = newBound;
+                    this.bound = Math.max(searchResult.cost!, this.bound + this.minBoundGrow);
                 }
             }
             reject(Error(`Aborted`));
