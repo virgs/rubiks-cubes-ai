@@ -59,6 +59,8 @@ const supervisedPermutations = [
     // H permutation: U Face, swaps the edges horizontally and vertically
     "2R2 U 2R2 2U 2R2 U 2R2"
 ]
+
+//https://github.com/virgs/rubiks-cubes-ai/commit/1822cb83bb110fd0cf2bcb0287e777ca41da3e5b#diff-6a31530d4601b7ac8792f08f3e63e2ba973d625fdbf6486d705c014e0eeb8b44
 //https://robertovaccari.com/blog/2020_07_07_genetic_rubik/
 export class GeneticAlgorithmSolver implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
