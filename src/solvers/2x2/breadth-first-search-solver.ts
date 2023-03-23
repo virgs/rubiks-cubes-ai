@@ -114,11 +114,12 @@ export class BreadthFirstSearchSolver implements CubeSolver {
                 const newCandidate: RubiksCube = this.measurer.add(Metrics[Metrics.PERFORM_ROTATION], () => current.cube.rotateFace(rotation));
                 if (!this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.visitedChecklist.has(newCandidate.getHash()))) {
                     this.measurer.add(Metrics[Metrics.ADD_CANDIDATE], () => {
-                        this.candidates.push({
+                        const candidate: Candidate = {
                             cube: newCandidate,
                             rotation: rotation,
                             parent: current
-                        });
+                        };
+                        this.candidates.push(candidate);
 
                     })
                 }

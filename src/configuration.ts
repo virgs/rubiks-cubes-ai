@@ -5,7 +5,7 @@ import { InterativeDeepeningAStarSolver } from "./solvers/2x2/iterative-deepenin
 import { InterativeDeepeningDepthFirstSearchSolver } from "./solvers/2x2/iterative-deepening-depth-first-search-solver";
 import { WeightedAStarSolver } from "./solvers/2x2/weighted-a-star-solver";
 import { GeneticAlgorithmSolver } from "./solvers/3x3/genetic-algorithm/genetic-algorithm-solver";
-import { NeuroEvolutionarySolver } from "./solvers/3x3/neuro-evolutionary/neuro-evolutionary-solver";
+import { NeuroEvolutionarySolver } from "./solvers/2x2/neuro-evolutionary/neuro-evolutionary-solver";
 import { ThistlethwaiteSolver } from "./solvers/3x3/thistlethwaite/thistlethwaite-solver";
 import type { CubeSolver } from "./solvers/cube-solver";
 import { HumanSolver } from "./solvers/human-solver";
@@ -29,20 +29,20 @@ export const WeightedAStarAlgorithmConfig = {
 export const NeuroEvolutionaryConfig = {
     geneticData: {
         mutationRate: 0.01,
-        populationPerGeneration: 150,
-        armageddonThreshold: 1500
+        populationPerGeneration: 200,
+        armageddonThreshold: 500
     },
     neuralNetworkData: {
-        hiddenNeurons: 15,
-        iterations: 20
+        hiddenNeurons: 10,
+        iterations: 1
     }
 }
 
 export const GeneticAlgorithmConfig = {
     populationPerGeneration: 500,
-    elitism: 20,
-    armageddonThreshold: 50,
-    numberOfInitialScrambleMovements: 10
+    elitism: 50,
+    armageddonThreshold: 300,
+    numberOfInitialScrambleMovements: 25
 }
 
 export const Configuration = {
@@ -91,6 +91,12 @@ export const Configuration = {
                     info: `Breadth-first-search. Brute force`
                 },
                 {
+                    key: 'NE',
+                    instantiator: (configuration: string) => new NeuroEvolutionarySolver(new RubiksCube({ clone: configuration })),
+                    checked: false,
+                    info: `Neuro Evolutionary. Uses number of misplaced stickers as fitness function. Internal neurons: ${NeuroEvolutionaryConfig.neuralNetworkData.hiddenNeurons}. Population: ${NeuroEvolutionaryConfig.geneticData.populationPerGeneration}. No elitism`
+                },
+                {
                     key: 'IDA*',
                     instantiator: (configuration: string) => new InterativeDeepeningAStarSolver(new RubiksCube({ clone: configuration })),
                     checked: true,
@@ -125,13 +131,7 @@ export const Configuration = {
                     key: 'Thisttlethwait',
                     instantiator: (configuration: string) => new ThistlethwaiteSolver(new RubiksCube({ clone: configuration })),
                     checked: true,
-                    info: `Neuro Evolutionary. Uses number of misplaced stickers as fitness function. Internal neurons: ${NeuroEvolutionaryConfig.neuralNetworkData.hiddenNeurons}. Population: ${NeuroEvolutionaryConfig.geneticData.populationPerGeneration}. No elitism`
-                },
-                {
-                    key: 'NE',
-                    instantiator: (configuration: string) => new NeuroEvolutionarySolver(new RubiksCube({ clone: configuration })),
-                    checked: false,
-                    info: `Neuro Evolutionary. Uses number of misplaced stickers as fitness function. Internal neurons: ${NeuroEvolutionaryConfig.neuralNetworkData.hiddenNeurons}. Population: ${NeuroEvolutionaryConfig.geneticData.populationPerGeneration}. No elitism`
+                    info: `Thisttlethwait multi step method`
                 },
                 {
                     key: 'GA',

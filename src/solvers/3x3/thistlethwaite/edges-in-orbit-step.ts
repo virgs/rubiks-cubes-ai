@@ -24,7 +24,7 @@ export class EdgesInOrbitStep implements ThistlethwaiteStep {
         return this.stepRotations;
     }
     public iterate(cube: RubiksCube): ThistlethwaiteResult {
-        const numOfEdgesTwistedPerMove = 4;
+        const numOfEdgesTwistedPerMove = 4.0;
         const goodEdgesCounter = this.countFrontAndBackEdgesInOrbit(cube)
         const transversalGoodEdges = this.countLeftAndRightEdgesInOrbit(cube)
         let nextStepSolver = undefined;

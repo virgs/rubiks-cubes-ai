@@ -18,7 +18,8 @@ enum Metrics {
     VISISTED_LIST_CHECK,
     ADD_TO_VISISTED_LIST_CHECK,
     PERFORM_ROTATION,
-    NOT_MEASURED
+    NOT_MEASURED,
+    CYCLE_AVOIDANCE_CHECK
 }
 
 type Candidate = {
@@ -31,11 +32,13 @@ interface SearchResult {
     aborted?: boolean;
     candidate?: Candidate;
     stepOutput?: ThistlethwaiteResult;
+    minGreaterValue?: number
 }
 
-// console.log(JSON.stringify(new RubiksCube({ dimension: 3 }).getAllCubelets()
-//     .filter(cubelet => cubelet.stickers.length === 2)
-//     .map(cubelet => cubelet.stickers.map(s => ({side: Sides[s.side], id: s.id, color: Colors[s.color]})))));
+type IterationData = {
+    bound: number;
+    newNodesVisited: number;
+};
 
 // const groupPremutations = [
 //     "L R F B U D L' R' F' B' U' D'",
@@ -48,28 +51,33 @@ interface SearchResult {
 //https://medium.com/@benjamin.botto/implementing-an-optimal-rubiks-cube-solver-using-korf-s-algorithm-bf750b332cf9
 export class ThistlethwaiteSolver implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
-    private readonly initialState: Candidate;
     private readonly goalState: RubiksCube;
-    private currentMaxDepth: number;
+    private readonly iterations: IterationData[];
+    private readonly minBoundGrow: number = 1.25; //Avoids new nodes visited per iteration non exponential grow
+    private stepInitialState: Candidate;
+    private bound: number;
     private visitedNodes: number;
     private aborted: boolean;
     private currentSolver?: ThistlethwaiteStep;
+    private currentPath: string[];
     private data: any;
 
     public constructor(cube: RubiksCube) {
+        this.iterations = [];
         this.measurer = new ProcedureMeasurer();
         this.visitedNodes = 0;
+        this.currentPath = [];
         this.aborted = false;
         this.goalState = this.buildSolvedCubeFromCentersCubelets(cube);
         this.currentSolver = new EdgesInOrbitStep(this.goalState);
+        this.bound = this.currentSolver.iterate(cube).minMovesToFinishSteps;
 
-        this.currentMaxDepth = 1;
-
-        this.initialState = {
+        this.stepInitialState = {
             cube: cube,
             rotations: [],
             parent: undefined,
         };
+        console.log(this.bound)
     }
 
     public abort(): void {
@@ -77,58 +85,80 @@ export class ThistlethwaiteSolver implements CubeSolver {
     }
 
     public async findSolution(): Promise<Solution> {
+        let nodesTouchedLastIteration = 0;
         return new Promise((resolve, reject) => {
             this.measurer.start();
-            let candidate = this.initialState;
+            let candidate = this.stepInitialState;
             while (!this.aborted) {
-                const searchResult = this.beginSearch(candidate, 0);
+                this.currentPath = [candidate.cube.getHash()];
+                const searchResult = this.search(candidate, 0);
                 if (searchResult.aborted) {
                     break;
                 } else if (searchResult.stepOutput) {
                     console.log('next step. is solved: ' + searchResult.candidate!.cube.isSolved())
                     if (searchResult.stepOutput.nextStepSolver) {
                         console.log(searchResult.stepOutput.nextStepSolver.constructor.name)
-                        this.currentMaxDepth = 0;
-                        this.currentSolver = searchResult.stepOutput.nextStepSolver
+                        this.currentSolver = searchResult.stepOutput.nextStepSolver;
+                        this.bound = this.currentSolver.iterate(candidate.cube).minMovesToFinishSteps;
                         candidate = searchResult.candidate!;
                         new HumanTranslator().printCube(candidate.cube)
-
                     } else {
                         return resolve(this.createSolution(searchResult.candidate!));
                     }
                 } else {
-                    ++this.currentMaxDepth;
-                    console.log(this.currentMaxDepth)
+                    const newNodesVisited = this.visitedNodes - nodesTouchedLastIteration;
+                    this.iterations.push({ newNodesVisited: newNodesVisited, bound: this.bound });
+                    nodesTouchedLastIteration = this.visitedNodes;
+                    this.bound = Math.max(searchResult.minGreaterValue!, this.bound + this.minBoundGrow);
+                    console.log(this.bound, newNodesVisited)
                 }
             }
             reject(Error(`Aborted`));
         });
     }
 
-    private beginSearch(candidate: Candidate, depth: number): SearchResult {
+    private search(candidate: Candidate, depth: number): SearchResult {
         ++this.visitedNodes;
         if (this.aborted) {
             return { aborted: true };
         }
-        if (depth <= this.currentMaxDepth) {
-            const iterationResult = this.currentSolver!.iterate(candidate.cube);
-            if (iterationResult.stepFinished) {
-                this.currentSolver = iterationResult.nextStepSolver;
-                console.log('step is over')
-                return { candidate: candidate, stepOutput: iterationResult };
-            } else {
-                //Use it as A* heuristic
-                // console.log(iterationResult.minMovesToFinishSteps);
+
+        const iterationResult = this.currentSolver!.iterate(candidate.cube);
+        let estimatedCostToStepGoal = iterationResult.minMovesToFinishSteps;
+        // console.log(estimatedCostToStepGoal)
+        if (iterationResult.stepFinished) {
+            this.currentSolver = iterationResult.nextStepSolver;
+            console.log('step is over')
+            return { candidate: candidate, stepOutput: iterationResult };
+        }
+        //Use it as A* heuristic
+        // console.log(iterationResult.minMovesToFinishSteps);
+        let minGreaterValue = Infinity;
+        const children = this.applyRotations(candidate);
+        for (let child of children) {
+            const sum = depth + estimatedCostToStepGoal;
+            if (sum > this.bound) {
+                return { minGreaterValue: sum }
             }
-            const children = this.applyRotations(candidate);
-            for (let child of children) {
-                const solution = this.beginSearch(child, depth + 1);
-                if (solution.candidate) {
-                    return solution;
+            const searchResult = this.search(child, depth + 1);
+            const childHash = child.cube.getHash();
+            if (this.measurer.add(Metrics[Metrics.CYCLE_AVOIDANCE_CHECK],
+                () => this.currentPath
+                    .every(hash => hash !== childHash))) {// avoid cycles
+                this.currentPath.push(childHash);
+                if (searchResult.candidate || searchResult.aborted) {
+                    return searchResult;
+                } else {
+                    // https://github.com/lukapopijac/pocket-cube-optimal-solver#about-the-search-algorithm
+                    estimatedCostToStepGoal = Math.min(estimatedCostToStepGoal, searchResult.minGreaterValue! - 1);
+                    minGreaterValue = Math.min(searchResult.minGreaterValue!, minGreaterValue);
                 }
+                this.currentPath.pop();
             }
         }
-        return { aborted: false, candidate: undefined }
+
+
+        return { aborted: false, candidate: undefined, minGreaterValue: minGreaterValue }
     }
 
     private createSolution(candidate: Candidate): Solution {

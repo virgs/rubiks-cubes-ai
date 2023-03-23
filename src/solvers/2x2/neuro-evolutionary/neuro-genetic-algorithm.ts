@@ -17,20 +17,19 @@ export class NeuroGeneticAlgorithm {
 
     public createNextGeneration(oldGenerationResults: Chromosome[]): Chromosome[] {
         ++this.generationsCounter;
-        const sum = oldGenerationResults
-            .reduce((acc, citizen) => {
-                return {
-                    score: acc.score + citizen.score,
-                    movesLength: acc.movesLength + citizen.genes.length
-                }
-            }, { score: 0.0, movesLength: 0 });
+        const generationResult = oldGenerationResults
+            .reduce((acc, citizen) => ({
+                bestScore: Math.max(acc.bestScore, citizen.score),
+                score: acc.score + citizen.score,
+                movesLength: acc.movesLength + citizen.genes.length
+            }), { score: 0.0, movesLength: 0, bestScore: 0 });
         if (this.generationsCounter % 10 === 0) {
-            console.log(`${this.generationsCounter} >. score sum: ${sum.score}. avg: ${Math.round(10 * sum.score / oldGenerationResults.length) / 10}. moves ${Math.round(10 * sum.movesLength / oldGenerationResults.length) / 10}`)
+            console.log(`${this.generationsCounter} >. score sum: ${generationResult.score}. best: ${generationResult.bestScore}. moves length: ${generationResult.movesLength / oldGenerationResults.length}`)
         }
         const scoreNormalizedCitizen = oldGenerationResults
             .map(citizen => ({
                 genes: citizen.genes,
-                score: parseFloat(citizen.score.toString()) / sum.score
+                score: parseFloat(citizen.score.toString()) / generationResult.score
             }));
         return Array.from(Array(this.populationPerGeneration))
             .map(() => this.createNewCitizen(this.pickOne(scoreNormalizedCitizen), this.pickOne(scoreNormalizedCitizen)));

@@ -76,9 +76,9 @@ export class GeneticAlgorithmSolver implements CubeSolver {
         const translator = new HumanTranslator();
         this.geneticAlgorithm = new GeneticAlgorithm(this.initialState,
             supervisedPermutations
-                .map(permutation => translator.convertStringToFaceRotations(permutation)),
+                .flatMap(permutation => translator.convertStringToFaceRotations(permutation)),
             orientations
-                .map(permutation => translator.convertStringToFaceRotations(permutation)));
+                .flatMap(orientation => translator.convertStringToFaceRotations(orientation)));
         this.citizens = this.geneticAlgorithm.createNextGeneration();
     }
 
@@ -92,10 +92,10 @@ export class GeneticAlgorithmSolver implements CubeSolver {
                 const result = [];
                 for (let citizen of this.citizens) {
                     const citizenResult = this.runCitizen(citizen);
-                    if (citizen.score === 0) {
-                        return resolve(this.createSolution(citizen));
+                    if (citizenResult.score === 0) {
+                        return resolve(this.createSolution(citizenResult));
                     }
-                    result.push(citizen)
+                    result.push(citizenResult)
                 }
 
                 this.citizens = this.geneticAlgorithm.createNextGeneration(result);
@@ -108,34 +108,31 @@ export class GeneticAlgorithmSolver implements CubeSolver {
     }
 
     private runCitizen(citizen: Chromosome): Chromosome {
-        let result: Chromosome;
+        let genes = citizen.genes.slice();
+        let cube = citizen.cube.clone();
+        let result: Chromosome = {
+            genes: genes,
+            score: Infinity,
+            newGenes: [],
+            cube: cube.clone()
+        };
         for (let rotation of citizen.newGenes) {
-            citizen.genes.push(rotation);
-            citizen.cube = citizen.cube.rotateFace(rotation)
+            genes.push(rotation);
+            cube = cube.rotateFace(rotation)
             const score = this.calculateCitizenScore(citizen.cube);
-            if (Number.isNaN(score) || score === 999) {
-                console.log('what')
-            }
-            citizen.score = score;
-            // if (result === undefined || result.score > score) {
-            result = {
-                genes: citizen.genes.slice(),
-                score: score,
-                newGenes: [],
-                cube: citizen.cube.clone()
-            }
-            // }
-            if (score === 0) {
-                return result;
+            if (score < result.score) {
+                if (score === 0) {
+                    return result;
+                } else {
+                    result = {
+                        genes: genes,
+                        score: score,
+                        newGenes: [],
+                        cube: cube.clone()
+                    };
+                }
             }
         }
-        // if (bestMoment) {
-        // citizen.score = bestMoment!.score;
-        // citizen.genes = [...bestMoment!.genes];
-        // citizen.cube = bestMoment!.cube.clone();    
-        // }
-
-        result!.genes = new RotationsTuner().tune(result!.genes!);
         return result!;
     }
 

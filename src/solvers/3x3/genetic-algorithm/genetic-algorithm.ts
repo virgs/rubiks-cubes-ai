@@ -73,7 +73,7 @@ export class GeneticAlgorithm {
         const pickNewOrientation = () => {
             return this.orientationList[Math.floor(Math.random() * this.orientationList.length)];
         }
-        switch (Math.floor(Math.random() * 4)) {
+        switch (Math.floor(Math.random() * 5)) {
             case 0:
                 newMutations.push(...pickNewMutation())
                 break;
@@ -98,7 +98,7 @@ export class GeneticAlgorithm {
             cube: singleParent.cube.clone(),
             genes: [...singleParent.genes.slice(0)],
             newGenes: newMutations,
-            score: 987 //new borns don't have score yet
+            score: NaN //new borns don't have score yet
         };
     }
 

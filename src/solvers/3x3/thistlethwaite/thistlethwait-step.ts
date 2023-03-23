@@ -4,7 +4,7 @@ import type { RubiksCube } from "@/engine/rubiks-cube";
 export interface ThistlethwaiteResult {
     stepFinished: boolean;
     nextStepSolver?: ThistlethwaiteStep;
-    minMovesToFinishSteps?: number;
+    minMovesToFinishSteps: number;
     data: any;
 }
 

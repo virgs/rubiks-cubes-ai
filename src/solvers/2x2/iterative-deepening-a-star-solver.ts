@@ -14,7 +14,8 @@ enum Metrics {
     VISISTED_LIST_CHECK,
     ADD_TO_VISISTED_LIST_CHECK,
     PERFORM_ROTATION,
-    NOT_MEASURED
+    NOT_MEASURED,
+    CYCLE_AVOIDANCE_CHECK
 }
 
 type Candidate = {
@@ -29,13 +30,18 @@ interface SearchResult {
     cost?: number;
 }
 
+type IterationData = {
+    bound: number;
+    newNodesVisited: number;
+};
+
 export class InterativeDeepeningAStarSolver implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
     private readonly actions: FaceRotation[];
     private readonly goalStateHash: string;
     private readonly root: Candidate;
     private readonly numberOfStickersMovedInOneTwist: number;
-    private readonly iterations: { bound: number, newNodesVisited: number }[];
+    private readonly iterations: IterationData[];
     private readonly minBoundGrow: number = 1.25; //Avoids new nodes visited per iteration non exponential grow
     private currentPath: string[];
     private bound: number;
@@ -81,7 +87,7 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
             while (!this.aborted) {
                 this.currentPath = [this.root.cube.getHash()];
 
-                const searchResult = this.beginSearch(this.root, 0)
+                const searchResult = this.search(this.root, 0)
                 if (searchResult.solution) {
                     return resolve(this.createSolution(searchResult.solution));
                 } else if (searchResult.aborted) {
@@ -97,16 +103,12 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
         });
     }
 
-    private beginSearch(candidate: Candidate, depth: number): SearchResult {
+    private search(candidate: Candidate, depth: number): SearchResult {
         ++this.visitedNodes;
         if (this.aborted) {
             return { aborted: true };
         }
-        const estimatedCost = this.calculateDistanceToFinalState(candidate.cube);
-        const sum = depth + estimatedCost;
-        if (sum > this.bound) {
-            return { cost: sum };
-        }
+        let estimatedCost = this.calculateDistanceToFinalState(candidate.cube);
 
         if (candidate.cube.isSolved()) {
             return { solution: candidate };
@@ -115,13 +117,21 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
         let minGreaterValue = Infinity;
         const children = this.applyRotations(candidate);
         for (let child of children) {
-            if (this.currentPath
-                .every(hash => hash !== child.cube.getHash())) {// avoid cycles
-                this.currentPath.push(child.cube.getHash());
-                const searchResult = this.beginSearch(child, depth + 1);
+            const sum = depth + estimatedCost;
+            if (sum > this.bound) {
+                return { cost: sum };
+            }
+            const childHash = child.cube.getHash();
+            if (this.measurer.add(Metrics[Metrics.CYCLE_AVOIDANCE_CHECK],
+                () => this.currentPath
+                    .every(hash => hash !== childHash))) {// avoid cycles
+                this.currentPath.push(childHash);
+                const searchResult = this.search(child, depth + 1);
                 if (searchResult.solution || searchResult.aborted) {
                     return searchResult;
                 } else {
+                    // https://github.com/lukapopijac/pocket-cube-optimal-solver#about-the-search-algorithm
+                    estimatedCost = Math.min(estimatedCost, searchResult.cost! - 1);
                     minGreaterValue = Math.min(searchResult.cost!, minGreaterValue);
                 }
                 this.currentPath.pop();

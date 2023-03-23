@@ -1,13 +1,13 @@
 import { NeuroEvolutionaryConfig } from "@/configuration";
-import { mapStringInitialToColor, type Colors } from "@/constants/colors";
-import { Sides, getAllSides } from "@/constants/sides";
+import { getAllColors, getOppositeColor, mapStringInitialToColor, type Colors } from "@/constants/colors";
+import { Sides, getAllSides, getOppositeSide } from "@/constants/sides";
 import { NeuroGeneticAlgorithm } from "./neuro-genetic-algorithm";
 import { NeuralNetwork } from "./neural-network";
 import { RotationsTuner } from "@/printers/rotations-tuner";
 import type { FaceRotation } from "@/engine/face-rotation";
 import type { CubeSolver, Solution } from "@/solvers/cube-solver";
 import { ProcedureMeasurer } from "@/solvers/procedure-measurer";
-import { RubiksCube } from "@/engine/rubiks-cube";
+import { RubiksCube, type Cubelet } from "@/engine/rubiks-cube";
 
 enum Metrics {
     NOT_MEASURED,
@@ -27,6 +27,7 @@ export class NeuroEvolutionarySolver implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
     private readonly inputs: number;
     private readonly initialState: RubiksCube;
+    private readonly goalStateHash: string;
     private actions: FaceRotation[];
     private neuroGeneticAlgorithm: NeuroGeneticAlgorithm;
     private citizens: Citizen[];
@@ -42,10 +43,13 @@ export class NeuroEvolutionarySolver implements CubeSolver {
             NeuroEvolutionaryConfig.geneticData!.populationPerGeneration!);
         this.initialState = cube.clone();
 
-        this.inputs = cube.getConfiguration().length
+        this.inputs = cube.getConfiguration().length;
         this.actions = [];
-        getAllSides()
-            .map((side: Sides) => [true, false]
+        const fixedCubelet = cube.getCubeletsBySides(Sides.BACK, Sides.LEFT, Sides.DOWN)[0];
+        const goalState = this.buildSolvedPocketCubeFromCornerCubelet(fixedCubelet);
+        this.goalStateHash = goalState.getHash();
+        [Sides.FRONT, Sides.UP, Sides.RIGHT] //So the fixed cubelet doesn't move
+            .map(side => [true, false]
                 .map(direction => {
                     this.actions.push({ side: side, counterClockwiseDirection: direction, layer: 0 });
                 }));
@@ -82,19 +86,16 @@ export class NeuroEvolutionarySolver implements CubeSolver {
         this.aborted = true;
     }
 
-
     private createNewPopulationFromScratch(): Citizen[] {
         this.neuroGeneticAlgorithm = new NeuroGeneticAlgorithm(NeuroEvolutionaryConfig.geneticData.mutationRate!,
             NeuroEvolutionaryConfig.geneticData!.populationPerGeneration!);
-        this.actions
-            .sort(() => Math.random() * 2 - 1);
         return Array.from(new Array(NeuroEvolutionaryConfig.geneticData!.populationPerGeneration!))
             .map(() => {
                 const nn = new NeuralNetwork({
                     inputs: this.inputs,
                     hiddenNeurons: NeuroEvolutionaryConfig.neuralNetworkData!.hiddenNeurons,
                     outputs: this.actions.length,
-                    bias: Math.random() * 2 - 1
+                    bias: 1
                 });
                 return {
                     genes: nn.getWeights(), //randomly selected at first
@@ -116,7 +117,7 @@ export class NeuroEvolutionarySolver implements CubeSolver {
                     inputs: this.inputs,
                     hiddenNeurons: NeuroEvolutionaryConfig.neuralNetworkData!.hiddenNeurons,
                     outputs: this.actions.length,
-                    bias: Math.random() * 2 - 1
+                    bias: 1
                 }, chromosome.genes);
                 return {
                     genes: chromosome.genes,
@@ -132,36 +133,30 @@ export class NeuroEvolutionarySolver implements CubeSolver {
             .reduce((solved) => {
                 if (!solved) {
                     return this.measurer.add(Metrics[Metrics.RUN_NEURAL_NETWORK], () => {
-                        const outputs = citizen.neuralNetwork.doTheMagic(citizen.cube.getConfiguration()
-                            .split('')
-                            .map(configuration => mapStringInitialToColor(configuration)));
-                        let greatesOutput = outputs.reduce((acc, output, index) => {
+                        const currentConfiguration = citizen.cube.getConfiguration()
+                            .split('');
+                        const inputs = currentConfiguration
+                                .map(character => mapStringInitialToColor(character));
+                        // const inputs = getAllColors()
+                        //     .flatMap(color => currentConfiguration
+                        //         .map(character => mapStringInitialToColor(character) === color ? 1 : 0))
+                        const outputs = citizen.neuralNetwork.doTheMagic(inputs);
+                        let greatestOutput = outputs.reduce((acc, output, index) => {
                             if (acc.index === -1 || output > acc.value) {
                                 acc.value = output;
                                 acc.index = index;
                             }
                             return acc;
                         }, { index: -1, value: 0 })
-                        if (greatesOutput.value > .5) {
-                            const action = this.actions[greatesOutput.index];
+                        if (greatestOutput.value > .5) {
+                            const action = this.actions[greatestOutput.index];
                             citizen.cube = citizen.cube.rotateFace(action);
+                            console.log(action)
                             citizen.moves.push(action);
                             if (citizen.cube.isSolved()) {
                                 return true;
                             }
                         }
-                        // let index = 0;
-                        // for (let output of outputs) {
-                        //     if (output > .75) {
-                        //         const action = this.actions[index];
-                        //         citizen.cube = citizen.cube.rotateFace(action);
-                        //         citizen.moves.push(action);
-                        //         if (citizen.cube.isSolved()) {
-                        //             return true;
-                        //         }
-                        //     }
-                        //     ++index;
-                        // }
                         return false;
                     });
                 }
@@ -173,10 +168,9 @@ export class NeuroEvolutionarySolver implements CubeSolver {
     private calculateCitizenScore(currentCube: RubiksCube): number {
         return this.measurer.add(Metrics[Metrics.CALCULATE_CITIZEN_SCORE], () => {
             const cubeConfiguration = currentCube.getConfiguration();
-            const goalConfiguration = this.buildSolvedCubeFromCenterCubelets(currentCube).getConfiguration();
             return cubeConfiguration
                 .split('')
-                .filter((char, index) => char === goalConfiguration[index])
+                .filter((char, index) => char === this.goalStateHash[index])
                 .length;
         });
     }
@@ -197,17 +191,15 @@ export class NeuroEvolutionarySolver implements CubeSolver {
         }
     }
 
-    public buildSolvedCubeFromCenterCubelets(cube: RubiksCube): RubiksCube {
-        const centersIndexes = cube.getAllColorlessCubelets()
-            .filter(cubelet => cubelet.stickers.length === 1)
-            .map(cubelet => cubelet.stickers[0].id);
+    public buildSolvedPocketCubeFromCornerCubelet(cubelet: Cubelet): RubiksCube {
         const colorMap: Map<Sides, Colors> = new Map();
-        getAllSides()
-            .forEach((side, index) => {
-                colorMap.set(side, cube.getColorOfIndex(centersIndexes[index]));
-            })
-
+        cubelet.stickers
+            .forEach(sticker => {
+                colorMap.set(sticker.side, sticker.color);
+                colorMap.set(getOppositeSide(sticker.side), getOppositeColor(sticker.color));
+            });
         return new RubiksCube({ colorMap: colorMap, dimension: this.initialState.getDimension() });
     }
+
 
 }
