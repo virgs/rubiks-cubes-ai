@@ -332,7 +332,7 @@ export default defineComponent({
       }
       history.replaceState(
         {},
-        null,
+        null as unknown as string,
         '?' +
         Object.keys(params)
           .map(key => {
@@ -434,8 +434,8 @@ export default defineComponent({
   width: 90%;
   border: none;
   background-color: transparent;
+  color: var(--color-heading);
   resize: none;
-  color: var(--color-background);
   outline: none;
   overflow-y: auto;
   -webkit-box-shadow: none;
@@ -447,6 +447,6 @@ export default defineComponent({
 .title {
   font-family: 'Courier New', Courier, monospace;
   font-weight: bold;
-  color: var(--color-background);
+  color: var(--color-heading);
 }
 </style>
