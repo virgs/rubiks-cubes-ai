@@ -108,7 +108,6 @@ export class GeneticAlgorithmSolver implements CubeSolver {
             rotations: rotations,
             totalTime: this.measurer.getTotalTime()!,
             data: {
-                allocatedMemory: GeneticAlgorithmConfig.populationPerGeneration * GeneticAlgorithmConfig.maxNumOfRotations,
                 armageddonCounter: this.geneticAlgorithm.getArmageddonCounter(),
                 generations: this.geneticAlgorithm.getGenerationsCounter(),
                 metrics: this.measurer.getData({ notMeasuredLabel: Metrics[Metrics.NOT_MEASURED],  measurementOverheadLabel: Metrics[Metrics.MEASUREMENT_OVERHEAD]}),

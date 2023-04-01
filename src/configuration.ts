@@ -51,7 +51,7 @@ export const Configuration = {
         titleDistance: 8.5,
         cubeSize: 2.5
     },
-    initiallySelectedCubeTypeIndex: 1,
+    initiallySelectedCubeTypeIndex: 0,
     cubeTypes: [
         {
             label: '2x2',
