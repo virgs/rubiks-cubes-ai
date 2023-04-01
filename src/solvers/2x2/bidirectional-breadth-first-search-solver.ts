@@ -14,7 +14,8 @@ enum Metrics {
     VISISTED_LIST_CHECK,
     ADD_TO_VISISTED_LIST_CHECK,
     PERFORM_ROTATION,
-    NOT_MEASURED
+    NOT_MEASURED,
+    MEASUREMENT_OVERHEAD
 }
 
 type Candidate = {
@@ -152,7 +153,7 @@ export class BidirectionalBreadthFirstSearchSolver implements CubeSolver {
             rotations: rotations,
             totalTime: this.measurer.getTotalTime()!,
             data: {
-                metrics: this.measurer.getData({ notMeasuredLabel: Metrics[Metrics.NOT_MEASURED] }),
+                metrics: this.measurer.getData({ notMeasuredLabel: Metrics[Metrics.NOT_MEASURED], measurementOverheadLabel: Metrics[Metrics.MEASUREMENT_OVERHEAD] }),
                 iterations: this.iterations,
                 visitedNodes: visitedNodes
             }

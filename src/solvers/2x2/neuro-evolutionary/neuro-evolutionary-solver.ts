@@ -1,13 +1,13 @@
 import { NeuroEvolutionaryConfig } from "@/configuration";
-import { getAllColors, getOppositeColor, mapStringInitialToColor, type Colors } from "@/constants/colors";
-import { Sides, getAllSides, getOppositeSide } from "@/constants/sides";
-import { NeuroGeneticAlgorithm } from "./neuro-genetic-algorithm";
-import { NeuralNetwork } from "./neural-network";
-import { RotationsTuner } from "@/printers/rotations-tuner";
+import { getOppositeColor, mapStringInitialToColor, type Colors } from "@/constants/colors";
+import { Sides, getOppositeSide } from "@/constants/sides";
 import type { FaceRotation } from "@/engine/face-rotation";
+import { RubiksCube, type Cubelet } from "@/engine/rubiks-cube";
+import { RotationsTuner } from "@/printers/rotations-tuner";
 import type { CubeSolver, Solution } from "@/solvers/cube-solver";
 import { ProcedureMeasurer } from "@/solvers/procedure-measurer";
-import { RubiksCube, type Cubelet } from "@/engine/rubiks-cube";
+import { NeuralNetwork } from "./neural-network";
+import { NeuroGeneticAlgorithm } from "./neuro-genetic-algorithm";
 
 enum Metrics {
     NOT_MEASURED,
@@ -17,7 +17,7 @@ enum Metrics {
     MEASUREMENT_OVERHEAD
 }
 type Citizen = {
-    genes: number[],
+    genes: number[][],
     neuralNetwork: NeuralNetwork,
     cube: RubiksCube,
     moves: FaceRotation[],
@@ -52,7 +52,8 @@ export class NeuroEvolutionarySolver implements CubeSolver {
             .map(side => [true, false]
                 .map(direction => {
                     this.actions.push({ side: side, counterClockwiseDirection: direction, layer: 0 });
-                }));
+                })
+            );
 
         this.citizens = this.createNewPopulationFromScratch();
     }
@@ -95,7 +96,6 @@ export class NeuroEvolutionarySolver implements CubeSolver {
                     inputs: this.inputs,
                     hiddenNeurons: NeuroEvolutionaryConfig.neuralNetworkData!.hiddenNeurons,
                     outputs: this.actions.length,
-                    bias: 1
                 });
                 return {
                     genes: nn.getWeights(), //randomly selected at first
@@ -117,7 +117,6 @@ export class NeuroEvolutionarySolver implements CubeSolver {
                     inputs: this.inputs,
                     hiddenNeurons: NeuroEvolutionaryConfig.neuralNetworkData!.hiddenNeurons,
                     outputs: this.actions.length,
-                    bias: 1
                 }, chromosome.genes);
                 return {
                     genes: chromosome.genes,
@@ -136,11 +135,11 @@ export class NeuroEvolutionarySolver implements CubeSolver {
                         const currentConfiguration = citizen.cube.getConfiguration()
                             .split('');
                         const inputs = currentConfiguration
-                                .map(character => mapStringInitialToColor(character));
+                            .map(character => mapStringInitialToColor(character));
                         // const inputs = getAllColors()
                         //     .flatMap(color => currentConfiguration
                         //         .map(character => mapStringInitialToColor(character) === color ? 1 : 0))
-                        const outputs = citizen.neuralNetwork.doTheMagic(inputs);
+                        const outputs = citizen.neuralNetwork.propagateForward(inputs);
                         let greatestOutput = outputs.reduce((acc, output, index) => {
                             if (acc.index === -1 || output > acc.value) {
                                 acc.value = output;
@@ -148,15 +147,14 @@ export class NeuroEvolutionarySolver implements CubeSolver {
                             }
                             return acc;
                         }, { index: -1, value: 0 })
-                        if (greatestOutput.value > .5) {
-                            const action = this.actions[greatestOutput.index];
-                            citizen.cube = citizen.cube.rotateFace(action);
-                            console.log(action)
-                            citizen.moves.push(action);
-                            if (citizen.cube.isSolved()) {
-                                return true;
-                            }
+                        // if (greatestOutput.value > .5) {
+                        const action = this.actions[greatestOutput.index];
+                        citizen.cube = citizen.cube.rotateFace(action);
+                        citizen.moves.push(action);
+                        if (citizen.cube.isSolved()) {
+                            return true;
                         }
+                        // }
                         return false;
                     });
                 }
@@ -183,7 +181,6 @@ export class NeuroEvolutionarySolver implements CubeSolver {
             totalTime: this.measurer.getTotalTime()!,
             data: {
                 armageddonCounter: this.armageddonCounter,
-                genes: solver.genes,
                 neuralNetworkWeights: solver.neuralNetwork.getWeights(),
                 metrics: this.measurer.getData({ notMeasuredLabel: Metrics[Metrics.NOT_MEASURED], measurementOverheadLabel: Metrics[Metrics.MEASUREMENT_OVERHEAD] }),
                 generations: this.neuroGeneticAlgorithm.getGenerationsCounter()

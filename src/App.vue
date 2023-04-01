@@ -145,12 +145,14 @@ export default defineComponent({
     window.addEventListener('keypress', async (event: KeyboardEvent) => {
       solverRenderers
         .forEach(solverRenderer => solverRenderer.keyInput(event));
+        console.log(event.key.toLowerCase())
       switch (event.key.toLowerCase()) {
         case 'enter': this.mainActionButtonEnabled && this.mainActionButtonClick()
           break;
+        case '\\': 
         case 'delete': !this.shuffling && this.reset()
-          break;
-        case 'p': !this.shuffling && this.shuffle()
+        break;
+        case ']': !this.shuffling && this.shuffle()
           break;
       }
       const layer = Number(event.key.toLowerCase())
@@ -352,7 +354,7 @@ export default defineComponent({
   <GithubCorner></GithubCorner>
   <div class="container-fluid px-0" style="width: 100%; height: 100%;">
     <div id="nav-bar" class="row justify-content-center align-items-center gx-2 mx-lg-5 mx-2">
-      <div class="col-12 col-lg-auto mt-2 mt-lg-3">
+      <div class="col-12 col-lg-auto mt-2 mt-lg-3" style="text-align: center;">
         <img class="img-fluid mr-2 pr-2" height="64" width="48"
           style="max-width: 72px; min-width: 72px; max-height: 96px;display: inline-block; margin-right: 10px;"
           src="/large-icon.png">

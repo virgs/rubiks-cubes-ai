@@ -5,7 +5,7 @@ import { ProcedureMeasurer } from "../procedure-measurer";
 import type { FaceRotation } from "@/engine/face-rotation";
 import { Colors, getOppositeColor } from "@/constants/colors";
 import { RubiksCube, type Cubelet } from '@/engine/rubiks-cube';
-import { WeightedAStarAlgorithmConfig, Configuration } from '@/configuration';
+import { WeightedAStarAlgorithmConfig } from '@/configuration';
 
 enum Metrics {
     ADD_CANDIDATE,
@@ -73,7 +73,7 @@ export class WeightedAStarSolver implements CubeSolver {
                 .map(direction => {
                     this.actions.push({ side: side, counterClockwiseDirection: direction, layer: 0 });
                 }));
-        this.measurer = new ProcedureMeasurer(Configuration.metrics.enabled);
+        this.measurer = new ProcedureMeasurer();
     }
 
     public async findSolution(): Promise<Solution> {

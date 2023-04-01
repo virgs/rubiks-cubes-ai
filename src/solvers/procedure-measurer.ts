@@ -1,3 +1,4 @@
+import { Configuration } from "@/configuration";
 
 type Call = {
     calls: number,
@@ -22,7 +23,7 @@ export class ProcedureMeasurer {
     private startTime?: number;
     private totalTime?: number;
 
-    constructor(enabled: boolean = true) {
+    constructor(enabled: boolean = Configuration.metrics.enabled) {
         this.map = new Map();
         this.enabled = enabled;
         this.measurerOverhead = 0;
@@ -74,11 +75,12 @@ export class ProcedureMeasurer {
                     result.push(this.createSummary(calls.elapsedTime, calls.calls, label))
                 });
 
-            if (extra?.notMeasuredLabel) {
-                result.push(this.createSummary(this.totalTime - sumTimes, 0, extra.notMeasuredLabel))
-            }
             if (extra?.measurementOverheadLabel) {
                 result.push(this.createSummary(this.measurerOverhead, 0, extra.measurementOverheadLabel))
+                sumTimes += this.measurerOverhead;
+            }
+            if (extra?.notMeasuredLabel) {
+                result.push(this.createSummary(this.totalTime - sumTimes, 0, extra.notMeasuredLabel))
             }
         }
         return result;

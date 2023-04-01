@@ -4,9 +4,7 @@ import { BreadthFirstSearchSolver } from "./solvers/2x2/breadth-first-search-sol
 import { InterativeDeepeningAStarSolver } from "./solvers/2x2/iterative-deepening-a-star-solver";
 import { InterativeDeepeningDepthFirstSearchSolver } from "./solvers/2x2/iterative-deepening-depth-first-search-solver";
 import { WeightedAStarSolver } from "./solvers/2x2/weighted-a-star-solver";
-import { GeneticAlgorithmSolver } from "./solvers/3x3/genetic-algorithm/genetic-algorithm-solver";
-import { NeuroEvolutionarySolver } from "./solvers/2x2/neuro-evolutionary/neuro-evolutionary-solver";
-import { ThistlethwaiteSolver } from "./solvers/3x3/thistlethwaite/thistlethwaite-solver";
+import { GeneticAlgorithmSolver } from "./solvers/2x2/genetic-algorithm/genetic-algorithm-solver";
 import type { CubeSolver } from "./solvers/cube-solver";
 import { HumanSolver } from "./solvers/human-solver";
 
@@ -28,26 +26,27 @@ export const WeightedAStarAlgorithmConfig = {
 
 export const NeuroEvolutionaryConfig = {
     geneticData: {
-        mutationRate: 0.01,
-        populationPerGeneration: 200,
-        armageddonThreshold: 500
+        mutationRate: 0.1,
+        populationPerGeneration: 100,
+        armageddonThreshold: 2000
     },
     neuralNetworkData: {
-        hiddenNeurons: 10,
-        iterations: 1
+        hiddenNeurons: [8, 8],
+        iterations: 20
     }
 }
 
 export const GeneticAlgorithmConfig = {
-    populationPerGeneration: 500,
-    elitism: 50,
-    armageddonThreshold: 300,
-    numberOfInitialScrambleMovements: 25
+    mutationRate: 0.1,
+    populationPerGeneration: 100,
+    maxNumOfRotations: 30,
+    elitism: 15,
+    armageddonThreshold: 5000
 }
 
 export const Configuration = {
     metrics: {
-        enabled: import.meta.env.DEV
+        enabled: false//import.meta.env.DEV
     },
     world: {
         debug: false,
@@ -91,16 +90,16 @@ export const Configuration = {
                     info: `Breadth-first-search. Brute force`
                 },
                 {
-                    key: 'NE',
-                    instantiator: (configuration: string) => new NeuroEvolutionarySolver(new RubiksCube({ clone: configuration })),
-                    checked: false,
-                    info: `Neuro Evolutionary. Uses number of misplaced stickers as fitness function. Internal neurons: ${NeuroEvolutionaryConfig.neuralNetworkData.hiddenNeurons}. Population: ${NeuroEvolutionaryConfig.geneticData.populationPerGeneration}. No elitism`
-                },
-                {
                     key: 'IDA*',
                     instantiator: (configuration: string) => new InterativeDeepeningAStarSolver(new RubiksCube({ clone: configuration })),
                     checked: true,
                     info: `Interative-deepening A star. Uses number of misplaced stickers as heuristic.`
+                },
+                {
+                    key: 'GA',
+                    instantiator: (configuration: string) => new GeneticAlgorithmSolver(new RubiksCube({ clone: configuration })),
+                    checked: false,
+                    info: `Random movements improved by genetic algorithm. Uses number of misplaced stickers as fitness function. Population: ${GeneticAlgorithmConfig.populationPerGeneration}. Elitism ${GeneticAlgorithmConfig.elitism}.  Mutation rate ${GeneticAlgorithmConfig.mutationRate}. `
                 },
                 {
                     key: 'WA*',
@@ -126,18 +125,6 @@ export const Configuration = {
                     instantiator: (configuration: string) => new HumanSolver(new RubiksCube({ clone: configuration })),
                     checked: false,
                     info: 'Use keys \'WASDFX\' combined with \'shift\' to rotate cube faces'
-                },
-                {
-                    key: 'Thisttlethwait',
-                    instantiator: (configuration: string) => new ThistlethwaiteSolver(new RubiksCube({ clone: configuration })),
-                    checked: true,
-                    info: `Thisttlethwait multi step method`
-                },
-                {
-                    key: 'GA',
-                    instantiator: (configuration: string) => new GeneticAlgorithmSolver(new RubiksCube({ clone: configuration })),
-                    checked: false,
-                    info: `Predefined macro movements combined with genetic algorithm. Uses number of misplaced stickers as fitness function. Population: ${GeneticAlgorithmConfig.populationPerGeneration}. Elitism ${GeneticAlgorithmConfig.elitism}. Asexual reproduction`
                 }
             ]
         },

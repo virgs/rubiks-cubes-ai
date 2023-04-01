@@ -1,6 +1,6 @@
 
 interface Chromosome {
-    genes: number[];
+    genes: number[][];
     score: number
 }
 
@@ -17,16 +17,17 @@ export class NeuroGeneticAlgorithm {
 
     public createNextGeneration(oldGenerationResults: Chromosome[]): Chromosome[] {
         ++this.generationsCounter;
-        const generationResult = oldGenerationResults
+        const amplifiedScore = oldGenerationResults
+            .map(result => ({ ...result, score: result.score * result.score }));
+        const generationResult = amplifiedScore
             .reduce((acc, citizen) => ({
                 bestScore: Math.max(acc.bestScore, citizen.score),
-                score: acc.score + citizen.score,
-                movesLength: acc.movesLength + citizen.genes.length
-            }), { score: 0.0, movesLength: 0, bestScore: 0 });
-        if (this.generationsCounter % 10 === 0) {
-            console.log(`${this.generationsCounter} >. score sum: ${generationResult.score}. best: ${generationResult.bestScore}. moves length: ${generationResult.movesLength / oldGenerationResults.length}`)
+                score: acc.score + citizen.score
+            }), { score: 0.0, bestScore: 0 });
+        if (this.generationsCounter % 100 === 0) {
+            console.log(`${this.generationsCounter} >. score sum: ${generationResult.score}. best: ${generationResult.bestScore}. avg: ${generationResult.score / amplifiedScore.length}`);
         }
-        const scoreNormalizedCitizen = oldGenerationResults
+        const scoreNormalizedCitizen = amplifiedScore
             .map(citizen => ({
                 genes: citizen.genes,
                 score: parseFloat(citizen.score.toString()) / generationResult.score
@@ -40,19 +41,28 @@ export class NeuroGeneticAlgorithm {
     }
 
     private createNewCitizen(first: Chromosome, second: Chromosome): Chromosome {
-        const crossOverCutIndex = Math.floor(Math.random() * first.genes.length);
-        const genes = first.genes
+        const genesFromFirstParent = first.genes.flat();
+        const genesFromSecondParent = second.genes.flat();
+        const crossOverCutIndex = Math.floor(Math.random() * genesFromSecondParent.length);
+        const newGenes = genesFromFirstParent
             .map((_, index) => {
-                let geneValue = first.genes[index];
+                let geneValue = genesFromFirstParent[index];
                 if (index > crossOverCutIndex) {
-                    geneValue = second.genes[index];
+                    geneValue = genesFromSecondParent[index];
                 }
                 if (Math.random() < this.mutationRate) {
-                    geneValue *= Math.random() * 2 - 1;
+                    geneValue = Math.random() * 2 - 1;
                 }
                 return geneValue;
             });
-        return { genes: genes, score: NaN }; //new borns don't have score yet
+        const layeredGenes = first.genes
+            .reduce((acc, layer) => {
+                const numberOfGenesInThisLayer = layer.length;
+                const genesInThisLayer = newGenes.splice(0, numberOfGenesInThisLayer);
+                acc.push(genesInThisLayer);
+                return acc;
+            }, [] as number[][]);
+        return { genes: layeredGenes, score: NaN }; //new borns don't have score yet
     }
 
     //No elitism. Everyone is valid <3. The ones that have best fitness value (normalized) have more probability to be chosen
