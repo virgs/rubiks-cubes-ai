@@ -24,18 +24,6 @@ export const WeightedAStarAlgorithmConfig = {
     heuristicWeight: 50,
 }
 
-export const NeuroEvolutionaryConfig = {
-    geneticData: {
-        mutationRate: 0.1,
-        populationPerGeneration: 100,
-        armageddonThreshold: 2000
-    },
-    neuralNetworkData: {
-        hiddenNeurons: [8, 8],
-        iterations: 20
-    }
-}
-
 export const GeneticAlgorithmConfig = {
     mutationRate: 0.1,
     populationPerGeneration: 100,
