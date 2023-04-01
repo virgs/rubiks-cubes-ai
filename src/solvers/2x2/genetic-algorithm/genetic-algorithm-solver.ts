@@ -21,8 +21,6 @@ enum Metrics {
     MEASUREMENT_OVERHEAD
 }
 
-//https://github.com/virgs/rubiks-cubes-ai/commit/1822cb83bb110fd0cf2bcb0287e777ca41da3e5b#diff-6a31530d4601b7ac8792f08f3e63e2ba973d625fdbf6486d705c014e0eeb8b44
-//https://robertovaccari.com/blog/2020_07_07_genetic_rubik/
 export class GeneticAlgorithmSolver implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
     private readonly initialState: RubiksCube;
@@ -81,7 +79,9 @@ export class GeneticAlgorithmSolver implements CubeSolver {
         return citizen.genes
             .reduce((acc, actionIndex) => {
                 if (this.measurer.add(Metrics[Metrics.CHECK_SOLUTION], () => acc.score === this.goalStateHash.length)) {
-                    console.log(cube.isSolved(), acc.score, this.goalStateHash.length, this.goalStateHash.split('').length)
+                    // new HumanTranslator().printCube(cube)
+                    // console.log(new HumanTranslator().translateRotations(acc.genes.map(action => this.actions[action])))
+                    // console.log(cube.isSolved(), acc.score, this.goalStateHash.length, this.goalStateHash.split('').length)
                     return acc;
                 } else {
                     cube = this.measurer.add(Metrics[Metrics.APPLYING_ROTATIONS], () => cube.rotateFace(this.actions[actionIndex]));
@@ -101,16 +101,17 @@ export class GeneticAlgorithmSolver implements CubeSolver {
     }
 
     private createSolution(solution: Chromosome): Solution {
-        new HumanTranslator().translateRotations(solution.genes.map(action => this.actions[action]))
-        const rotations = new RotationsTuner().tune(solution.genes.map(action => this.actions[action]));
+        // const rotations = new RotationsTuner().tune(solution.genes.map(action => this.actions[action]));
+        const rotations = solution.genes.map(action => this.actions[action])
         this.measurer.finish();
         return {
             rotations: rotations,
             totalTime: this.measurer.getTotalTime()!,
             data: {
+                allocatedMemory: GeneticAlgorithmConfig.populationPerGeneration * GeneticAlgorithmConfig.maxNumOfRotations,
                 armageddonCounter: this.geneticAlgorithm.getArmageddonCounter(),
+                generations: this.geneticAlgorithm.getGenerationsCounter(),
                 metrics: this.measurer.getData({ notMeasuredLabel: Metrics[Metrics.NOT_MEASURED],  measurementOverheadLabel: Metrics[Metrics.MEASUREMENT_OVERHEAD]}),
-                generations: this.geneticAlgorithm.getGenerationsCounter()
             }
         }
     }

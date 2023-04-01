@@ -121,7 +121,8 @@ export default defineComponent({
     const navBar = document.getElementById("nav-bar")!;
     const app = document.getElementById("app")!;
     container.style.height = (app.clientHeight - navBar.clientHeight) + "px";
-    container.style.width = navBar.clientWidth * 0.95 + "px";
+    container.style.width = '100%';
+
     world = new World(container);
     world.start();
     await this.reset();
@@ -145,13 +146,13 @@ export default defineComponent({
     window.addEventListener('keypress', async (event: KeyboardEvent) => {
       solverRenderers
         .forEach(solverRenderer => solverRenderer.keyInput(event));
-        console.log(event.key.toLowerCase())
+      console.log(event.key.toLowerCase())
       switch (event.key.toLowerCase()) {
         case 'enter': this.mainActionButtonEnabled && this.mainActionButtonClick()
           break;
-        case '\\': 
+        case '\\':
         case 'delete': !this.shuffling && this.reset()
-        break;
+          break;
         case ']': !this.shuffling && this.shuffle()
           break;
       }
@@ -417,8 +418,10 @@ export default defineComponent({
         <textarea rows="2" class="shuffle-moves" readonly v-model="shuffleMovesText"></textarea>
       </div>
     </div>
-    <div class="row m-0 p-0 w-100" style="background-color: transparent;">
-      <div id="scene-container" style="cursor: move; background-color: transparent;">
+    <div class="row mx-auto p-0 w-100" style="background-color: transparent; text-align: center;">
+      <div class="col-12">
+        <div id="scene-container" style="cursor: move; background-color: transparent; width: 100%; text-align: center;">
+        </div>
       </div>
     </div>
   </div>

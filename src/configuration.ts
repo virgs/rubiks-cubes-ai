@@ -1,6 +1,5 @@
 import { RubiksCube } from "./engine/rubiks-cube";
 import { BidirectionalBreadthFirstSearchSolver } from "./solvers/2x2/bidirectional-breadth-first-search-solver";
-import { BreadthFirstSearchSolver } from "./solvers/2x2/breadth-first-search-solver";
 import { InterativeDeepeningAStarSolver } from "./solvers/2x2/iterative-deepening-a-star-solver";
 import { InterativeDeepeningDepthFirstSearchSolver } from "./solvers/2x2/iterative-deepening-depth-first-search-solver";
 import { WeightedAStarSolver } from "./solvers/2x2/weighted-a-star-solver";
@@ -34,7 +33,7 @@ export const GeneticAlgorithmConfig = {
 
 export const Configuration = {
     metrics: {
-        enabled: false//import.meta.env.DEV
+        enabled: import.meta.env.DEV
     },
     world: {
         debug: false,
@@ -72,21 +71,15 @@ export const Configuration = {
                     info: `Interative-deepening depth-first-search. Brute force`
                 },
                 {
-                    key: 'BFS',
-                    instantiator: (configuration: string) => new BreadthFirstSearchSolver(new RubiksCube({ clone: configuration })),
-                    checked: false,
-                    info: `Breadth-first-search. Brute force`
-                },
-                {
                     key: 'IDA*',
                     instantiator: (configuration: string) => new InterativeDeepeningAStarSolver(new RubiksCube({ clone: configuration })),
-                    checked: true,
+                    checked: false,
                     info: `Interative-deepening A star. Uses number of misplaced stickers as heuristic.`
                 },
                 {
                     key: 'GA',
                     instantiator: (configuration: string) => new GeneticAlgorithmSolver(new RubiksCube({ clone: configuration })),
-                    checked: false,
+                    checked: true,
                     info: `Random movements improved by genetic algorithm. Uses number of misplaced stickers as fitness function. Population: ${GeneticAlgorithmConfig.populationPerGeneration}. Elitism ${GeneticAlgorithmConfig.elitism}.  Mutation rate ${GeneticAlgorithmConfig.mutationRate}. `
                 },
                 {

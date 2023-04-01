@@ -113,7 +113,7 @@ export class WeightedAStarSolver implements CubeSolver {
         this.measurer.add(Metrics[Metrics.BUILD_SOLUTION], () => {
             while (current && current.rotation) {
                 rotations.unshift(current.rotation);
-                current = this.visitedChecklist.get(current.parentHash);
+                current = this.visitedChecklist.get(current.parentHash!);
             }
         })
         this.measurer.finish();

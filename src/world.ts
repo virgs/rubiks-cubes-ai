@@ -128,6 +128,7 @@ export class World {
     }
 
     private adjustSize(container: HTMLElement): void {
+        console.log(container.clientWidth)
         this.camera.aspect = container.clientWidth / container.clientHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(container.clientWidth, container.clientHeight);

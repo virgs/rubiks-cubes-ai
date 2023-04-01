@@ -24,8 +24,7 @@ export class GeneticAlgorithm {
             return this.createNewPopulationFromScratch();
         }
         if (this.generationsCounter % GeneticAlgorithmConfig.armageddonThreshold === 0) {
-            console.log('Armageddon: ' + this.armageddonCounter);
-            ++this.armageddonCounter;
+            console.log('Armageddon: ' + ++this.armageddonCounter);
             return this.createNextGeneration();
         }
         //greater first
