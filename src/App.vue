@@ -327,7 +327,7 @@ export default defineComponent({
       const a = document.createElement("a");
       const file = new Blob([JSON.stringify(report)], { type: 'text/json' });
       a.href = URL.createObjectURL(file);
-      a.download = `report-${Date.now()}.json`;
+      a.download = `report-${report.totalTime}.json`;
       document.body.appendChild(a);
       a.click();
       URL.revokeObjectURL(a.href);

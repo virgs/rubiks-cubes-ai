@@ -1,0 +1,826 @@
+{
+  "timestamp": 1680466571062,
+  "shuffle": "30:  R    L'   B'   F    L'  2D   2F    D'   B    R'   D'   L   2F   2D    B   2U    L'  2R    L'  2B    U    L'   D'  ",
+  "solutions": [
+    {
+      "label": "2x2",
+      "key": "IDDFS",
+      "solution": {
+        "rotations": [
+          {
+            "side": 2,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 2,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 3,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 0,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 2,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 0,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 2,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 3,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 3,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 2,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          }
+        ],
+        "totalTime": 74381.09999996424,
+        "data": {
+          "metrics": [
+            {
+              "label": "PERFORM_ROTATION",
+              "totalTime": 31349.199998915195,
+              "totalRelativeTime": "42.14%",
+              "numOfCalls": 16373676,
+              "avgTimePerCall": 0.001914609767465485
+            },
+            {
+              "label": "ADD_CANDIDATE",
+              "totalTime": 5681.699995756149,
+              "totalRelativeTime": "7.63%",
+              "numOfCalls": 16373676,
+              "avgTimePerCall": 0.0003470021023841042
+            },
+            {
+              "label": "NOT_MEASURED",
+              "totalTime": 37350.20000529289,
+              "totalRelativeTime": "50.21%",
+              "numOfCalls": 0,
+              "avgTimePerCall": 37350.20000529289
+            }
+          ],
+          "visitedNodes": 16373655
+        }
+      }
+    },
+    {
+      "label": "2x2",
+      "key": "IDA*",
+      "solution": {
+        "rotations": [
+          {
+            "side": 2,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 2,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 3,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 0,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 2,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 0,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 2,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 3,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 3,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 2,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          }
+        ],
+        "totalTime": 28856.100000023842,
+        "data": {
+          "metrics": [
+            {
+              "label": "PERFORM_ROTATION",
+              "totalTime": 13061.300001859665,
+              "totalRelativeTime": "45.26%",
+              "numOfCalls": 4983816,
+              "avgTimePerCall": 0.002620742820734085
+            },
+            {
+              "label": "ADD_CANDIDATE",
+              "totalTime": 2342.8000059723854,
+              "totalRelativeTime": "8.11%",
+              "numOfCalls": 4983816,
+              "avgTimePerCall": 0.0004700815611917425
+            },
+            {
+              "label": "CYCLE_AVOIDANCE_CHECK",
+              "totalTime": 561.4000018239021,
+              "totalRelativeTime": "1.94%",
+              "numOfCalls": 1003344,
+              "avgTimePerCall": 0.0005595289370583789
+            },
+            {
+              "label": "NOT_MEASURED",
+              "totalTime": 12890.59999036789,
+              "totalRelativeTime": "44.67%",
+              "numOfCalls": 0,
+              "avgTimePerCall": 12890.59999036789
+            }
+          ],
+          "visitedNodes": 830637,
+          "iterations": [
+            {
+              "newNodesVisited": 7,
+              "bound": 1.4166666666666667
+            },
+            {
+              "newNodesVisited": 37,
+              "bound": 2.666666666666667
+            },
+            {
+              "newNodesVisited": 197,
+              "bound": 3.916666666666667
+            },
+            {
+              "newNodesVisited": 1347,
+              "bound": 5.166666666666667
+            },
+            {
+              "newNodesVisited": 14436,
+              "bound": 6.416666666666667
+            },
+            {
+              "newNodesVisited": 112810,
+              "bound": 7.666666666666667
+            },
+            {
+              "newNodesVisited": 584784,
+              "bound": 8.916666666666668
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "2x2",
+      "key": "GA",
+      "solution": {
+        "rotations": [
+          {
+            "side": 2,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 0,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 0,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 3,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 3,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 0,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 0,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 3,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 0,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 0,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 0,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 0,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 2,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 0,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 2,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 3,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 2,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 0,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 0,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 3,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 2,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 3,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 2,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 0,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 2,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 2,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          }
+        ],
+        "totalTime": 150583,
+        "data": {
+          "armageddonCounter": 1,
+          "generations": 8889,
+          "metrics": [
+            {
+              "label": "CHECK_SOLUTION",
+              "totalTime": 8157.500002503395,
+              "totalRelativeTime": "5.41%",
+              "numOfCalls": 26661870,
+              "avgTimePerCall": 0.00030596128487999513
+            },
+            {
+              "label": "APPLYING_ROTATIONS",
+              "totalTime": 46513.30003029108,
+              "totalRelativeTime": "30.88%",
+              "numOfCalls": 26661866,
+              "avgTimePerCall": 0.0017445628160568762
+            },
+            {
+              "label": "COMPUTE_GENE",
+              "totalTime": 8399.19999653101,
+              "totalRelativeTime": "5.57%",
+              "numOfCalls": 26661866,
+              "avgTimePerCall": 0.00031502671255384036
+            },
+            {
+              "label": "CALCULATE_CITIZEN_SCORE",
+              "totalTime": 16206.300020694733,
+              "totalRelativeTime": "10.76%",
+              "numOfCalls": 26661866,
+              "avgTimePerCall": 0.0006078456781942694
+            },
+            {
+              "label": "AGGREGATE_CURRENT_GENERATION",
+              "totalTime": 287.8999936580658,
+              "totalRelativeTime": "0.19%",
+              "numOfCalls": 888728,
+              "avgTimePerCall": 0.00032394612711433173
+            },
+            {
+              "label": "CREATE_NEXT_GENERATION",
+              "totalTime": 889.7000004053116,
+              "totalRelativeTime": "0.59%",
+              "numOfCalls": 8887,
+              "avgTimePerCall": 0.1001125239569384
+            },
+            {
+              "label": "MEASUREMENT_OVERHEAD",
+              "totalTime": 34949.79999756813,
+              "totalRelativeTime": "23.2%",
+              "numOfCalls": 0,
+              "avgTimePerCall": 34949.79999756813
+            },
+            {
+              "label": "NOT_MEASURED",
+              "totalTime": 35179.299958348274,
+              "totalRelativeTime": "23.36%",
+              "numOfCalls": 0,
+              "avgTimePerCall": 35179.299958348274
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "2x2",
+      "key": "SA",
+      "solution": {
+        "rotations": [
+          {
+            "side": 2,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 0,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 3,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 3,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 0,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 0,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 2,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 3,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 2,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 0,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 0,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 3,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          }
+        ],
+        "totalTime": 24911.600000023842,
+        "data": {
+          "metrics": [
+            {
+              "label": "CHECK_SOLUTION",
+              "totalTime": 1326.2000024318695,
+              "totalRelativeTime": "5.32%",
+              "numOfCalls": 2858430,
+              "avgTimePerCall": 0.00046396098642676907
+            },
+            {
+              "label": "APPLYING_ROTATIONS",
+              "totalTime": 7620.800001144409,
+              "totalRelativeTime": "30.59%",
+              "numOfCalls": 2858412,
+              "avgTimePerCall": 0.0026660957206814167
+            },
+            {
+              "label": "COMPUTE_GENE",
+              "totalTime": 1367.799995481968,
+              "totalRelativeTime": "5.49%",
+              "numOfCalls": 2858412,
+              "avgTimePerCall": 0.00047851744097140926
+            },
+            {
+              "label": "CALCULATE_CITIZEN_SCORE",
+              "totalTime": 2812.5000014305115,
+              "totalRelativeTime": "11.28%",
+              "numOfCalls": 2858412,
+              "avgTimePerCall": 0.0009839379352698321
+            },
+            {
+              "label": "AGGREGATE_CURRENT_GENERATION",
+              "totalTime": 48.900000512599945,
+              "totalRelativeTime": "0.19%",
+              "numOfCalls": 95280,
+              "avgTimePerCall": 0.0005132241867401337
+            },
+            {
+              "label": "CREATE_NEXT_GENERATION",
+              "totalTime": 154.90000015497208,
+              "totalRelativeTime": "0.62%",
+              "numOfCalls": 952,
+              "avgTimePerCall": 0.16271008419639924
+            },
+            {
+              "label": "MEASUREMENT_OVERHEAD",
+              "totalTime": 5776.79999768734,
+              "totalRelativeTime": "23.18%",
+              "numOfCalls": 0,
+              "avgTimePerCall": 5776.79999768734
+            },
+            {
+              "label": "NOT_MEASURED",
+              "totalTime": 5803.700001180172,
+              "totalRelativeTime": "23.29%",
+              "numOfCalls": 0,
+              "avgTimePerCall": 5803.700001180172
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "2x2",
+      "key": "WA*",
+      "solution": {
+        "rotations": [
+          {
+            "side": 3,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 2,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 0,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 2,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 0,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 3,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 2,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 2,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 3,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 3,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 2,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 3,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 2,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 3,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          }
+        ],
+        "totalTime": 3399.300000011921,
+        "data": {
+          "metrics": [
+            {
+              "label": "ITERATIONS_COUNTER_INCREMENT",
+              "totalTime": 47.39999955892563,
+              "totalRelativeTime": "1.39%",
+              "numOfCalls": 94626,
+              "avgTimePerCall": 0.0005009194043806736
+            },
+            {
+              "label": "ABORTED_VERIFICATION",
+              "totalTime": 21.999999821186066,
+              "totalRelativeTime": "0.64%",
+              "numOfCalls": 47313,
+              "avgTimePerCall": 0.00046498847718779335
+            },
+            {
+              "label": "POP_CANDIDATE",
+              "totalTime": 136.00000029802322,
+              "totalRelativeTime": "4%",
+              "numOfCalls": 47313,
+              "avgTimePerCall": 0.0028744742522778775
+            },
+            {
+              "label": "VISISTED_LIST_CHECK",
+              "totalTime": 252.10000002384186,
+              "totalRelativeTime": "7.41%",
+              "numOfCalls": 300045,
+              "avgTimePerCall": 0.0008402073023174585
+            },
+            {
+              "label": "CHECK_SOLUTION",
+              "totalTime": 18.500000059604645,
+              "totalRelativeTime": "0.54%",
+              "numOfCalls": 42123,
+              "avgTimePerCall": 0.0004391899926312144
+            },
+            {
+              "label": "ADD_TO_VISISTED_LIST_CHECK",
+              "totalTime": 30.70000022649765,
+              "totalRelativeTime": "0.9%",
+              "numOfCalls": 42122,
+              "avgTimePerCall": 0.0007288352933502124
+            },
+            {
+              "label": "PERFORM_ROTATION",
+              "totalTime": 878.1000001430511,
+              "totalRelativeTime": "25.83%",
+              "numOfCalls": 252732,
+              "avgTimePerCall": 0.0034744314140791478
+            },
+            {
+              "label": "HEURISTIC_CALCULATION",
+              "totalTime": 311.4000009894371,
+              "totalRelativeTime": "9.16%",
+              "numOfCalls": 252732,
+              "avgTimePerCall": 0.0012321352301625324
+            },
+            {
+              "label": "ADD_CANDIDATE",
+              "totalTime": 180.89999973773956,
+              "totalRelativeTime": "5.32%",
+              "numOfCalls": 201875,
+              "avgTimePerCall": 0.0008960990699083075
+            },
+            {
+              "label": "BUILD_SOLUTION",
+              "totalTime": 0,
+              "totalRelativeTime": "0%",
+              "numOfCalls": 1,
+              "avgTimePerCall": 0
+            },
+            {
+              "label": "MEASUREMENT_OVERHEAD",
+              "totalTime": 804.0000008940697,
+              "totalRelativeTime": "23.65%",
+              "numOfCalls": 0,
+              "avgTimePerCall": 804.0000008940697
+            },
+            {
+              "label": "NOT_MEASURED",
+              "totalTime": 718.1999982595444,
+              "totalRelativeTime": "21.12%",
+              "numOfCalls": 0,
+              "avgTimePerCall": 718.1999982595444
+            }
+          ],
+          "visitedNodes": 47313,
+          "differentNodes": 42123
+        }
+      }
+    },
+    {
+      "label": "2x2",
+      "key": "BiBFS",
+      "solution": {
+        "rotations": [
+          {
+            "side": 4,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 4,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 1,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 5,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 4,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 1,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 5,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          },
+          {
+            "side": 4,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 4,
+            "counterClockwiseDirection": false,
+            "layer": 0
+          },
+          {
+            "side": 5,
+            "counterClockwiseDirection": true,
+            "layer": 0
+          }
+        ],
+        "totalTime": 228.69999998807907,
+        "data": {
+          "metrics": [
+            {
+              "label": "POP_CANDIDATE",
+              "totalTime": 2.300000011920929,
+              "totalRelativeTime": "1%",
+              "numOfCalls": 5854,
+              "avgTimePerCall": 0.0003928937499010811
+            },
+            {
+              "label": "VISISTED_LIST_CHECK",
+              "totalTime": 23.000000298023224,
+              "totalRelativeTime": "10.05%",
+              "numOfCalls": 41948,
+              "avgTimePerCall": 0.0005482978997335564
+            },
+            {
+              "label": "ADD_TO_VISISTED_LIST_CHECK",
+              "totalTime": 2.3000001311302185,
+              "totalRelativeTime": "1%",
+              "numOfCalls": 5156,
+              "avgTimePerCall": 0.0004460822597226956
+            },
+            {
+              "label": "PERFORM_ROTATION",
+              "totalTime": 87.09999936819077,
+              "totalRelativeTime": "38.08%",
+              "numOfCalls": 30936,
+              "avgTimePerCall": 0.0028154900235386206
+            },
+            {
+              "label": "ADD_CANDIDATE",
+              "totalTime": 16.100000083446503,
+              "totalRelativeTime": "7.03%",
+              "numOfCalls": 25006,
+              "avgTimePerCall": 0.0006438454804225587
+            },
+            {
+              "label": "MEASUREMENT_OVERHEAD",
+              "totalTime": 49.299999952316284,
+              "totalRelativeTime": "21.55%",
+              "numOfCalls": 0,
+              "avgTimePerCall": 49.299999952316284
+            },
+            {
+              "label": "NOT_MEASURED",
+              "totalTime": 48.60000014305115,
+              "totalRelativeTime": "21.25%",
+              "numOfCalls": 0,
+              "avgTimePerCall": 48.60000014305115
+            }
+          ],
+          "iterations": 2579,
+          "visitedNodes": 2579
+        }
+      }
+    }
+  ]
+}

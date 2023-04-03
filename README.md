@@ -1,119 +1,127 @@
-# poket-cube
+# Rubiks cubes AI
 
-1. Study 3D
-1. AI
-    - Neuro evolutionary algorithms
-1. bitwise old times fun stuff
-1. Have fun 
+This project allows you to play/solve a Rubik's cube inside a program. By using the buttons and keys, you can rotate the cube and change its configuration. Once you click on solve the algotithms will run.
 
-Show average time table. Tell the distinctions of each method. Show gifs.
-Explain they compete for CPU resources
+![screenshot](./docs/screenshot.png)
 
-# cite these:
-https://deepcube.igb.uci.edu/
+### Keys
+Twist the faces of the cube using these keys: **W**, **A**, **S**, **D**, **F**, and **X** for up, left, front, right, back, and down twists, respectively. Hold **Shift** for prime (counter-clockwise) moves. Use any number key to change the layer on which the rotation will perform. Bear in mind that the layer rotation is limited by the cube dimension (there is no way to rotate a middle layer in a 2x2 cube, since it has no middle layer, for instance).
 
-# URL Query params
-/rubiks-cubes-ai?cube=0&moves=F'  2U    B   2D    F'   R'   D'   U    L'   B    L    F    L'   F'   D   2U    L'
-- cube
-- moves
+Press **\]** to quickly scramble the cube and **\\** to restore its original configuration.
 
-# Characteristics of a Pocket Cube
-There is plenty of prior art in this space, and thanks to some key characteristics of a 2x2x2 Pocket Cube, optimally solving a given cube state is not too computationally intensive. The Pocket Cube consists of 8 cubies, each with three colour stickers on them. Any permutation of the cubies is possible, with seven of these being able to be independently oriented in three ways. If we fix one of these cubies to a chosen position and orientation (essential deeming it to be in a solved state); we can permit any permutation of the remaining seven cubies and any orientation of six cubies. This results in their only being 7! * 3^6 = 3674160 possible unique states.
+### Mouse
+Use the mouse left button, right button and scroll to handle the camera.
 
 
-# Characteristics of a Rubik Cube
-As documented in my previous post, a Pocket Cube has a couple of key characteristics which make it easier to construct a solver using conventional Graph searching algorithms, with minimal pruning or heuristics required. However, in the case of a 3x3x3 Rubik Cube this is not the case, thanks in large part to the addition of a centre cubie - the two no longer share the same optimisations that can be performed. The cube itself has 43 quintillion, 252 quadrillion, 3 trillion, 274 billion, 489 million, 856 thousand different valid states, which in itself makes it computational infeasible to visit each possible move sequence in an adequate time. However, research has been conducted to prove that God’s Number for a Rubik’s Cube is twenty - that proving that any initial state can be solved in twenty moves or less.
+#### --asdasd Add 7x7 gif
 
---
+### Goals
+This project was created for fun and studying purposes. These were the mains goals behind it:
 
-### A star
-I tried different herustics such as:
-1. Average distance of every cubelet to it's final hipothetycal position.
-1. Average number of different colors of every side
+1. Have fun.
+1. Study 3D in browser environments using [threejs](https://threejs.org/)
+1. Solve a Rubiks cube without any human supervised technique:
+    - No previous set of rotations
+    - No precomputed databases
+    This characteristic pretty much makes it impossible to solve any other cube than the pocket one (2x2x2). Hence, every other cube is displayed only for recreationsl purposes.
+1. Experimenting with different search algorithms and compare them. Namely:
+    - **[Interative-deepening depth-first-search](./src/solvers/2x2/iterative-deepening-depth-first-search-solver.ts)**: It doesn't keep a list of already visited so it's very efficient memory-wise. However it revisits same nodes several times. Given enough time, guaranteed to find the optimal answer.
+    - **[Interative-deepening A star](./src/solvers/2x2/iterative-deepening-a-star-solver.ts)**: In short, IDA* works similarly like a regular iterative deepening search, but instead of exploring every node, it utilizes heuristics to prune some branches in the search three. As such it is very memory efficient and it provides an optimal solution as long as the heuristics is admissible. IDA* search uses heuristics to prune branches which are guaranteed to lack a solution within the allowed depth. As heuristics calculation made with pattern databases is not consistent, it is possible to have a situation where IDA* will explore the subtree of what will appear to be a good node, too much. That will happen when the node has an excessively underestimated heuristics value. It doesn't keep a list of already visited so it's very efficient memory-wise. However it revisits same nodes several times. Given enough time, guaranteed to find the optimal answer.In fact, it has no guarantee at all that a solution will be found. Thus, if it takes too long to find it, it restarts from the beginning.
+    - **[Simulated Annealing](./src/solvers/2x2/simulated-annealing/simulated-annealing-solver.ts)**: Physics-based metaheuristic. given a pocket cube current status, generate a set of a list of random actions and, using Genetic Algorithm, slowly improve them until a single list of actions that solve the cube is found. It uses the number of misplaced stickers as fitness function. Often times find redundant moves since it doesnt care about irrelevant twists or twists that cancel each other. Heavily based on luck. Would not be efficient for larger cube sizes. It would take forever. 
+    Random movements improved by simulated annealing algorithm. Uses number of misplaced stickers as a measure of a solution candidate result. Population: ${SimulatedAnnealingConfig.population}. Initial temperature: ${SimulatedAnnealingConfig.initialTemperature}. Temperature decrease rate: ${SimulatedAnnealingConfig.temperatureDecreaseRate}` Non-deterministic algorithm, meaning that it won't get the same result in every run. In fact, it has no guarantee at all that a solution will be found. Thus, if it takes too long to find it, it restarts from the beginning. Previous knowledge is needed. Since I know the God's number for this dimension is 14, the candidates have to be a solution rotations set greater than this number. The greater, the faster and the better time considering but, evidently, worse for spacial constrains. That's why I set this number to 30. You can see it has some redundant moves.
+    - **[Genetic Algorithm](./src/solvers/2x2/genetic-algorithm/genetic-algorithm.ts)**: Evolutionary-based  metaheuristic. given a pocket cube current status, generate a set of a list of random actions and, using Genetic Algorithm, slowly improve them until a single list of actions that solve the cube is found. It uses the number of misplaced stickers as fitness function. Often times find redundant moves since it doesnt care about irrelevant twists or twists that cancel each other. Heavily based on luck. Would not be efficient for larger cube sizes. It would take forever.  Non-deterministic algorithm, meaning that it won't get the same result in every run. Previous knowledge is needed. Since I know the God's number for this dimension is 14, the candidates have to be a solution rotations set greater than this number. The greater, the faster and the better time considering but, evidently, worse for spacial constrains. That's why I set this number to 30. You can see it has some redundant moves.
+    - **[Weighted A star](./src/solvers/2x2/weighted-a-star-solver.ts)**: Keeps a list of visited nodes and not efficient for larger cube sizes. No reexploration. Which means that, if, while it's searching for the final path, it finds a better path to a already visited node, it doesn't reanalyze it and its children path. In order to avoid cycles and reentrance, it keeps a list of every visited node. So it can easily fills any machine memory if it's used for larger scopes such as rubiks cubes (any dimension bigger than 2x2, as a matter of fact)
+    - **[Bidirectional breadth-first-search](./src/solvers/2x2/bidirectional-breadth-first-search-solver.ts)**: As we know the desired goal state and the initial cube state we can employ two simultaneous Breath First Searches - one going forward from the initial state and one backward from the goal state, stopping when they meet. In doing this we provide a means to restrict the branching which occurs when the search is being performed, into seperate two sub-graphs - dramatically reducing the amount of exploration required.
+    Suppose if the branching factor of the tree is b and distance of the goal vertex from the source is d, then the trivial Breath First Search complexity would be O(bd). On the other hand, if we execute two search operations then the complexity would be O(bd/2) for each search, with a total complexity of O(bd/2 + bd/2) - which is far less than O(bd).  In order to avoid cycles and reentrance, it keeps a list of every visited node. So it can easily fills any machine memory if it's used for larger scopes such as rubiks cubes (any dimension bigger than 2x2, as a matter of fact)
+    Keeps a list of visited nodes and not efficient for larger cube sizes. Very effective for small scopes. Deterministic, doesn't use any heuristic function. So doesn't require any prior information rather than knowing if the cube is in a solved state, but useless in larger scopes (aka bigger cubes) due to its memory limitations.
 
-To ensure that we fix the given ‘solved’ cubie, we are only required to implement three of the possible six moves, these being Up, Right and Front in my case - resulting in the Down-Bottom-Left DBL cubie staying in-place at all times. In fixing a single cubie we have managed to reduce the number of valid states, and as such employing a convention Graph search algorithm over the search space provides us with a efficent means to reach the optimal solution move sequence.
-
-Copy the readme from https://github.com/achmand/Solving-2x2-Rubiks-Cube, https://github.com/benbotto/rubiks-cube-cracker, and https://github.com/lukapopijac/pocket-cube-optimal-solver and adapt them
-
-A cube is represented by an array of colors (26). That way is easier to clone a clube, all we have to do is to copy the array.
-on the other hand... The rotation operations and cubelets mapping (show code) are super annoying since it includes some manual mapping.
-
-The abstraction allows higher order cubes.. The solvers wouldn't work because they are stricted attached to this dimension cube. It would be really easy to change it.
-
-```
-    UP    LEFT  FRONT RIGHT BACK  DOWN  
-    ----  ----  ----  ----  ----  ----  
-    0000  1111  0000  1111  0000  1111
-    0000  0000  1111  1111  0000  0000
-    0000  0000  0000  0000  1111  1111
-    ----  ----  ----  ----  ----  ----  
-    YYYY  OOOO  BBBB  RRRR  GGGG  WWWW
-
-```
-
-```
-          UP        
-          Y ₀  Y ₁  
-          Y ₃  Y ₂  
-LEFT      FRONT     RIGHT     BACK      
-O ₄  O ₅  B ₈  B ₉  R₁₂  R₁₃  G₁₆  G₁₇  
-O ₇  O ₆  B₁₁  B₁₀  R₁₅  R₁₄  G₁₉  G₁₈  
-          DOWN      
-          W₂₀  W₂₁  
-          W₂₃  W₂₂  
-```
-
-Meaning...
-
-```
- F    L'   R   2U'   F'   D    F   
-2D    U'   B    F   2U    F'  2R
- U'  2L'   R'   D'  2R    F    F'
-2D'   B    L'   F'   D    R'   U'
- R'  2F   2D'   L'   B'  2F'  2U
-  ```
-
- Meaning first layer move...
+----
 
 
-God's Number for the 2x2 puzzle (having only 3,674,160 different positions) has been proven to be 11 moves using the half turn metric, or 14 using the quarter turn metric (half turns count as 2 rotations).
+## Rubik's cube twist notation
+Rubik's cube's standard twist notation is: U, L, F, R, B and D desribe 90-degree clockwise twists of the up, left, front, right, back, and down faces, respectively. Adding an apostrophe indicates a counter-clockwise twist, so U' means twist the up face 90-degrees counter-clockwise. Prefixing a 2 to a move indicates a double 90-degree twist, or a 180-degree twist; 2F means to twist the front face twice. Larger cubes require an additional notation to describe intern layers notation. We achieve this by using subscript letters (₁₂₃...₈₉) to identify wchich layer was twisted.
 
-Given that for a pocket cube, the God's number is 14. You'll find often times that the path found by these algorithms are not optimal.
- BFS and A* don't find the best answer because they don't look for the best answer to solve the cube. They look for the best answer to solve the cube with a given configuration. As long as one predefined cubelet remains static (usually, the bottom-left-back one). The reason behind it is to keep the branching factor smaller. You see, in this particular cube, you don't have to move all the sides (6) both directions. If the L move basically consists of a R' move and a new cube orientation (which is not a move, technically), you don't need to do the L move at all. The same applies for the other 2 axis. So, instead of having a branching factor of 2\*6, I make it 2\*3. I could even claim that R' is the same 3R, as in fact it is. It would make the branching factor 3\*1, so even smaller. But the solutions found would be even farther from the optimal one,
+## Rubik's cube representation
+There are several ways to represent a Rubik's cube as an object structure. Each one having having its pros and cons and differ from each other in characteristics as complexity, memory usage and manipulation.
+
+The one I chose represents all cubes with an unidimensional array. For instance, a solved pocket cube with the top and front faces being yellow and blue respectively is stored as:
+
+The formula: `(cube dimension * cube dimension) * 6`
+So, a 2x2 cube is represented as a 24 sized string, where every index contains the initial of the color it represents.
 
 
-# Using a Bidirectional search
-As we know the desired goal state and the initial cube state we can employ two simultaneous Breath First Searches - one going forward from the initial state and one backward from the goal state, stopping when they meet. In doing this we provide a means to restrict the branching which occurs when the search is being performed, into seperate two sub-graphs - dramatically reducing the amount of exploration required.
+So the pocket cube is the string: `YYYYOOOOBBBBRRRRGGGGWWWW`  
+Distributed like this:
+![pocket-cube-representation](./docs/2x2ss.png)
 
-> Suppose if the branching factor of the tree is b and distance of the goal vertex from the source is d, then the trivial Breath First Search complexity would be O(bd). On the other hand, if we execute two search operations then the complexity would be O(bd/2) for each search, with a total complexity of O(bd/2 + bd/2) - which is far less than O(bd).
+The regular one, also having the top and front faces being yellow and blue respectively is:
+So the pocket cube is the string: `YYYYYYYYYOOOOOOOOOBBBBBBBBBRRRRRRRRRGGGGGGGGGWWWWWWWWW`  
+Distributed like this:
 
-# Visualising the Solution
-Now that I was able to optimally solve a given cube state in the Browser via WASM, next was to provide a pleasing visualisation which could be followed along using a real Pocket Cube. For this I decided to build the client in Vue using Three.js and TypeScript. I have had little experience till now using Three.js, but thought it would be interesting to explore constructing such models in a declarative manner using React.
+![rubiks-cube-representation](./docs/3x3ss.png)
 
-I found this to be a very rewarding experience, using a Facelet representation of the cube state to communicate between the client and the solver. The cube component itself took adavanteg of React Hooks to manage the state transitions and rotation animations.
+And, ultimately, just as a curiosity: `YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW`  
 
-# Reinforcement Learning
-Reinforcement learning (RL) is an area of machine learning where an agent learns how to behave
-in an environment by performing an action and seeing the rewards. Over the past several years, RL
-has sparked interest, as it has been applied to a wide array of fields [5, 1, 2]. While RL has been
-successful in many use cases, it depends on environments in which it can obtain informative rewards
-as it takes a certain policy. In domains with very sparse rewards, RL algorithms do not perform nearly
-as well [8]. Such domains include short answer exam problems, and combination puzzles such as the
-Rubik’s Cube, which is why we were interested in exploring novel RL approaches to solving such
-problems.
+![rubiks-cube-representation](./docs/7x7ss.png)
 
-# Related Work
-Deep Reinforcement Learning (DRL) broadly describes the use of deep neural networks to solve
-RL problems, and often involves training a model to predict the value function for a (state, action)
-pair [7]. Deep reinforcement learning techniques have been successful with such games as chess
-and Go [12, 13], and there have been recent efforts to use adapted versions of these techniques to
-solve problems with sparser reward spaces. While many games have extremely large state spaces,
-the Rubik’s cube problem is unique because of its sparse reward space. The random turns of a cube
-are difficult to evaluate as rewards because of the uncertainty in judging whether or not the new
-configuration is closer to a solution.
-Our work for this paper involved a modified implementation of McAleer et al.’s paper [8] that first
-solved the Rubik’s cube problem by augmenting a Monte Carlo Tree Search (MCTS) algorithm
-with a trained neural network. MCTS is an online, heuristic search algorithm for decision making
-processes that has enjoyed great success in game AI [4]. There are many variants of MCTS [3], two
-of which we implement in this paper. It builds upon the ideas of Alpha Go Zero [14], whose neural
-network learns by generating its own training data (i.e., playing simulated games of Go against itself).
+Not the most efficient way, but it gets the job done.
+
+The rotation is then done by changing colors in the array with each other. Obviously, there is a pattern that must be followed to achieve this. Just keep in mind that the colors are changed the index stay the same. Rotation can be made to each face on two directions clockwise and anti-clockwise.
+So basically, when a rotation is performed the colors inside the array are changed accordingly.
+
+If every tile of each face have a matching color, the cube is solved.
+
+## Pocket Cube technicalities (2x2x2)
+There is plenty of prior art in this space, and thanks to some key characteristics of a 2x2x2 Pocket Cube, optimally solving a given cube state is not too computationally intensive. The Pocket Cube consists of 8 cubies/cubelet, each with three colour stickers on them, resulting in a 24 total stickers. Any permutation of the cubies is possible, with seven of these being able to be independently oriented in three ways. If we fix one of these cubies to a chosen position and orientation (essential deeming it to be in a solved state); we can permit any permutation of the remaining seven cubies and any orientation of six cubies. This results in their only being 7! * 3⁶ = 3,674,160 possible unique states. Which, in itself, makes it computational feasible to visit each possible move sequence in an adequate time by any modern computer configuration.
+
+    
+The cube consists of 8 smaller cubies, each one with 3 color stickers on it. Any permutation of the cubies is possible, and 7 of them can be independently oriented in three ways. If we fix one cubie to have a chosen position and orientation, we can allow any permutation of the remaining 7 cubies and any orientation of 6 cubies (the orientation of the first cubie is fixed, 6 cubies can be independently oriented, and the orientation of the last one is determined by the other). The number of possible states is:
+
+        3,674,160
+
+
+This is a fairly small amount of states, and it can be easily saved in a computer memory, in which case the search algorithm becomes trivial. As the purpose of this experiment was to try different search algorithms, the amount of memory was intentionally limited.
+
+In case of a standard Rubik's cube, the number of possible states is vastly larger, and enumerating all the states is infeasible.
+
+## General solution approach
+In this particular cube, you don't have to move all the sides (6) both directions. If the L move basically consists of a R' move and a new cube orientation (which is not a move, technically), you don't need to do the L move at all. The same applies for the other 2 axis. So, instead of having a branching factor of 2⁶, I make it 2³. Whenever possible and taking advantage of the pocket cube especific characteristics, most solutions fix a a deliberately chosen cubelet. By doing that one can solve a  pocket cube rotating only three of the six faces, these being Up, Right and Front - in my case - resulting in the Down-Bottom-Left DBL cubelet staying in-place at all times. As long as one predefined cubelet remains static (bottom-left-back one) we keep the branching factor small and, as such, employing a convention Graph search algorithm over the search space provides us with a efficent means to reach a solution move sequence.
+
+Given that, for a pocket cube, the God's number using quarter-turn metric is **14**. You'll often find times that the path found by these algorithms are not optimal.
+ Namely Genetic Algorithm and WA* don't find the best answer because they don't look for the best answer to solve the cube. They look for the the fattest one to answer to solve the cube with a given configuration and some non-deterministic values. I could even claim that R' is the same 3R, as in fact it is. It would make the branching factor 3¹, so even smaller. But the solutions found would be even farther from the optimal one,
+
+## Report
+
+15 executions of a pocket cubes scrambled with 30 random moves. Worth noting that Every alg runs simultaneously in the same machine in a different thread competing for the same resources and once one algorithm finishes, the other ones have less resource competition.
+Other than that, in order to theses numbers get gathered, some flags and procedures were added/enable to the code which, ironically, make them run a bit slower.
+
+
+### Machine configuration:
+
+- MacOS Ventura 13.2.1
+- Model Name:	MacBook Air
+- Processor:
+    - Chipset Model:	Apple M2
+    - Type:	GPU
+    - Total Number of Cores:	10
+    - Vendor:	Apple (0x106b)
+    - Metal Support:	Metal 3
+    - Total Number of Cores:	8 (4 performance and 4 efficiency)
+- Memory:	8 GB (LPDDR5)
+- Storage: 500GB SSD
+
+
+
+Once you click on solve the alogirthms will run individually in a different thread each, competing for the same machine resources.
+
+
+
+| Algorithm | Time average (max, min, std. dev) | Nodes visited average (max, std. dev) | Optimal solution rate | Solution compared to optimal avg  (max, std. dev)  | Spacial complexity |
+|-----|-----|-----|-----|-----|-----|
+| IDDFS | | | 100% | 1 (0) | Constant |
+| IDA* | | | 100% | 1 (0) | Constant |
+| GA | | | | | Constant |
+| SA | | | | | Constant |
+| WA* | | | | | Exponential |
+| BiBFS | | |  100% | 1 (0) | Exponential |
+
