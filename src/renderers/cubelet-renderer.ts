@@ -13,12 +13,12 @@ type Config = {
 };
 
 export class CubeletRenderer {
-    private static readonly stickerlessColor = 0x0A1B2C;
-    private static readonly gap: number = .05;
+    private static readonly stickerlessColor = 0x0A0B0C;
     private readonly cubeletMesh: Mesh;
 
     public constructor(config: Config) {
-        const size = config.sideSize - CubeletRenderer.gap;
+        const gap = config.cubeDimension * 0.005;
+        const size = config.sideSize - gap;
         const geometry = new RoundedBoxGeometry(size, size, size, 3, 0.1);
         let position: Vector3 = this.getPositionFromCubelet(config);
         position.subScalar((config.cubeDimension - 1) * .5);

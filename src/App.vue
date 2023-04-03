@@ -17,6 +17,7 @@ import { getAllSides } from "./constants/sides";
 import * as Tween from '@tweenjs/tween.js'
 import type { RubiksCube } from './engine/rubiks-cube';
 import { UrlQueryHandler } from './url-query-handler';
+import type { Solution } from './solvers/cube-solver';
 
 //They have to be non reactive
 const urlQueryHandler = new UrlQueryHandler();
@@ -146,7 +147,6 @@ export default defineComponent({
     window.addEventListener('keypress', async (event: KeyboardEvent) => {
       solverRenderers
         .forEach(solverRenderer => solverRenderer.keyInput(event));
-      console.log(event.key.toLowerCase())
       switch (event.key.toLowerCase()) {
         case 'enter': this.mainActionButtonEnabled && this.mainActionButtonClick()
           break;
@@ -299,11 +299,22 @@ export default defineComponent({
       const interval = setInterval(() => this.timer = Date.now() - startTime, 100);
       try {
         const results = await Promise.allSettled(solverRenderers
-          .map(solver => solver.start()));
+          .map(solver => solver.solve()));
         results
           .filter(result => result.status === 'rejected')
           .map(result => result as PromiseRejectedResult)
           .forEach(result => console.log(result.reason))
+        const solutions = results
+          .filter(result => result.status === 'fulfilled')
+          .map(result => (result as PromiseFulfilledResult<any>).value)
+        const report = {
+          timestamp: Date.now(),
+          shuffle: this.shuffleMovesText,
+          solutions: solutions
+        }
+        if (true || urlQueryHandler.getParameterByName('generateReport', false)) {
+          this.saveReport(report);
+        }
       } catch (e) {
         console.log(e)
       }
@@ -311,6 +322,16 @@ export default defineComponent({
       this.shuffled = false;
       this.solving = false;
       clearInterval(interval);
+    },
+    saveReport(report: any) {
+      const a = document.createElement("a");
+      const file = new Blob([JSON.stringify(report)], { type: 'text/json' });
+      a.href = URL.createObjectURL(file);
+      a.download = `report-${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(a.href);
+      document.body.removeChild(a);
     },
     updateUrl() {
       let afterMovesNumber = this.shuffleMovesText;

@@ -36,11 +36,12 @@ export class SolverRenderer {
     private readonly movesList: FaceRotation[];
     private readonly interval: number;
     private readonly solversMapWorker: Worker;
-    private findSolutionResolve?: (value: void) => void;
+    private findSolutionResolve?: (value: any) => void;
     private findSolutionReject?: (reason?: any) => void;
     private solutionsText?: Mesh;
     private rotatingFace: boolean;
     private terminated: boolean;
+    private result?: {key: string, label: string, solution: Solution};
 
     public constructor(config: SolverRendererConfig) {
         this.config = config;
@@ -69,7 +70,7 @@ export class SolverRenderer {
             if (this.movesAnimationsQueue.length > 0 && !this.rotatingFace) {
                 this.performRotations();
                 if (this.terminated) {
-                    this.findSolutionResolve!();
+                    this.findSolutionResolve!(this.result!);
                 }
             }
         }, 100);
@@ -88,7 +89,7 @@ export class SolverRenderer {
         } as SolverWorkerRequest);
     }
 
-    public async start(): Promise<void> {
+    public async solve(): Promise<Solution> {
         return new Promise(async (resolve, reject) => {
             this.findSolutionResolve = resolve;
             this.findSolutionReject = reject;
@@ -97,18 +98,18 @@ export class SolverRenderer {
             const onMessage = async (event: MessageEvent<SolverWorkerResponse>) => {
                 if (!this.terminated) {
                     if (event.data.solution) {
-                        const solution = JSON.parse(event.data.solution!) as Solution;
-                        console.log(this.config.label, this.config.key, solution)
-                        if (!solution.data.human) {
-                            this.movesAnimationsQueue.push(...solution.rotations);
+                        this.result = {label: this.config.label, key: this.config.key, solution: JSON.parse(event.data.solution!) as Solution};
+                        console.log(this.result);
+                        if (!this.result.solution.data.human) {
+                            this.movesAnimationsQueue.push(...this.result.solution.rotations);
                         }
-                        const ms = Math.trunc(solution.totalTime * 1000) / 1000;
+                        const ms = Math.trunc(this.result.solution.totalTime * 1000) / 1000;
                         let time = ms + 'ms';
                         if (ms > 1000) {
                             time = (Math.trunc((ms * 1000) / 1000) / 1000) + 's';
                         }
                         let text = '     Total time: ' + time + '\n';
-                        text += new HumanTranslator().translateRotations(solution.rotations, { lineBreak: 5, showNumberOfMoves: true });
+                        text += new HumanTranslator().translateRotations(this.result.solution.rotations, { lineBreak: 5, showNumberOfMoves: true });
                         this.solutionsText = this.createText(text, .6);
                         this.solutionsText.position.set(this.title.position.x + Configuration.renderers.cubeSize * .5,
                             this.title.position.y - Configuration.renderers.cubeSize,
@@ -117,7 +118,7 @@ export class SolverRenderer {
                         this.terminated = true;
                         this.solversMapWorker.terminate();
                     } else if (event.data.faceRotation) {
-                        this.movesAnimationsQueue.push(event.data.faceRotation)
+                        this.movesAnimationsQueue.push(event.data.faceRotation);
                     }
                 }
             }

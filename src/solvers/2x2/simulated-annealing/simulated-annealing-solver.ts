@@ -1,32 +1,34 @@
-import { GeneticAlgorithmConfig } from "@/configuration";
+import { GeneticAlgorithmConfig, SimulatedAnnealingConfig } from "@/configuration";
 import { getOppositeColor, type Colors } from "@/constants/colors";
 import { Sides, getOppositeSide, } from "@/constants/sides";
 import type { FaceRotation } from "@/engine/face-rotation";
 import { RubiksCube, type Cubelet } from "@/engine/rubiks-cube";
 import type { CubeSolver, Solution } from "../../cube-solver";
 import { ProcedureMeasurer } from "../../procedure-measurer";
-import { GeneticAlgorithm, type Chromosome } from "./genetic-algorithm";
+import { SimulatedAnnealing, type Candidate } from "./simulated-annealing";
 
 enum Metrics {
     NOT_MEASURED,
-    RUN_CITIZEN_ROTATIONS,
+    RUN_CANDIDATE_ROTATIONS,
     CALCULATE_CITIZEN_SCORE,
     APPLYING_ROTATIONS,
     CREATE_NEXT_GENERATION,
-    COMPUTE_GENE,
+    COMPUTE_ROTATION,
     AGGREGATE_CURRENT_GENERATION,
     CHECK_SOLUTION,
     MEASUREMENT_OVERHEAD
 }
 
-export class GeneticAlgorithmSolver implements CubeSolver {
+export class SimulatedAnnealingSolver implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
     private readonly initialState: RubiksCube;
     private readonly goalStateHash: string;
-    private geneticAlgorithm: GeneticAlgorithm;
-    private citizens: Chromosome[];
+    private simulatedAnnealing: SimulatedAnnealing;
+    private candidates: Candidate[];
     private aborted: boolean;
     private actions: FaceRotation[];
+    private restartCounter: number = 0;
+    private iterations: number = 0;
 
     public constructor(cube: RubiksCube) {
         this.measurer = new ProcedureMeasurer();
@@ -43,19 +45,25 @@ export class GeneticAlgorithmSolver implements CubeSolver {
                 })
             );
 
-        this.geneticAlgorithm = new GeneticAlgorithm(this.actions.length, GeneticAlgorithmConfig.maxNumOfRotations)
-        this.citizens = this.geneticAlgorithm.createNextGeneration();
+        this.simulatedAnnealing = new SimulatedAnnealing(this.actions.length)
+        this.candidates = this.simulatedAnnealing.createNextGeneration();
     }
 
     public async findSolution(): Promise<Solution> {
         this.measurer.start();
         return new Promise((resolve, reject) => {
             while (true) {
+                ++this.iterations;
                 if (this.aborted) {
                     return reject();
                 }
-                const result: Chromosome[] = [];
-                for (let citizen of this.citizens) {
+                if (this.simulatedAnnealing.getGenerationCounter() > SimulatedAnnealingConfig.restartThreshold) {
+                    ++this.restartCounter;
+                    this.simulatedAnnealing = new SimulatedAnnealing(this.actions.length)
+                    this.candidates = this.simulatedAnnealing.createNextGeneration();            
+                }
+                const result: Candidate[] = [];
+                for (let citizen of this.candidates) {
                     const citizenResult = this.runCitizen(citizen);
                     if (citizenResult.score === this.goalStateHash.length) {
                         return resolve(this.createSolution(citizenResult));
@@ -63,7 +71,7 @@ export class GeneticAlgorithmSolver implements CubeSolver {
                     this.measurer.add(Metrics[Metrics.AGGREGATE_CURRENT_GENERATION], () => result.push(citizenResult));
                 }
 
-                this.citizens = this.measurer.add(Metrics[Metrics.CREATE_NEXT_GENERATION], () => this.geneticAlgorithm.createNextGeneration(result));
+                this.candidates = this.measurer.add(Metrics[Metrics.CREATE_NEXT_GENERATION], () => this.simulatedAnnealing.createNextGeneration(result));
             }
         });
     }
@@ -72,22 +80,19 @@ export class GeneticAlgorithmSolver implements CubeSolver {
         this.aborted = true;
     }
 
-    private runCitizen(citizen: Chromosome): Chromosome {
+    private runCitizen(citizen: Candidate): Candidate {
         let cube = this.initialState.clone()
-        return citizen.genes
+        return citizen.actions
             .reduce((acc, actionIndex) => {
                 if (this.measurer.add(Metrics[Metrics.CHECK_SOLUTION], () => acc.score === this.goalStateHash.length)) {
-                    // new HumanTranslator().printCube(cube)
-                    // console.log(new HumanTranslator().translateRotations(acc.genes.map(action => this.actions[action])))
-                    // console.log(cube.isSolved(), acc.score, this.goalStateHash.length, this.goalStateHash.split('').length)
                     return acc;
                 } else {
                     cube = this.measurer.add(Metrics[Metrics.APPLYING_ROTATIONS], () => cube.rotateFace(this.actions[actionIndex]));
-                    this.measurer.add(Metrics[Metrics.COMPUTE_GENE], () => acc.genes.push(actionIndex));
+                    this.measurer.add(Metrics[Metrics.COMPUTE_ROTATION], () => acc.actions.push(actionIndex));
                     acc.score = this.measurer.add(Metrics[Metrics.CALCULATE_CITIZEN_SCORE], () => this.calculateCitizenScore(cube));
                 }
                 return acc;
-            }, { score: 0, genes: [] as number[] });
+            }, { score: 0, actions: [] as number[] });
     }
 
     private calculateCitizenScore(currentCube: RubiksCube): number {
@@ -98,16 +103,15 @@ export class GeneticAlgorithmSolver implements CubeSolver {
             .length;
     }
 
-    private createSolution(solution: Chromosome): Solution {
-        // const rotations = new RotationsTuner().tune(solution.genes.map(action => this.actions[action]));
-        const rotations = solution.genes.map(action => this.actions[action])
+    private createSolution(solution: Candidate): Solution {
+        const rotations = solution.actions.map(action => this.actions[action])
         this.measurer.finish();
         return {
             rotations: rotations,
             totalTime: this.measurer.getTotalTime()!,
             data: {
-                armageddonCounter: this.geneticAlgorithm.getArmageddonCounter(),
-                generations: this.geneticAlgorithm.getGenerationsCounter(),
+                restartCounter: this.restartCounter,
+                iterations: this.iterations,
                 metrics: this.measurer.getData({ notMeasuredLabel: Metrics[Metrics.NOT_MEASURED], measurementOverheadLabel: Metrics[Metrics.MEASUREMENT_OVERHEAD] }),
             }
         }

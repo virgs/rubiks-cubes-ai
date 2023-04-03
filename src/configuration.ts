@@ -1,9 +1,10 @@
 import { RubiksCube } from "./engine/rubiks-cube";
 import { BidirectionalBreadthFirstSearchSolver } from "./solvers/2x2/bidirectional-breadth-first-search-solver";
+import { GeneticAlgorithmSolver } from "./solvers/2x2/genetic-algorithm/genetic-algorithm-solver";
 import { InterativeDeepeningAStarSolver } from "./solvers/2x2/iterative-deepening-a-star-solver";
 import { InterativeDeepeningDepthFirstSearchSolver } from "./solvers/2x2/iterative-deepening-depth-first-search-solver";
+import { SimulatedAnnealingSolver } from "./solvers/2x2/simulated-annealing/simulated-annealing-solver";
 import { WeightedAStarSolver } from "./solvers/2x2/weighted-a-star-solver";
-import { GeneticAlgorithmSolver } from "./solvers/2x2/genetic-algorithm/genetic-algorithm-solver";
 import type { CubeSolver } from "./solvers/cube-solver";
 import { HumanSolver } from "./solvers/human-solver";
 
@@ -31,13 +32,22 @@ export const GeneticAlgorithmConfig = {
     armageddonThreshold: 5000
 }
 
+export const SimulatedAnnealingConfig = {
+    population: 100,
+    initialTemperature: .2,
+    temperatureDecreaseRate: .75,
+    numOfRotations: 30,
+    maxSuccessPerIteration: 10,
+    restartThreshold: 1000 * 1000 * 1000
+}
+
 export const Configuration = {
     metrics: {
         enabled: import.meta.env.DEV
     },
     world: {
         debug: false,
-        scrambleMoves: 15,
+        scrambleMoves: 30,
         scrambleRotationDuration: 100,
         cubesCircleRay: 4.5,
         camera: {
@@ -83,6 +93,12 @@ export const Configuration = {
                     info: `Random movements improved by genetic algorithm. Uses number of misplaced stickers as fitness function. Population: ${GeneticAlgorithmConfig.populationPerGeneration}. Elitism ${GeneticAlgorithmConfig.elitism}.  Mutation rate ${GeneticAlgorithmConfig.mutationRate}. `
                 },
                 {
+                    key: 'SA',
+                    instantiator: (configuration: string) => new SimulatedAnnealingSolver(new RubiksCube({ clone: configuration })),
+                    checked: true,
+                    info: `Random movements improved by simulated annealing algorithm. Uses number of misplaced stickers as a measure of a solution candidate result. Population: ${SimulatedAnnealingConfig.population}. Initial temperature: ${SimulatedAnnealingConfig.initialTemperature}. Temperature decrease rate: ${SimulatedAnnealingConfig.temperatureDecreaseRate}`
+                },
+                {
                     key: 'WA*',
                     instantiator: (configuration: string) => new WeightedAStarSolver(new RubiksCube({ clone: configuration })),
                     checked: true,
@@ -92,7 +108,7 @@ export const Configuration = {
                     key: 'BiBFS',
                     instantiator: (configuration: string) => new BidirectionalBreadthFirstSearchSolver(new RubiksCube({ clone: configuration })),
                     checked: true,
-                    info: `BiDirectional Breadth-first-search. Brute force.`
+                    info: `Bidirectional breadth-first-search. Brute force.`
                 }
             ]
         },
@@ -126,6 +142,32 @@ export const Configuration = {
             label: '5x5',
             dimension: 5,
             instantiator: () => new RubiksCube({ dimension: 5 }),
+            methods: [
+                {
+                    key: 'Human',
+                    instantiator: (configuration: string) => new HumanSolver(new RubiksCube({ clone: configuration })),
+                    checked: false,
+                    info: 'Use keys \'WASDFX\' combined with \'shift\' and numbers to rotate cube faces'
+                }
+            ]
+        },
+        {
+            label: '6x6',
+            dimension: 6,
+            instantiator: () => new RubiksCube({ dimension: 6 }),
+            methods: [
+                {
+                    key: 'Human',
+                    instantiator: (configuration: string) => new HumanSolver(new RubiksCube({ clone: configuration })),
+                    checked: false,
+                    info: 'Use keys \'WASDFX\' combined with \'shift\' and numbers to rotate cube faces'
+                }
+            ]
+        },
+        {
+            label: '7x7',
+            dimension: 7,
+            instantiator: () => new RubiksCube({ dimension: 7 }),
             methods: [
                 {
                     key: 'Human',
