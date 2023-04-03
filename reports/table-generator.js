@@ -17,6 +17,7 @@ const analyseSingleRun = report => {
             const data = report.solutions
                 .find(solution => solution.key.toLowerCase() === tag.toLowerCase());
             const analysedData = {
+                id: report.timestamp,
                 tag: tag,
                 time: Math.trunc(data.solution.totalTime),
                 visitedNodes: data.solution.data.visitedNodes || '-',
@@ -42,17 +43,19 @@ const analyseSingleRun = report => {
 }
 
 const reports = readReports();
-const analysedReports = reports
+const analysedExecution = reports
+    // .filter((_, index) => index === 0)
     .map(report => analyseSingleRun(report));
 
 const aggregateResults = () => {
     const table =
-        `| Algorithm | Time average (max, min, std. dev.) | Visited nodes (max, min, std. dev.) | Optimal solution length ratio average |\n` +
-        `| ----- | ----- | ----- | ----- |\n` +
+        `| Algorithm | Time average - ms (max, min, std. dev.) | Average time greater than best algorithm | Visited nodes (max, min, std. dev.) | Optimal solution length ratio average |\n` +
+        `| ----- | ----- | ----- | ----- | ----- |\n` +
         algorithms
             .map(algorithm => {
-                const algorithmResults = analysedReports.reports
-                    .filter(report => report.tag.toLowerCase() === algorithm.toLowerCase());
+                const algorithmResults = analysedExecution
+                    .map(execution => execution.reports
+                        .find(report => report.tag.toLowerCase() === algorithm.toLowerCase()));
                 const algorithmResultsLength = algorithmResults.length;
                 const time = algorithmResults
                     .reduce((acc, item) => {
@@ -78,14 +81,27 @@ const aggregateResults = () => {
                     }, { max: -Infinity, min: Infinity, sum: 0 });
                 const lengthRatio = algorithmResults
                     .reduce((acc, item) => {
-                        acc.sum += item.solutionLength / bestResults.solutionLength;
+                        acc.sum += item.solutionLength;
+                        acc.bestSum += bestResults[item.id].solutionLength;
                         return acc;
-                    }, { sum: 0 }) / algorithmResultsLength;
-                return `| ${algorithm} | ${(time / algorithmResultsLength).toFixed(2)} (${time.max.toFixed(2)}, ${time.min.toFixed(2)} -) | ${(nodes.sum / algorithmResultsLength).toFixed(2)} (${nodes.max}, ${nodes.min} -) | ${lengthRatio.toFixed(2)} |`;
+                    }, { sum: 0, bestSum: 0 });
+                const timeRatio = algorithmResults
+                    .reduce((acc, item) => {
+                        acc.sum += item.time;
+                        acc.bestSum += bestResults[item.id].time;
+                        return acc;
+                    }, { sum: 0, bestSum: 0 });
+
+                const timeMean = time.sum / algorithmResultsLength;
+                const timeStdDev = algorithmResults
+                    .reduce((acc, item) => acc + Math.abs(item.time - timeMean), 0) / algorithmResultsLength;
+                const nodesMean = nodes.sum / algorithmResultsLength;
+                const nodesStdDev = algorithmResults
+                    .reduce((acc, item) => acc + Math.abs(item.visitedNodes - nodesMean), 0) / algorithmResultsLength;
+                return `| ${algorithm} | ${timeMean.toFixed(2)} (${time.max.toFixed(2)}, ${time.min.toFixed(2)}, ${timeStdDev.toFixed(2)}) | ${(timeRatio.sum / timeRatio.bestSum).toFixed(2)} | ${nodesMean.toFixed(2)} (${nodes.max}, ${nodes.min}, ${nodesStdDev.toFixed(2)}) | ${(lengthRatio.sum / lengthRatio.bestSum).toFixed(2)} |`;
             })
             .join('\n');
     console.log(table);
 };
 
-// console.log(analysedReports[0])
 aggregateResults()

@@ -115,13 +115,11 @@ Other than that, in order to theses numbers get gathered, some flags and procedu
 Once you click on solve the alogirthms will run individually in a different thread each, competing for the same machine resources.
 
 
-
-| Algorithm | Time average (max, min, std. dev) | Nodes visited average (max, std. dev) | Optimal solution rate | Solution compared to optimal avg  (max, std. dev)  | Spacial complexity |
-|-----|-----|-----|-----|-----|-----|
-| IDDFS | | | 100% | 1 (0) | Constant |
-| IDA* | | | 100% | 1 (0) | Constant |
-| GA | | | | | Constant |
-| SA | | | | | Constant |
-| WA* | | | | | Exponential |
-| BiBFS | | |  100% | 1 (0) | Exponential |
-
+| Algorithm | Time average - ms (max, min, std. dev.) | Average time greater than best algorithm | Visited nodes (max, min, std. dev.) | Optimal solution length ratio average |
+| ----- | ----- | ----- | ----- | ----- |
+| IDDFS | 545,171.73 (2,597,518.00, 31,132.00, 639,977.97) | 2,572.37 | 160,807,505.87 (676,246,016, 15,778,766, 178,499,530.32) | 1.00 |
+| IDA* | 145,542.87 (908,558.00, 8,984.00, 147,245.12) | 686.74 | 6,224,233.00 (36,351,644, 731,793, 5,408,088.13) | 1.00 |
+| GA | 65,826.53 (235,016.00, 8,027.00, 51,191.57) | 310.60 | - | 2.29 |
+| SA | 64,671.00 (250,180.00, 2,314.00, 60,219.60) | 305.15 | - | 2.44 |
+| WA* | 2,353.67 (5,494.00, 401.00, 1,426.18) | 11.11 | 53,588.73 (127,790, 11,373, 20,584.28) | 1.51 |
+| BiBFS | 211.93 (622.00, 110.00, 108.30) | 1.00 | 2,886.33 (6733, 1,325, 1,312.80) | 1.00 |
