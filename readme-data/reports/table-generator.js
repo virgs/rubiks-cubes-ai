@@ -19,7 +19,7 @@ const analyseSingleRun = report => {
             const analysedData = {
                 id: report.timestamp,
                 tag: tag,
-                time: Math.trunc(data.solution.totalTime),
+                time: data.solution.totalTime,
                 visitedNodes: data.solution.data.visitedNodes || '-',
                 solutionLength: data.solution.rotations.length
             };
@@ -49,7 +49,7 @@ const analysedExecution = reports
 
 const aggregateResults = () => {
     const table =
-        `| Algorithm | Time average - ms (max, min, std. dev.) | Average time greater than best algorithm | Visited nodes (max, min, std. dev.) | Optimal solution length ratio average |\n` +
+        `| Algorithm | Time average - seconds (max, min, std. dev.) | Average time worse than the best | Visited nodes (max, min, std. dev.) | Optimal solution length ratio average |\n` +
         `| ----- | ----- | ----- | ----- | ----- |\n` +
         algorithms
             .map(algorithm => {
@@ -98,7 +98,10 @@ const aggregateResults = () => {
                 const nodesMean = nodes.sum / algorithmResultsLength;
                 const nodesStdDev = algorithmResults
                     .reduce((acc, item) => acc + Math.abs(item.visitedNodes - nodesMean), 0) / algorithmResultsLength;
-                return `| ${algorithm} | ${timeMean.toFixed(2)} (${time.max.toFixed(2)}, ${time.min.toFixed(2)}, ${timeStdDev.toFixed(2)}) | ${(timeRatio.sum / timeRatio.bestSum).toFixed(2)} | ${nodesMean.toFixed(2)} (${nodes.max}, ${nodes.min}, ${nodesStdDev.toFixed(2)}) | ${(lengthRatio.sum / lengthRatio.bestSum).toFixed(2)} |`;
+                return `| ${algorithm} | ${(timeMean / 1000).toLocaleString()} (${(time.max / 1000).toLocaleString()}, ${(time.min / 1000).toLocaleString()}, ${(timeStdDev / 1000).toLocaleString()}) ` +
+                    `| ${(timeRatio.sum / timeRatio.bestSum).toLocaleString()} ` +
+                    `| ${nodesMean.toLocaleString()} (${nodes.max.toLocaleString()}, ${nodes.min.toLocaleString()}, ${nodesStdDev.toLocaleString()}) ` +
+                    `| ${(lengthRatio.sum / lengthRatio.bestSum).toLocaleString()} |`;
             })
             .join('\n');
     console.log(table);

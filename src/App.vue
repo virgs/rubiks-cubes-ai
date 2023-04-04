@@ -312,7 +312,7 @@ export default defineComponent({
           shuffle: this.shuffleMovesText,
           solutions: solutions
         }
-        if (true || urlQueryHandler.getParameterByName('generateReport', false)) {
+        if (Configuration.metrics.generateReport) {
           this.saveReport(report);
         }
       } catch (e) {

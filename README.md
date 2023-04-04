@@ -1,88 +1,102 @@
 # Rubiks cubes AI
 
-This project allows you to play/solve a Rubik's cube inside a program. By using the buttons and keys, you can rotate the cube and change its configuration. Once you click on solve the algotithms will run.
+This project intends to make available, both for entertainment and for algorithm studies, several Rubik's cubes of different dimensions rendered in a three-dimensional canvas. Using the keyboard and mouse, you can rotate the cube's faces and change the camera.  
+To run an algorithm, shuffle the cube, select a method and click 'solve'.
 
-![screenshot](./docs/screenshot.png)
+![screenshot](./readme-data/screenshot.png)
 
 ### Keys
-Twist the faces of the cube using these keys: **W**, **A**, **S**, **D**, **F**, and **X** for up, left, front, right, back, and down twists, respectively. Hold **Shift** for prime (counter-clockwise) moves. Use any number key to change the layer on which the rotation will perform. Bear in mind that the layer rotation is limited by the cube dimension (there is no way to rotate a middle layer in a 2x2 cube, since it has no middle layer, for instance).
+Rotate the cube faces using the following keys: **W**, **A**, **S**, **D**, **F** and **X**: up, left, front, right, back, and down twists, respectively. Hold **Shift** for prime moves (counterclockwise). Use any numeric key to change the layer on which the rotation will be performed. The layer rotation is limited by the cube dimension (there is no way to rotate a middle layer in a 2x2 cube as it has no middle layer, for example).  
 
-Press **\]** to quickly scramble the cube and **\\** to restore its original configuration.
+Press **\]** to quickly shuffle the cube and **\\** to restore its original configuration.
 
 ### Mouse
-Use the mouse left button, right button and scroll to handle the camera.
+Use left button, right button and scroll to handle the camera.
 
-
-#### --asdasd Add 7x7 gif
 
 ### Goals
-This project was created for fun and studying purposes. These were the mains goals behind it:
+This project was created for fun and study purposes. These were the main objectives behind it:
 
 1. Have fun.
 1. Study 3D in browser environments using [threejs](https://threejs.org/)
-1. Solve a Rubiks cube without any human supervised technique:
-    - No previous set of rotations
-    - No precomputed databases
-    This characteristic pretty much makes it impossible to solve any other cube than the pocket one (2x2x2). Hence, every other cube is displayed only for recreationsl purposes.
-1. Experimenting with different search algorithms and compare them. Namely:
-    - **[Interative-deepening depth-first-search](./src/solvers/2x2/iterative-deepening-depth-first-search-solver.ts)**: It doesn't keep a list of already visited so it's very efficient memory-wise. However it revisits same nodes several times. Given enough time, guaranteed to find the optimal answer.
-    - **[Interative-deepening A star](./src/solvers/2x2/iterative-deepening-a-star-solver.ts)**: In short, IDA* works similarly like a regular iterative deepening search, but instead of exploring every node, it utilizes heuristics to prune some branches in the search three. As such it is very memory efficient and it provides an optimal solution as long as the heuristics is admissible. IDA* search uses heuristics to prune branches which are guaranteed to lack a solution within the allowed depth. As heuristics calculation made with pattern databases is not consistent, it is possible to have a situation where IDA* will explore the subtree of what will appear to be a good node, too much. That will happen when the node has an excessively underestimated heuristics value. It doesn't keep a list of already visited so it's very efficient memory-wise. However it revisits same nodes several times. Given enough time, guaranteed to find the optimal answer.In fact, it has no guarantee at all that a solution will be found. Thus, if it takes too long to find it, it restarts from the beginning.
-    - **[Simulated Annealing](./src/solvers/2x2/simulated-annealing/simulated-annealing-solver.ts)**: Physics-based metaheuristic. given a pocket cube current status, generate a set of a list of random actions and, using Genetic Algorithm, slowly improve them until a single list of actions that solve the cube is found. It uses the number of misplaced stickers as fitness function. Often times find redundant moves since it doesnt care about irrelevant twists or twists that cancel each other. Heavily based on luck. Would not be efficient for larger cube sizes. It would take forever. 
-    Random movements improved by simulated annealing algorithm. Uses number of misplaced stickers as a measure of a solution candidate result. Population: ${SimulatedAnnealingConfig.population}. Initial temperature: ${SimulatedAnnealingConfig.initialTemperature}. Temperature decrease rate: ${SimulatedAnnealingConfig.temperatureDecreaseRate}` Non-deterministic algorithm, meaning that it won't get the same result in every run. In fact, it has no guarantee at all that a solution will be found. Thus, if it takes too long to find it, it restarts from the beginning. Previous knowledge is needed. Since I know the God's number for this dimension is 14, the candidates have to be a solution rotations set greater than this number. The greater, the faster and the better time considering but, evidently, worse for spacial constrains. That's why I set this number to 30. You can see it has some redundant moves.
-    - **[Genetic Algorithm](./src/solvers/2x2/genetic-algorithm/genetic-algorithm.ts)**: Evolutionary-based  metaheuristic. given a pocket cube current status, generate a set of a list of random actions and, using Genetic Algorithm, slowly improve them until a single list of actions that solve the cube is found. It uses the number of misplaced stickers as fitness function. Often times find redundant moves since it doesnt care about irrelevant twists or twists that cancel each other. Heavily based on luck. Would not be efficient for larger cube sizes. It would take forever.  Non-deterministic algorithm, meaning that it won't get the same result in every run. Previous knowledge is needed. Since I know the God's number for this dimension is 14, the candidates have to be a solution rotations set greater than this number. The greater, the faster and the better time considering but, evidently, worse for spacial constrains. That's why I set this number to 30. You can see it has some redundant moves.
-    - **[Weighted A star](./src/solvers/2x2/weighted-a-star-solver.ts)**: Keeps a list of visited nodes and not efficient for larger cube sizes. No reexploration. Which means that, if, while it's searching for the final path, it finds a better path to a already visited node, it doesn't reanalyze it and its children path. In order to avoid cycles and reentrance, it keeps a list of every visited node. So it can easily fills any machine memory if it's used for larger scopes such as rubiks cubes (any dimension bigger than 2x2, as a matter of fact)
-    - **[Bidirectional breadth-first-search](./src/solvers/2x2/bidirectional-breadth-first-search-solver.ts)**: As we know the desired goal state and the initial cube state we can employ two simultaneous Breath First Searches - one going forward from the initial state and one backward from the goal state, stopping when they meet. In doing this we provide a means to restrict the branching which occurs when the search is being performed, into seperate two sub-graphs - dramatically reducing the amount of exploration required.
-    Suppose if the branching factor of the tree is b and distance of the goal vertex from the source is d, then the trivial Breath First Search complexity would be O(bd). On the other hand, if we execute two search operations then the complexity would be O(bd/2) for each search, with a total complexity of O(bd/2 + bd/2) - which is far less than O(bd).  In order to avoid cycles and reentrance, it keeps a list of every visited node. So it can easily fills any machine memory if it's used for larger scopes such as rubiks cubes (any dimension bigger than 2x2, as a matter of fact)
-    Keeps a list of visited nodes and not efficient for larger cube sizes. Very effective for small scopes. Deterministic, doesn't use any heuristic function. So doesn't require any prior information rather than knowing if the cube is in a solved state, but useless in larger scopes (aka bigger cubes) due to its memory limitations.
+1. Solve a Rubik's cube with minimal human knowledge techniques:
+      - No previous set of rotations.
+      - No precomputed databases.
+      This feature makes it practically impossible to solve any other cube other than the pocket cube (2x2x2). Therefore, all other cubes are displayed for recreational purposes only.
+1. Try different search algorithms and compare them. Namely:
+    - **[Interative-deepening depth-first-search](./src/solvers/2x2/iterative-deepening-depth-first-search-solver.ts)**: IDDFS combines depth-first search’s space-efficiency and breadth-first search’s fast search (for nodes closer to the root). IDDFS calls DFS for different depths starting from an initial value. In every call, DFS is restricted from going beyond a given depth. Given enough time, guaranteed to find the optimal answer. An important thing to note is, since it doesn't keep a list of previously visited nodes, the top-level nodes are visited multiple times. At its end, we get that the last (or max depth) level is visited once, the second last level is visited twice, and so on. It may seem expensive, but it turns out to be not so costly and very efficient memory-wise, since in a tree most of the nodes are in the bottom level. So it does not matter much if the upper levels are visited multiple times. 
 
+    - **[Interative-deepening A star](./src/solvers/2x2/iterative-deepening-a-star-solver.ts)**: In short, IDA* works like IDDFS, but instead of limiting the depth by a fixed value, it uses heuristics to prune off branches that will certainly not have a solution within the allowed depth using an “iterative deepening” approach. As such, it is very memory efficient, avoids the exponential time complexity of traditional DFS, and, given enough time, provides an optimal solution as long as the heuristics are admissible. As the chosen heuristic (misplaced stickers) is not consistent, it is possible that there is a situation where IDA* over-explores the subtree of what appears to be a good node. This will happen when the node has an excessively underestimated heuristic value. Since it doesn't keep a list of previously visited ones, it's very memory efficient. However, like IDDFS, it may revisit the same nodes multiple times.    
+
+    - **[Simulated Annealing](./src/solvers/2x2/simulated-annealing/simulated-annealing-solver.ts)**: It's a *physics-based* metaheuristic. Since it's heavily based on luck, it's a non-deterministic algorithm, meaning that it won't get the same result in every run, and it's not efficient for larger cube sizes because it may take forever.  In fact, it has no guarantee at all that a solution will be found. Thus, if it takes too long to find it, it restarts from the beginning and keeps trying.  
+    It works by slowly improving a randomly generated set of actions list until a single list of rotations solves the cube. Furthermore, it uses the number of misplaced stickers to calculate how close a candidate is to solving the cube and selects the best one of each iteration to be disturbed by an ever-decreasing temperature and create a new set of candidates.  
+    To make sure that a list of actions will eventually be the solution, and to avoid a large solution, some previous Rubik's cube knowledge is needed. Since God's number of a pocket cube in the quarter-turn metric is **14**, all the candidates are a list whose length is greater than this number. The greater, the faster and the better time considering but, evidently, worse for spacial constraints. That's why I set this number to 30. That's also why it will oftentimes perform redundant moves: because the solution length is set beforehand.
+
+    - **[Genetic Algorithm](./src/solvers/2x2/genetic-algorithm/genetic-algorithm.ts)**: It's an *evolutionary-based* metaheuristic. Since it's heavily based on, luck it's a non-deterministic algorithm, meaning that it won't get the same result in every run, and it's not efficient for larger cube sizes because it may take forever. In fact, it has no guarantee at all that a solution will be found. Thus, if it takes too long to find it, it restarts from the beginning and keeps trying in an event that I very gladly named “Armageddon”.   
+    It works by slowly improving a randomly generated set (aka population) of actions list (aka chromosomes) until a single list of rotations solves the cube. Furthermore, it uses the number of misplaced stickers to calculate how close a citizen is to solving the cube and selects the best ones of each generation to get together and have new offspring generated by crossovers and mutations.  
+    To make sure that a list of actions will eventually be the solution, and to avoid a large solution, some previous Rubik's cube knowledge is needed. Since God's number of a pocket cube in the quarter-turn metric is **14**, all the candidates are a list whose length is greater than this number. The greater, the faster and the better time considering but, evidently, worse for spacial constraints. That's why I set this number to 30. That's also why it will oftentimes perform redundant moves: because the solution length is set beforehand.
+
+    - **[Weighted A star](./src/solvers/2x2/weighted-a-star-solver.ts)**: 
+
+    - **[Bidirectional breadth-first-search](./src/solvers/2x2/bidirectional-breadth-first-search-solver.ts)**: As the goal state (solved) and the initial state (scrambled) are known, two simultaneous Breath First Searches are run simultaneously. One from the initial state toward the goal state, and the second one searches backwardly from the goal state to the initial state. The algorithm finishes when they meet in the middle. In doing this we provide a means to restrict the branching which occurs when the search is being performed in deeper levels, into separate two sub-graphs - dramatically reducing the amount of exploration required.  For the worst-case scenario in a 2x2 cube (where the branching factor is 6, and the God number is 14), the maximum number of explored nodes explored decreases from 6¹⁴ to (6⁷ + 6⁷). On the other hand, when applied in a regular 3x3 Rubik's Cube (branching factor ~18 and the God number 20), despite reducing the exploration from 18²⁰ to (18¹⁰ + 18¹⁰), the complexity still is impractical for every computer yet to be invented for the next decades.  
+    Since it keeps a list of every visited state to avoid cycles, it can easily fill any machine memory if used in a really large scope, such as any other dimension bigger than 2x2. That makes it pretty much useless in a really large scope due to its memory limitations. Even so, it's a deterministic algorithm, and, assuming that your memory won't explode, it's very efficient both time and space-wise for the 2x2 cube universe as it will always find the same optimal solution and doesn't require any prior information about the the cube.
+
+    
 ----
 
-
 ## Rubik's cube twist notation
-Rubik's cube's standard twist notation is: U, L, F, R, B and D desribe 90-degree clockwise twists of the up, left, front, right, back, and down faces, respectively. Adding an apostrophe indicates a counter-clockwise twist, so U' means twist the up face 90-degrees counter-clockwise. Prefixing a 2 to a move indicates a double 90-degree twist, or a 180-degree twist; 2F means to twist the front face twice. Larger cubes require an additional notation to describe intern layers notation. We achieve this by using subscript letters (₁₂₃...₈₉) to identify wchich layer was twisted.
+Rubik's cube's standard twist notation is: *U*, *L*, *F*, *R*, *B*, and D describe 90-degree clockwise twists of the up, left, front, right, back, and down faces, respectively. Adding an apostrophe indicates a counter-clockwise twist, so *U'* means twist the up face 90 degrees counter-clockwise. Prefixing a *2* to a move indicates a double 90-degree twist or a 180-degree twist; *2F* means twisting the front face twice. Larger cubes require an additional notation to describe intern layers notation. We achieve this by using subscript letters (*₁₂₃*...*₈₉*) to identify which layer was twisted, so *2D₂* means a 180-degree rotation of the second layer from the down face.
+
 
 ## Rubik's cube representation
-There are several ways to represent a Rubik's cube as an object structure. Each one having having its pros and cons and differ from each other in characteristics as complexity, memory usage and manipulation.
+There are several ways to represent a Rubik's cube as an object structure. Each one has its pros and cons and differs from the others in characteristics such as complexity, memory usage, and manipulation.
 
-The one I chose represents all cubes with an unidimensional array. For instance, a solved pocket cube with the top and front faces being yellow and blue respectively is stored as:
+The one I chose represents all cubes with a unidimensional array, where every index contains the initial of the color it represents, and every index has a fixed position in the cube. For instance, the first item is always the up sticker of the back-left-top cubelet. 
+The formula:  `(cube dimension * cube dimension) * 6` tells how many Bytes are needed to represent a single cube.
 
-The formula: `(cube dimension * cube dimension) * 6`
-So, a 2x2 cube is represented as a 24 sized string, where every index contains the initial of the color it represents.
+So the *2x2* cube is a 24-sized string; the *3x3* is a 54 one, the *4x4* a 96 one, and so on and so forth.
 
+With that being said, the 2x2 cube  with the top and front faces being yellow and blue respectively is represented by the string: `YYYYOOOOBBBBRRRRGGGGWWWW`  
 
-So the pocket cube is the string: `YYYYOOOOBBBBRRRRGGGGWWWW`  
-Distributed like this:
-![pocket-cube-representation](./docs/2x2ss.png)
+Distributed like this:  
+![pocket-cube-representation](./readme-data/2x2ss.png)
 
-The regular one, also having the top and front faces being yellow and blue respectively is:
+The 3x3, also having the top and front faces being yellow and blue respectively, is:
 So the pocket cube is the string: `YYYYYYYYYOOOOOOOOOBBBBBBBBBRRRRRRRRRGGGGGGGGGWWWWWWWWW`  
 Distributed like this:
 
-![rubiks-cube-representation](./docs/3x3ss.png)
+![rubiks-cube-representation](./readme-data/3x3ss.png)
 
-And, ultimately, just as a curiosity: `YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW`  
+And, ultimately, just out of curiosity: `YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW`  is the 7x7 cube solved.
 
-![rubiks-cube-representation](./docs/7x7ss.png)
+![rubiks-cube-representation](./readme-data/7x7ss.png)
 
-Not the most efficient way, but it gets the job done.
+Not the most efficient way, but it gets the job done. One small caveat of this approach is that there are 24 (6x4) ways to represent a solved cube because it doesn't accommodate the whole cube rotation. Still, it is a particularly good one because it is completely dissociated with the rendering object orientation, and it's easily cloned and handled. Since these are operations performed literally more than a million times, it's a good choice.
 
-The rotation is then done by changing colors in the array with each other. Obviously, there is a pattern that must be followed to achieve this. Just keep in mind that the colors are changed the index stay the same. Rotation can be made to each face on two directions clockwise and anti-clockwise.
-So basically, when a rotation is performed the colors inside the array are changed accordingly.
+The rotation is then done by changing colors in the array with each other. Obviously, there is a pattern that must be followed to achieve this. Just keep in mind that the colors are changed, and the index stays the same.
 
-If every tile of each face have a matching color, the cube is solved.
+If every tile of each face has a matching color, the cube is solved.
 
-## Pocket Cube technicalities (2x2x2)
-There is plenty of prior art in this space, and thanks to some key characteristics of a 2x2x2 Pocket Cube, optimally solving a given cube state is not too computationally intensive. The Pocket Cube consists of 8 cubies/cubelet, each with three colour stickers on them, resulting in a 24 total stickers. Any permutation of the cubies is possible, with seven of these being able to be independently oriented in three ways. If we fix one of these cubies to a chosen position and orientation (essential deeming it to be in a solved state); we can permit any permutation of the remaining seven cubies and any orientation of six cubies. This results in their only being 7! * 3⁶ = 3,674,160 possible unique states. Which, in itself, makes it computational feasible to visit each possible move sequence in an adequate time by any modern computer configuration.
+## Pocket Cube technicalities (2x2)
+There is plenty of prior art in this space, and thanks to some key characteristics of a 2x2 Pocket Cube, optimally solving a given cube state is not too computationally intensive. The Pocket Cube consists of 8cubelet, each with three color stickers on them, resulting in 24 total stickers. Any permutation of the cubelets is possible, with seven of these being able to be independently oriented in three ways. If we fix one of these cubelets to a chosen position and orientation (essentially deeming it to be in a solved state); we can permit any permutation of the remaining seven cubelets and any orientation of six cubelets. This results in there only being 7! * 3⁶ = 3,674,160 possible unique states. This, in itself, makes it computationally feasible to visit each possible move sequence in an adequate time by any modern computer configuration.
 
     
-The cube consists of 8 smaller cubies, each one with 3 color stickers on it. Any permutation of the cubies is possible, and 7 of them can be independently oriented in three ways. If we fix one cubie to have a chosen position and orientation, we can allow any permutation of the remaining 7 cubies and any orientation of 6 cubies (the orientation of the first cubie is fixed, 6 cubies can be independently oriented, and the orientation of the last one is determined by the other). The number of possible states is:
-
-        3,674,160
+The cube consists of 8 smaller cubelets, each one with 3 color stickers on it. Any permutation of the cubelets is possible, and 7 of them can be independently oriented in three ways. If we fix one cubelet to have a chosen position and orientation, we can allow any permutation of the remaining 7 cubelets and any orientation of 6 cubelets (the orientation of the first cubelet is fixed, 6 cubelets can be independently oriented, and the orientation of the last one is determined by the other). The number of possible states is:
 
 
-This is a fairly small amount of states, and it can be easily saved in a computer memory, in which case the search algorithm becomes trivial. As the purpose of this experiment was to try different search algorithms, the amount of memory was intentionally limited.
+    3,674,160
 
-In case of a standard Rubik's cube, the number of possible states is vastly larger, and enumerating all the states is infeasible.
+
+This is a fairly small amount of states, and it can be easily saved in computer memory, in which case the search algorithm becomes trivial. As the purpose of this experiment was to try different search algorithms, the amount of memory was intentionally limited.
+
+In the case of a standard Rubik's cube, the number of possible states is vastly larger:
+
+    43,252,003,274,489,856,000 (or 43 quintillion)
+
+This is a manageably imaginable number. It's a little less than the square of the earth's population, for example. So, enumerating all the states is infeasible.
+
+
+---- Revised up to here
 
 ## General solution approach
 In this particular cube, you don't have to move all the sides (6) both directions. If the L move basically consists of a R' move and a new cube orientation (which is not a move, technically), you don't need to do the L move at all. The same applies for the other 2 axis. So, instead of having a branching factor of 2⁶, I make it 2³. Whenever possible and taking advantage of the pocket cube especific characteristics, most solutions fix a a deliberately chosen cubelet. By doing that one can solve a  pocket cube rotating only three of the six faces, these being Up, Right and Front - in my case - resulting in the Down-Bottom-Left DBL cubelet staying in-place at all times. As long as one predefined cubelet remains static (bottom-left-back one) we keep the branching factor small and, as such, employing a convention Graph search algorithm over the search space provides us with a efficent means to reach a solution move sequence.
@@ -115,11 +129,11 @@ Other than that, in order to theses numbers get gathered, some flags and procedu
 Once you click on solve the alogirthms will run individually in a different thread each, competing for the same machine resources.
 
 
-| Algorithm | Time average - ms (max, min, std. dev.) | Average time greater than best algorithm | Visited nodes (max, min, std. dev.) | Optimal solution length ratio average |
-| ----- | ----- | ----- | ----- | ----- |
-| IDDFS | 545,171.73 (2,597,518.00, 31,132.00, 639,977.97) | 2,572.37 | 160,807,505.87 (676,246,016, 15,778,766, 178,499,530.32) | 1.00 |
-| IDA* | 145,542.87 (908,558.00, 8,984.00, 147,245.12) | 686.74 | 6,224,233.00 (36,351,644, 731,793, 5,408,088.13) | 1.00 |
-| GA | 65,826.53 (235,016.00, 8,027.00, 51,191.57) | 310.60 | - | 2.29 |
-| SA | 64,671.00 (250,180.00, 2,314.00, 60,219.60) | 305.15 | - | 2.44 |
-| WA* | 2,353.67 (5,494.00, 401.00, 1,426.18) | 11.11 | 53,588.73 (127,790, 11,373, 20,584.28) | 1.51 |
-| BiBFS | 211.93 (622.00, 110.00, 108.30) | 1.00 | 2,886.33 (6733, 1,325, 1,312.80) | 1.00 |
+| Algorithm | Time average - seconds (max, min, std. dev.) | Average time worse than the best | Visited nodes (max, min, std. dev.) | Optimal solution length ratio average | Time complexity | Spacial complexity
+| ----- | ----- | ----- | ----- | ----- | ----- | ----- |
+| IDDFS | 545.172 (2,597.519, 31.133, 639.978) | 2,564.953 | 160,807,505.867 (676,246,016, 15,778,766, 178,499,530.32) | 1 | O(branch ^ depth) | O(depth) |
+| IDA* | 145.543 (908.558, 8.984, 147.245) | 684.759 | 6,224,233 (36,351,644, 731,793, 5,408,088.133) | 1 | O(branch ^ depth) | O(depth) |
+| GA | 65.827 (235.016, 8.027, 51.192) | 309.706 | - | 2.295 | - | O(depth) |
+| SA | 64.671 (250.181, 2.315, 60.22) | 304.27 | - | 2.436 | - | O(depth) |
+| WA* | 2.354 (5.494, 0.402, 1.426) | 11.075 | 53,588.733 (127,790, 11,373, 20,584.284) | 1.513  | O(branch ^ depth) | O(branch ^ depth) |
+| BiBFS | 0.213 (0.623, 0.11, 0.108) | 1 | 2,886.333 (6,733, 1,325, 1,312.8) | 1  | O(branch ^ depth) | O(branch ^ depth) |

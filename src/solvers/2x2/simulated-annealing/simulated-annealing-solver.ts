@@ -59,6 +59,7 @@ export class SimulatedAnnealingSolver implements CubeSolver {
                 }
                 if (this.simulatedAnnealing.getGenerationCounter() > SimulatedAnnealingConfig.restartThreshold) {
                     ++this.restartCounter;
+                    console.log('Restart')
                     this.simulatedAnnealing = new SimulatedAnnealing(this.actions.length)
                     this.candidates = this.simulatedAnnealing.createNextGeneration();            
                 }
