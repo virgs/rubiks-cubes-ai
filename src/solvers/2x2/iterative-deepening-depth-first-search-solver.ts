@@ -1,7 +1,7 @@
 import { getOppositeSide, Sides } from "../../constants/sides";
 import { ProcedureMeasurer } from "../procedure-measurer";
 import type { CubeSolver, Solution } from "../cube-solver";
-import type { FaceRotation } from "@/engine/face-rotation";
+import { rotationsCancel, type FaceRotation, rotationsAreEqual } from "@/engine/face-rotation";
 import { type Cubelet, RubiksCube } from "@/engine/rubiks-cube";
 import { Colors, getOppositeColor } from "@/constants/colors";
 
@@ -23,16 +23,23 @@ type Candidate = {
     parent?: Candidate
 }
 
+type IterationData = {
+    bound: number;
+    visitedNodes: number;
+};
+
 export class InterativeDeepeningDepthFirstSearchSolver implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
     private readonly actions: FaceRotation[];
     private readonly root: Candidate;
+    private readonly iterations: IterationData[];
     private currentMaxDepth: number;
     private visitedNodes: number;
     private aborted: boolean;
 
     public constructor(cube: RubiksCube) {
         this.measurer = new ProcedureMeasurer();
+        this.iterations = [];
         this.visitedNodes = 0;
         this.aborted = false;
 
@@ -52,7 +59,6 @@ export class InterativeDeepeningDepthFirstSearchSolver implements CubeSolver {
         this.aborted = true;
     }
 
-
     public async findSolution(): Promise<Solution> {
         return new Promise((resolve, reject) => {
             this.measurer.start();
@@ -62,6 +68,8 @@ export class InterativeDeepeningDepthFirstSearchSolver implements CubeSolver {
                     this.measurer.finish();
                     return resolve(this.createSolution(solution));
                 }
+                this.iterations.push({ visitedNodes: this.visitedNodes, bound: this.currentMaxDepth });
+                this.visitedNodes = 0;
                 ++this.currentMaxDepth;
             }
             reject(Error(`Aborted`));
@@ -111,7 +119,9 @@ export class InterativeDeepeningDepthFirstSearchSolver implements CubeSolver {
             totalTime: this.measurer.getTotalTime()!,
             data: {
                 metrics: this.measurer.getData({ notMeasuredLabel: Metrics[Metrics.NOT_MEASURED] }),
-                visitedNodes: this.visitedNodes
+                visitedNodes: this.iterations
+                    .reduce((acc, item) => acc + item.visitedNodes, 0),
+                iterations: this.iterations
             }
         };
     }
@@ -120,6 +130,18 @@ export class InterativeDeepeningDepthFirstSearchSolver implements CubeSolver {
         const result: Candidate[] = [];
         this.actions
             .forEach(rotation => {
+                // Avoids undoing stuff
+                if (current.rotation) {
+                    if (rotationsCancel(current.rotation, rotation)) {
+                        return;
+                    }
+                    if (current.parent && current.parent.rotation &&
+                        rotationsAreEqual(current.rotation, rotation) &&
+                        rotationsAreEqual(current.parent.rotation, rotation)) {
+                        return;
+                    }
+                }
+
                 const newCandidate: RubiksCube = this.measurer.add(Metrics[Metrics.PERFORM_ROTATION], () => current.cube.rotateFace(rotation));
                 this.measurer.add(Metrics[Metrics.ADD_CANDIDATE], () => {
                     result.push({

@@ -35,21 +35,21 @@ export const GeneticAlgorithmConfig = {
 export const SimulatedAnnealingConfig = {
     population: 100,
     initialTemperature: .2,
-    temperatureDecreaseRate: .75,
+    temperatureDecreaseRate: .85,
     numOfRotations: 30,
     maxSuccessPerIteration: 10,
-    restartThreshold: 1000 * 1000 * 1000
+    restartThreshold: 5000
 }
 
 export const Configuration = {
     metrics: {
-        enabled: !import.meta.env.DEV,
-        generateReport: false
+        enabled: true || import.meta.env.DEV,
+        generateReport: true
     },
     world: {
         debug: false,
-        scrambleMoves: 30,
-        scrambleRotationDuration: 100,
+        scrambleMoves: () => Math.floor(Math.random() * 10 + 30),
+        scrambleRotationDuration: 80,
         cubesCircleRay: 4.5,
         camera: {
             closeDistance: 20,

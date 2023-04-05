@@ -2,7 +2,7 @@ import Heap from 'heap';
 import { getOppositeSide, Sides } from "../../constants/sides";
 import type { CubeSolver, Solution } from "../cube-solver";
 import { ProcedureMeasurer } from "../procedure-measurer";
-import type { FaceRotation } from "@/engine/face-rotation";
+import { rotationsCancel, type FaceRotation, rotationsAreEqual } from "@/engine/face-rotation";
 import { Colors, getOppositeColor } from "@/constants/colors";
 import { RubiksCube, type Cubelet } from '@/engine/rubiks-cube';
 import { WeightedAStarAlgorithmConfig } from '@/configuration';
@@ -33,8 +33,7 @@ type Candidate = {
     heuristicValue: number,
     cube: RubiksCube;
     rotation?: FaceRotation,
-    parentHash?: string;
-    hash: string;
+    parent?: Candidate;
 }
 
 // https://theory.stanford.edu/~amitp/GameProgramming/Variations.html#weighted-a-star
@@ -60,8 +59,7 @@ export class WeightedAStarSolver implements CubeSolver {
             heuristicValue: 0,
             cube: cube,
             rotation: undefined,
-            parentHash: undefined,
-            hash: cube.getHash()
+            parent: undefined,
         };
         this.candidates.push(current);
         this.actions = [];
@@ -88,14 +86,14 @@ export class WeightedAStarSolver implements CubeSolver {
                 }
                 this.measurer.add(Metrics[Metrics.ITERATIONS_COUNTER_INCREMENT], () => ++visitedNodes)
                 current = this.measurer.add(Metrics[Metrics.POP_CANDIDATE], () => this.candidates.pop());
-                if (this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.visitedChecklist.has(current.hash))) {
+                if (this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.visitedChecklist.has(current.cube.getHash()))) {
                     continue;
                 }
                 ++differentNodes;
-                if (this.measurer.add(Metrics[Metrics.CHECK_SOLUTION], () => current.hash === this.goalStateHash)) {
+                if (this.measurer.add(Metrics[Metrics.CHECK_SOLUTION], () => current.cube.getHash() === this.goalStateHash)) {
                     return resolve((this.measurer.add(Metrics[Metrics.SOLUTION_CREATION], () => this.createSolution(current!, visitedNodes, differentNodes))));
                 } else {
-                    this.measurer.add(Metrics[Metrics.ADD_TO_VISISTED_LIST_CHECK], () => this.visitedChecklist.set(current.hash, current));
+                    this.measurer.add(Metrics[Metrics.ADD_TO_VISISTED_LIST_CHECK], () => this.visitedChecklist.set(current.cube.getHash(), current));
                     this.applyRotations(current!);
                 }
             }
@@ -113,7 +111,7 @@ export class WeightedAStarSolver implements CubeSolver {
         this.measurer.add(Metrics[Metrics.BUILD_SOLUTION], () => {
             while (current && current.rotation) {
                 rotations.unshift(current.rotation);
-                current = this.visitedChecklist.get(current.parentHash!);
+                current = current.parent;
             }
         })
         this.measurer.finish();
@@ -129,18 +127,29 @@ export class WeightedAStarSolver implements CubeSolver {
         }
     }
 
-    private applyRotations(parent: Candidate): void {
+    private applyRotations(current: Candidate): void {
         for (let rotation of this.actions) {
-            const newCubeConfiguration: RubiksCube = this.measurer.add(Metrics[Metrics.PERFORM_ROTATION], () => parent.cube.rotateFace(rotation));
+            // Avoids undoing stuff
+            if (current.rotation) {
+                if (rotationsCancel(current.rotation, rotation)) {
+                    continue;
+                }
+                if (current.parent && current.parent.rotation &&
+                    rotationsAreEqual(current.rotation, rotation) &&
+                    rotationsAreEqual(current.parent.rotation, rotation)) {
+                    continue;
+                }
+            }
+
+            const newCubeConfiguration: RubiksCube = this.measurer.add(Metrics[Metrics.PERFORM_ROTATION], () => current.cube.rotateFace(rotation));
             const newCubeHash = newCubeConfiguration.getHash();
             const heuristicFunctionValue = this.measurer.add(Metrics[Metrics.HEURISTIC_CALCULATION], () => this.calculateDistanceToFinalState(newCubeConfiguration));
             const newCandidate: Candidate = {
-                cost: parent.cost + 1,
+                cost: current.cost + 1,
                 cube: newCubeConfiguration,
                 rotation: rotation,
                 heuristicValue: heuristicFunctionValue,
-                parentHash: parent.hash,
-                hash: newCubeHash
+                parent: current
             };
             const alreadyVisited = this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => this.visitedChecklist.get(newCubeHash));
             if (!alreadyVisited) {

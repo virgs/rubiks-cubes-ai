@@ -250,10 +250,11 @@ export default defineComponent({
       await this.returnCubesToStage();
 
       this.shuffling = true;
-      const newRotations = new CubeScrambler(Configuration.world.scrambleMoves * 2)
+      const scrambleMoves = Configuration.world.scrambleMoves();
+      const newRotations = new CubeScrambler(scrambleMoves)
         .scramble(cube!)
       const scramblingRotations = tuner.tune(newRotations)
-        .filter((_, index) => index < Configuration.world.scrambleMoves);
+        .filter((_, index) => index < scrambleMoves);
       for (let rotation of scramblingRotations) {
         await cubeRenderer!.rotateFace({ ...rotation, duration: Configuration.world.scrambleRotationDuration });
         shuffleMoves.push(rotation);
@@ -314,6 +315,14 @@ export default defineComponent({
         }
         if (Configuration.metrics.generateReport) {
           this.saveReport(report);
+
+          this.finishedSolving = true;
+          this.shuffled = false;
+          this.solving = false;
+          clearInterval(interval);
+          await this.reset();
+          await this.shuffle();
+          return await this.mainActionButtonClick();
         }
       } catch (e) {
         console.log(e)
@@ -327,7 +336,7 @@ export default defineComponent({
       const a = document.createElement("a");
       const file = new Blob([JSON.stringify(report)], { type: 'text/json' });
       a.href = URL.createObjectURL(file);
-      a.download = `report-${report.totalTime}.json`;
+      a.download = `${report.timestamp}.json`;
       document.body.appendChild(a);
       a.click();
       URL.revokeObjectURL(a.href);

@@ -3,7 +3,7 @@ import { getOppositeSide, Sides } from "../../constants/sides";
 import LinkedList from "double-linked-list";
 import { ProcedureMeasurer } from "../procedure-measurer";
 import type { CubeSolver, Solution } from "../cube-solver";
-import type { FaceRotation } from "@/engine/face-rotation";
+import { rotationsAreEqual, rotationsCancel, type FaceRotation } from "@/engine/face-rotation";
 import { RubiksCube, type Cubelet } from "@/engine/rubiks-cube";
 import { type Colors, getOppositeColor } from "@/constants/colors";
 
@@ -53,10 +53,7 @@ export class BidirectionalBreadthFirstSearchSolver implements CubeSolver {
         this.forwardSearchToExploreList.push(current);
 
         const fixedSides: Sides[] = [];
-        const xIndex = [Sides.RIGHT, Sides.LEFT][Math.floor(Math.random() * 2)];
-        const yIndex = [Sides.UP, Sides.DOWN][Math.floor(Math.random() * 2)];
-        const zIndex = [Sides.FRONT, Sides.BACK][Math.floor(Math.random() * 2)];
-        [xIndex, yIndex, zIndex]
+        [Sides.RIGHT, Sides.UP, Sides.FRONT]
             .map(side => [true, false]
                 .map(direction => {
                     fixedSides.push(getOppositeSide(side));
@@ -119,6 +116,17 @@ export class BidirectionalBreadthFirstSearchSolver implements CubeSolver {
     private applyRotations(list: LinkedList, exploredMap: Map<string, Candidate>, current: Candidate): void {
         this.actions
             .forEach(rotation => {
+                if (current.rotation) {
+                    if (rotationsCancel(current.rotation, rotation)) {
+                        return;
+                    }
+                    if (current.parent && current.parent.rotation &&
+                        rotationsAreEqual(current.rotation, rotation) &&
+                        rotationsAreEqual(current.parent.rotation, rotation)) {
+                        return;
+                    }
+                }
+
                 const newCandidate: RubiksCube = this.measurer.add(Metrics[Metrics.PERFORM_ROTATION], () => current.cube.rotateFace(rotation));
                 if (!this.measurer.add(Metrics[Metrics.VISISTED_LIST_CHECK], () => exploredMap.has(newCandidate.getHash()))) {
                     this.measurer.add(Metrics[Metrics.ADD_CANDIDATE], () => {

@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const dirName = './reports/';
+const dirName = './readme-data/reports/';
 const readReports = () => {
     const filenames = fs.readdirSync(dirName)
     return filenames
@@ -8,8 +8,6 @@ const readReports = () => {
         .map(fileName => JSON.parse(fs.readFileSync(dirName + fileName, 'utf-8')));
 }
 
-let bestResults = {};
-const algorithms = ['IDDFS', 'IDA*', 'GA', 'SA', 'WA*', 'BiBFS'];
 const analyseSingleRun = report => {
     const shuffleText = report.shuffle.split(':')[1].replace(/\s+/g, ' ').trim();
     const result = algorithms
@@ -25,32 +23,54 @@ const analyseSingleRun = report => {
             };
             acc.reports.push(analysedData);
             if (tag.toLowerCase() === 'BiBFS'.toLowerCase()) {
-                bestResults[report.timestamp] = analysedData;
+                bestResults[report.timestamp] = {
+                    ...analysedData,
+                    shuffleText: shuffleText
+                };
             }
             return acc;
         }, { shuffle: shuffleText, id: report.timestamp, reports: [] });
 
-    // const table =
-    //     `#### Shuffle: \`${result.shuffle}\`\n` +
-    //     `| Algorithm | Time | Nodes visited | Solution length |\n` +
-    //     `| ----- | ----- | ----- | ----- |\n` +
-    //     result.reports
-    //         .map(result => `| ${result.tag} | ${result.time} | ${result.visitedNodes} | ${result.solutionLength} |`)
-    //         .join('\n');
+    const table =
+        `#### Shuffle: \`${result.shuffle}\`\n` +
+        `| Algorithm | Time | Nodes visited | Solution length |\n` +
+        `| ----- | ----- | ----- | ----- |\n` +
+        result.reports
+            .map(result => `| ${result.tag} | ${result.time.toLocaleString()} | ${result.visitedNodes.toLocaleString()} | ${result.solutionLength.toLocaleString()} |`)
+            .join('\n');
 
-    // fs.writeFileSync(dirName + report.timestamp + '-table.md', table);
+    fs.writeFileSync(dirName + 'table-' + report.timestamp + '.md', table);
     return result;
 }
 
+let bestResults = {};
+const algorithms = ['IDDFS', 'IDA*', 'GA', 'SA', 'WA*', 'BiBFS'];
 const reports = readReports();
 const analysedExecution = reports
-    // .filter((_, index) => index === 0)
     .map(report => analyseSingleRun(report));
+const analyseSolutionsDistribution = () => {
+    const solutionLengths = Object.values(bestResults)
+        .map(result => result.solutionLength)
+        .sort((a, b) => a - b);
+    const uniqueSolutionLengths = [...new Set(solutionLengths)];
+    const table =
+        `| Optimal solution moves | Appearances | Distribution |\n` +
+        `| ----- | ----- | ----- | \n` +
+        uniqueSolutionLengths
+            .map(length => {
+                const appearences = solutionLengths
+                    .filter(value => value === length).length;
+                return `| ${length} | ${appearences} | ${(appearences / solutionLengths.length).toFixed(2)} |`;
+            })
+            .join('\n')
+    console.log(table)
+    return table;
+}
 
 const aggregateResults = () => {
     const table =
-        `| Algorithm | Time average - seconds (max, min, std. dev.) | Average time worse than the best | Visited nodes (max, min, std. dev.) | Optimal solution length ratio average |\n` +
-        `| ----- | ----- | ----- | ----- | ----- |\n` +
+        `| Algorithm | Time average - seconds (max, min, std. dev.) | Average time worse than the best | Visited nodes (max, min, std. dev.) | Optimal solution length ratio average | Time complexity | Spacial complexity |\n` +
+        `| ----- | ----- | ----- | ----- | ----- | ----- | ----- |\n` +
         algorithms
             .map(algorithm => {
                 const algorithmResults = analysedExecution
@@ -93,18 +113,19 @@ const aggregateResults = () => {
                     }, { sum: 0, bestSum: 0 });
 
                 const timeMean = time.sum / algorithmResultsLength;
-                const timeStdDev = algorithmResults
-                    .reduce((acc, item) => acc + Math.abs(item.time - timeMean), 0) / algorithmResultsLength;
+                const timeStdDev = Math.sqrt(algorithmResults
+                    .reduce((acc, item) => acc + Math.pow(item.time - timeMean, 2), 0) / algorithmResultsLength);
                 const nodesMean = nodes.sum / algorithmResultsLength;
-                const nodesStdDev = algorithmResults
-                    .reduce((acc, item) => acc + Math.abs(item.visitedNodes - nodesMean), 0) / algorithmResultsLength;
-                return `| ${algorithm} | ${(timeMean / 1000).toLocaleString()} (${(time.max / 1000).toLocaleString()}, ${(time.min / 1000).toLocaleString()}, ${(timeStdDev / 1000).toLocaleString()}) ` +
+                const nodesStdDev = Math.sqrt(algorithmResults
+                    .reduce((acc, item) => acc + Math.pow(item.visitedNodes - nodesMean, 2), 0) / algorithmResultsLength);
+                return `| ${algorithm} | ${(timeMean / 1000).toLocaleString()} (${(time.max / 1000).toLocaleString()}, ${(time.min / 1000).toLocaleString()}, σ: ${(timeStdDev / 1000).toLocaleString()}) ` +
                     `| ${(timeRatio.sum / timeRatio.bestSum).toLocaleString()} ` +
-                    `| ${nodesMean.toLocaleString()} (${nodes.max.toLocaleString()}, ${nodes.min.toLocaleString()}, ${nodesStdDev.toLocaleString()}) ` +
-                    `| ${(lengthRatio.sum / lengthRatio.bestSum).toLocaleString()} |`;
+                    `| ${nodesMean.toLocaleString()} (${nodes.max.toLocaleString()}, ${nodes.min.toLocaleString()}, σ: ${nodesStdDev.toLocaleString()}) ` +
+                    `| ${(lengthRatio.sum / lengthRatio.bestSum).toLocaleString()} | O(branch ^ depth) | O(branch ^ depth) |`;
             })
             .join('\n');
     console.log(table);
 };
 
+analyseSolutionsDistribution();
 aggregateResults()
