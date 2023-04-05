@@ -315,14 +315,6 @@ export default defineComponent({
         }
         if (Configuration.metrics.generateReport) {
           this.saveReport(report);
-
-          this.finishedSolving = true;
-          this.shuffled = false;
-          this.solving = false;
-          clearInterval(interval);
-          await this.reset();
-          await this.shuffle();
-          return await this.mainActionButtonClick();
         }
       } catch (e) {
         console.log(e)
