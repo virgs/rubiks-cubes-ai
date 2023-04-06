@@ -6,6 +6,8 @@ import { RubiksCube, type Cubelet } from "@/engine/rubiks-cube";
 import type { CubeSolver, Solution } from "../../cube-solver";
 import { ProcedureMeasurer } from "../../procedure-measurer";
 import { SimulatedAnnealing, type Candidate } from "./simulated-annealing";
+import { RotationsTuner } from "@/printers/rotations-tuner";
+import { HumanTranslator } from "@/printers/human-translator";
 
 enum Metrics {
     NOT_MEASURED,
@@ -105,7 +107,8 @@ export class SimulatedAnnealingSolver implements CubeSolver {
     }
 
     private createSolution(solution: Candidate): Solution {
-        const rotations = solution.actions.map(action => this.actions[action])
+        // console.log(new HumanTranslator().translateRotations(solution.actions.map(action => this.actions[action])))
+        const rotations = new RotationsTuner().tune(solution.actions.map(action => this.actions[action]));
         this.measurer.finish();
         return {
             rotations: rotations,

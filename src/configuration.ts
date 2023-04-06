@@ -16,7 +16,8 @@ export type CubeTypes = {
         key: string,
         instantiator: (configuration: string) => CubeSolver,
         checked: boolean,
-        info: string
+        info: string,
+        human: boolean
     }[]
 }
 
@@ -73,6 +74,7 @@ export const Configuration = {
                     key: 'Human',
                     instantiator: (configuration: string) => new HumanSolver(new RubiksCube({ clone: configuration })),
                     checked: false,
+                    human: true,
                     info: 'Use keys \'WASDFX\' combined with \'shift\' to rotate cube faces'
                 },
                 {
@@ -121,7 +123,8 @@ export const Configuration = {
                 {
                     key: 'Human',
                     instantiator: (configuration: string) => new HumanSolver(new RubiksCube({ clone: configuration })),
-                    checked: false,
+                    checked: true,
+                    human: true,
                     info: 'Use keys \'WASDFX\' combined with \'shift\' to rotate cube faces'
                 }
             ]
@@ -134,7 +137,8 @@ export const Configuration = {
                 {
                     key: 'Human',
                     instantiator: (configuration: string) => new HumanSolver(new RubiksCube({ clone: configuration })),
-                    checked: false,
+                    checked: true,
+                    human: true,
                     info: 'Use keys \'WASDFX\' combined with \'shift\' and numbers to rotate cube faces'
                 }
             ]
@@ -147,7 +151,8 @@ export const Configuration = {
                 {
                     key: 'Human',
                     instantiator: (configuration: string) => new HumanSolver(new RubiksCube({ clone: configuration })),
-                    checked: false,
+                    checked: true,
+                    human: true,
                     info: 'Use keys \'WASDFX\' combined with \'shift\' and numbers to rotate cube faces'
                 }
             ]
@@ -160,7 +165,8 @@ export const Configuration = {
                 {
                     key: 'Human',
                     instantiator: (configuration: string) => new HumanSolver(new RubiksCube({ clone: configuration })),
-                    checked: false,
+                    checked: true,
+                    human: true,
                     info: 'Use keys \'WASDFX\' combined with \'shift\' and numbers to rotate cube faces'
                 }
             ]
@@ -173,7 +179,8 @@ export const Configuration = {
                 {
                     key: 'Human',
                     instantiator: (configuration: string) => new HumanSolver(new RubiksCube({ clone: configuration })),
-                    checked: false,
+                    checked: true,
+                    human: true,
                     info: 'Use keys \'WASDFX\' combined with \'shift\' and numbers to rotate cube faces'
                 }
             ]

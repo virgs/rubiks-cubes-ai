@@ -17,7 +17,7 @@ export class CubeletRenderer {
     private readonly cubeletMesh: Mesh;
 
     public constructor(config: Config) {
-        const gap = config.cubeDimension * 0.005;
+        const gap = config.cubeDimension * 0.001;
         const size = config.sideSize - gap;
         const geometry = new RoundedBoxGeometry(size, size, size, 3, 0.1);
         let position: Vector3 = this.getPositionFromCubelet(config);

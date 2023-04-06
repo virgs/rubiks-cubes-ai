@@ -17,7 +17,6 @@ import { getAllSides } from "./constants/sides";
 import * as Tween from '@tweenjs/tween.js'
 import type { RubiksCube } from './engine/rubiks-cube';
 import { UrlQueryHandler } from './url-query-handler';
-import type { Solution } from './solvers/cube-solver';
 
 //They have to be non reactive
 const urlQueryHandler = new UrlQueryHandler();
@@ -60,11 +59,16 @@ export default defineComponent({
   computed: {
     badgeLayerNumberIsEnabled() {
       return (method: any): boolean => {
-        return method.checked && method.key.toLowerCase() === 'human' && this.selectedCubeType.dimension > 2;
+        return method.checked && method.human && this.selectedCubeType.dimension > 2;
       };
     },
     selectedCubeType() {
       return this.cubeTypes[this.selectedDimensionIndex];
+    },
+    currentAvailableMethods() {
+      const app = document.getElementById("app")!;
+      return this.selectedCubeType.methods
+        .filter(method => !method.human || (this.selectedCubeType.methods.length < 2 || app.clientWidth > 500))
     },
     mainButtonLabel() {
       const timeLabel = ` ${(this.timer / 1000).toFixed(1)}s`;
@@ -79,7 +83,7 @@ export default defineComponent({
       }
     },
     mainActionButtonEnabled() {
-      if (this.selectedCubeType.methods
+      if (this.currentAvailableMethods
         .every(method => !method.checked)) {
         return false;
       }
@@ -134,7 +138,7 @@ export default defineComponent({
       showLayer: this.selectedCubeType.dimension > 3,
       subscript: true
     });
-    this.selectedCubeType.methods
+    this.currentAvailableMethods
       .forEach(method => method.checked = initialMethods.includes(method.key));
     this.shuffling = true;
     for (let faceRotation of shuffleMoves) {
@@ -273,7 +277,7 @@ export default defineComponent({
       if (this.solving || this.finishedSolving) {
         return this.returnCubesToStage();
       }
-      const solverKeys: string[] = this.selectedCubeType.methods
+      const solverKeys: string[] = this.currentAvailableMethods
         .filter(method => method.checked)
         .map(method => method.key);
       solverRenderers = solverKeys
@@ -350,7 +354,7 @@ export default defineComponent({
 
       const params: any = {
         cube: this.selectedDimensionIndex,
-        methods: this.selectedCubeType.methods
+        methods: this.currentAvailableMethods
           .filter(method => method.checked)
           .map(method => method.key),
         moves: afterMovesNumber,
@@ -404,7 +408,7 @@ export default defineComponent({
               </li>
             </ul>
           </div>
-          <template v-for="method, index in selectedCubeType.methods" :key="selectedCubeType.label + method.key">
+          <template v-for="method, index in currentAvailableMethods" :key="selectedCubeType.label + method.key">
             <input type="checkbox" v-model="method.checked" class="btn-check"
               :id="'btncheck' + selectedCubeType.dimension + index" autocomplete="off">
             <label class="btn btn-outline-info fa-solid" :for="'btncheck' + selectedCubeType.dimension + index"

@@ -3,39 +3,62 @@ import { getOppositeRotation, rotationsAreEqual, rotationsCancel, type FaceRotat
 export class RotationsTuner {
 
     public tune(rotations: FaceRotation[]): FaceRotation[] {
-        const result: FaceRotation[] = [];
-        let lastRotation: FaceRotation | undefined;
-        let modifiedFlag = false;
-        let consecutiveEqualsRotations: number = 1;
-        for (let rotation of rotations) {
-            if (lastRotation &&
-                rotationsCancel(rotation, lastRotation)) {
-                result.pop();
-                modifiedFlag = true;
-                consecutiveEqualsRotations = 0;
-            } else {
-                if (lastRotation) {
-                    if (rotationsAreEqual(lastRotation, rotation)) {
-                        ++consecutiveEqualsRotations;
-                        if (consecutiveEqualsRotations === 3) {
-                            result.pop();
-                            result.pop();
-                            result.push(getOppositeRotation(rotation));
-                            consecutiveEqualsRotations = 0;
-                            modifiedFlag = true;
-                            continue;
-                        }
-                    } else if (!rotationsAreEqual(lastRotation, rotation)) {
-                        consecutiveEqualsRotations = 1;
-                    }
-                }
-                result.push(rotation);
+        let result = [...rotations];
+        while (true) {
+            // console.log(new HumanTranslator().translateRotations(result))
+            const afterOppositeRemovals = this.removeTwoConsecutiveOppositeRotations(result);
+            result = afterOppositeRemovals.result;
+            if (afterOppositeRemovals.modifiedFlag) {
+                // console.log('opposite removed')
+                continue;
             }
-            lastRotation = rotation;
-        }
-        if (modifiedFlag) {
-            return this.tune(result);
+            const afterConsecuteOppositeReplacement = this.replaceThreeConsecutiveRotations(result);
+            result = afterConsecuteOppositeReplacement.result;
+            if (afterConsecuteOppositeReplacement.modifiedFlag) {
+                // console.log('consecutives replaced')
+                continue;
+            }
+            break;
         }
         return result;
+    }
+
+
+    private removeTwoConsecutiveOppositeRotations(rotations: FaceRotation[]): { modifiedFlag: boolean, result: FaceRotation[] } {
+        if (rotations.length === 1) {
+            return { modifiedFlag: false, result: rotations };
+        }
+        let modifiedFlag = false;
+        const result: FaceRotation[] = [];
+        for (let i = 0; i < rotations.length; ++i) {
+            if (result.length > 0 && rotationsCancel(rotations[i], result[result.length - 1])) {
+                modifiedFlag = true;
+                result.pop();
+            } else {
+                result.push({ ...rotations[i] });
+            }
+        }
+        return { modifiedFlag: modifiedFlag, result: result };
+    }
+
+    private replaceThreeConsecutiveRotations(rotations: FaceRotation[]): { modifiedFlag: boolean, result: FaceRotation[] } {
+        if (rotations.length <= 2) {
+            return { modifiedFlag: false, result: rotations };
+        }
+        let modifiedFlag = false;
+        const result: FaceRotation[] = [];
+        for (let i = 0; i < rotations.length; ++i) {
+            if (result.length > 1 &&
+                rotationsAreEqual(rotations[i], result[result.length - 1]) &&
+                rotationsAreEqual(rotations[i], result[result.length - 2])) {
+                modifiedFlag = true;
+                result.pop();
+                result.pop();
+                result.push({ ...getOppositeRotation(rotations[i]) });
+            } else {
+                result.push({ ...rotations[i] });
+            }
+        }
+        return { modifiedFlag: modifiedFlag, result: result };
     }
 }
