@@ -113,37 +113,41 @@ Since it keeps a list of every visited state to avoid cycles, it can easily fill
 
 # Algorithms comparison report
 
-To generate the report, **50 executions** of a pocket cube [scrambled](#scrambling) with a random number between **30 and 40** were executed.
+To generate the report, **150 executions** of a pocket cube [scrambled](#scrambling) with a random number between **30 and 40** were executed.
 Worth noting that every algorithm runs simultaneously in the same machine, thus they compete for the same resources and once one algorithm finishes, the other ones have less resource competition.  
 Other than that, in order to gather these numbers, some flags, and procedures were added/enable to the code which, ironically, make them run a bit slower.
 
-| Algorithm | Time average - seconds (max, min, std. dev.) | Average time worse than the best | Visited nodes (max, min, std. dev.) | Optimal solution length ratio average | Time complexity | Spacial complexity |
-| ----- | ----- | ----- | ----- | ----- | ----- | ----- |
-| IDDFS | 76.623 (410.966, 1.092, σ: 99.105) | 444.731 | 17,918,735.76 (67,725,922, 124,590, σ: 25,360,279.023) | 1 | O(branch ^ depth) | O(depth) |
-| IDA* | 93.472 (385.298, 1.293, σ: 87.195) | 542.527 | 3,844,201.56 (13,121,312, 26,697, σ: 4,646,397.906) | 1 | O(branch ^ depth) | O(depth) |
-| GA | 37.792 (157.383, 0.043, σ: 37.555) | 219.35 | - | 2.265 | Pre-defined | Pre-defined |
-| SA | 73.888 (395.93, 1.748, σ: 82.292) | 428.861 | - | 2.404 | Pre-defined | Pre-defined |
-| WA* | 1.206 (2.709, 0.096, σ: 0.602) | 6.998 | 46,484.5 (105,749, 2,168, σ: 23,818.754) | 1.446 | O(branch ^ depth) | O(branch ^ depth) |
-| BiBFS | 0.172 (0.363, 0.04, σ: 0.084) | 1 | 2,973.18 (6,175, 366, σ: 1,769.28) | 1 | O(2 * branch ^ (depth / 2)) | O(2 * branch ^ (depth / 2)) |
 
 ### Report per solution length
-| Optimal solution moves | Appearances | Distribution | IDDFS average times - seconds (std. dev.)  | IDA* average times - seconds (std. dev.)  | GA average times - seconds (std. dev.)  | SA average times - seconds (std. dev.)  | WA* average times - seconds (std. dev.)  | BiBFS average times - seconds (std. dev.)  | 
-| ----- | ----- | ----- |  ----- | ----- | ----- | ----- | ----- | ----- |
-| 5 | 1 | 0.02 | 0.021 (σ: 0)  | 0.023 (σ: 0)  | 0.216 (σ: 0)  | 5.261 (σ: 0)  | 0.009 (σ: 0)  | 0.005 (σ: 0) 
-| 8 | 2 | 0.04 | 1.158 (σ: 0.098)  | 1.468 (σ: 0.184)  | 6.133 (σ: 2.194)  | 9.473 (σ: 7.705)  | 1.611 (σ: 0.959)  | 0.039 (σ: 0.013) 
-| 9 | 6 | 0.12 | 4.448 (σ: 2.202)  | 11.622 (σ: 6.983)  | 33.461 (σ: 26.621)  | 44.514 (σ: 37.462)  | 1.693 (σ: 0.662)  | 0.118 (σ: 0.032) 
-| 10 | 12 | 0.24 | 20.604 (σ: 11.007)  | 63.469 (σ: 37.609)  | 36.543 (σ: 27.493)  | 73.601 (σ: 54.294)  | 1.457 (σ: 1.262)  | 0.133 (σ: 0.056) 
-| 11 | 14 | 0.28 | 96.219 (σ: 35.988)  | 82.813 (σ: 40.862)  | 34.333 (σ: 25.316)  | 78.065 (σ: 46.757)  | 0.855 (σ: 0.391)  | 0.249 (σ: 0.081) 
-| 12 | 13 | 0.26 | 265.338 (σ: 103.511)  | 248.002 (σ: 102.344)  | 44.086 (σ: 40.394)  | 90.732 (σ: 66.789)  | 1.644 (σ: 0.707)  | 0.296 (σ: 0.098) 
-| 13 | 2 | 0.04 | 882.841 (σ: 39.418)  | 877.331 (σ: 86.383)  | 18.061 (σ: 6.755)  | 23.023 (σ: 3.734)  | 0.889 (σ: 0.279)  | 0.633 (σ: 0.012) 
+| Optimal solution length | Distribution | IDDFS times avg (std. dev.)  | IDA* times avg (std. dev.)  | SA times avg (std. dev.)  | GA times avg (std. dev.)  | WA* times avg (std. dev.)  | BiBFS times avg (std. dev.)  | 
+|  ----- | ----- |  ----- | ----- | ----- | ----- | ----- | ----- |
+| 5 | 0.01 | 0.021s (σ: 0s)  | 0.023s (σ: 0s)  | 5.261s (σ: 0s)  | 0.216s (σ: 0s)  | 0.009s (σ: 0s)  | 0.005s (σ: 0s) 
+| 7 | 0.01 | 0.203s (σ: 0.033s)  | 0.184s (σ: 0.021s)  | 8.21s (σ: 7.523s)  | 0.667s (σ: 0.251s)  | 0.494s (σ: 0.455s)  | 0.027s (σ: 0.006s) 
+| 8 | 0.04 | 1.119s (σ: 0.228s)  | 1.404s (σ: 0.346s)  | 17.786s (σ: 10.928s)  | 3.892s (σ: 2.981s)  | 0.867s (σ: 0.795s)  | 0.035s (σ: 0.015s) 
+| 9 | 0.11 | 4.096s (σ: 1.718s)  | 10.184s (σ: 5.412s)  | 40.286s (σ: 34.413s)  | 21.262s (σ: 22.029s)  | 1.116s (σ: 0.626s)  | 0.107s (σ: 0.031s) 
+| 10 | 0.28 | 20.461s (σ: 11.134s)  | 64.97s (σ: 34.713s)  | 70.663s (σ: 80.151s)  | 28.7s (σ: 24.087s)  | 1.429s (σ: 1.303s)  | 0.143s (σ: 0.082s) 
+| 11 | 0.33 | 81.979s (σ: 36.8s)  | 66.786s (σ: 36.572s)  | 76.712s (σ: 57.971s)  | 38.652s (σ: 39.129s)  | 1.149s (σ: 1.042s)  | 0.247s (σ: 0.119s) 
+| 12 | 0.19 | 234.062s (σ: 80.77s)  | 215.18s (σ: 80.481s)  | 85.691s (σ: 79.135s)  | 52.622s (σ: 59.528s)  | 1.35s (σ: 0.648s)  | 0.289s (σ: 0.105s) 
+| 13 | 0.03 | 880.14s (σ: 41.056s)  | 890.504s (σ: 67.579s)  | 88.817s (σ: 77.486s)  | 22.587s (σ: 10.54s)  | 1.409s (σ: 0.657s)  | 0.596s (σ: 0.038s)
+
+
+### Report per algorithm
+| Algorithm | Time average - (std. dev.) | Average times worse than the best | Visited nodes (std. dev.) | Optimal solution length ratio average | Time complexity | Spacial complexity |
+| ----- | ----- | ----- | ----- | ----- | ----- | ----- |
+| IDDFS | 100.729s (σ: 157.626s) | 373.446 | 26,924,837.207 (σ: 55,234,510.142) | 1 | O(branch ^ depth) | O(depth) |
+| IDA* | 105.58s (σ: 153.103s) | 453.515 | 5,512,831.24 (σ: 11,626,333.488) | 1 | O(branch ^ depth) | O(depth) |
+| SA | 69.142s (σ: 68.888s) | 422.824 | 0 (σ: 0) | 1.624 | Constant - pre-defined | Constant - pre-defined |
+| GA | 33.921s (σ: 39.408s) | 189.477 | 0 (σ: 0) | 1.501 | Constant - pre-defined | Constant - pre-defined |
+| WA* | 1.24s (σ: 1.02s) | 8.561 | 44,316.253 (σ: 29,390.32) | 1.434 | O(branch ^ depth) | O(branch ^ depth) |
+| BiBFS | 0.206s (σ: 0.137s) | 1 | 3,591.32 (σ: 2,495.894) | 1 | O(2 * branch ^ (depth / 2)) | O(2 * branch ^ (depth / 2)) |
 
 ## Analysis
-Overall, considering the *Time average* and the *Nodes visited* numbers, **BiBFS** is, by far, the best algorithm to solve this cube. It's easy to note that only one approach *average time* is better than the *BiBFS's* worst time: **WA's**. Since I brought it up, **WA** is a good approach too. Even though it is, in average, ~7 times slower than **BiBFS**, this difference is very subtle for most pocket cubes where the optimal solution is less than 12 rotations away.  
+Overall, considering the *Time average* and the *Nodes visited* numbers, **BiBFS** is, by far, the best algorithm to solve this cube. Regardless of the *optimal solution length*. One interesting thing to note is that the **WA's** 7 step solution average is approximately half of the *BiBFS's* 13 steps solutions. As a matter of fact, so do the 7 steps solution for every graph-based solution such as **IDDFS** and **IDA**. What makes total sense when you see their respective *Time complexities*. Since I brought it up, **WA** is a good approach too. Even though it is, in average, ~8,.5 times slower than **BiBFS**, this difference is very subtle and usually less than a second. Another nice thing to notice is that, even though **WA's** performance massively dominates **IDDFS's** and **IDA's** for most of the scenarios, it is actually dominated by them for the scenarios where the optimal solution is less than 8. Which, in my simulations, represent only 2% of the cases.
 
-Both **GA** and **SA**, the meta-heuristic algorithms, have somewhat similar performances. In average, they are ~200 times slower than the best one (**BiBFS**), but are better than the slowest ones too (**IDDFS** and **IDA\***). However, its constant and inoffensive memory usage and reliable performance make them solutions to be considered when it comes to Pocket cubes AI. Maybe tweaking a bit **SA** hyper-params would make it more efficient, but, as always, finding their optimal values is not an easy task and often involves a lot of trial and error.  
-Considering such heavily lucky-dependent approachs and an inconsistent fitness function, their steady performances amaze me. Especially when you realize that one wrong action taken in the very beginning of a candidate immediately throws away a potentially good solution. Given that their *Optimal solution length ratio average* are greater than 1, pretty much all of their solutions contain unnecessary moves combination (eg. *R* followed by a *R'*). Some solution-tuner algorithm could be used to make them shorter. That's why I added this bad boy: [Rotation Tuner](./src/printers/rotations-tuner.ts). It looks for a sequence of rotations to, recursively, remove two consecutive opposite operations (such as *R* followed by a *R'*) and replace three consecutive equal rotations and replace it with the opposite one (*LLL* becomes *L'*). It's not necessary, though, but it seemed like a nice way to pass the time.
+Both **GA** and **SA**, the meta-heuristic algorithms, have somewhat steady performances. In average, **SA's** is the double of **GA's**, but they're still in the same level.and both are usually better than the slowest ones too (**IDDFS** and **IDA\***). Their constant and inoffensive memory usages and reliable performance make them solutions to be considered when it comes to Pocket cubes AI. Maybe tweaking a bit **SA** hyper-params would make it more efficient, but, as always, finding their optimal values is not an easy task and often involves a lot of trial and error.  
+Worth noting that, considering such heavily lucky-dependent approachs and an inconsistent fitness function, their steady performances amaze me. Especially when you realize that one wrong action taken in the very beginning of a candidate immediately throws away a potentially good solution. Guess that's exactly what makes **GA's** perfomance better than **SA's**. **GA's** *mutation rate* is less than **SA's** counterpart: *temperature*, what makes it keep good initial solutions. Given that their solution length is predefined, pretty much all of their solutions contained unnecessary moves combination (eg. *R* followed by a *R'*). Some solution-tuner algorithm was used to make them shorter. [Rotation Tuner](./src/printers/rotations-tuner.ts) looks for a sequence of rotations to, recursively, remove two consecutive opposite operations (such as *R* followed by a *R'*) and replace three consecutive equal rotations and replace it with the opposite one (*LLL* becomes *L'*). This bad boy was not necessary, though, but it seemed like a nice way to pass the time.
 
-**IDDFS** and **IDA** are, when it comes to *time to solve the cube* are the slowest ones. Their high standard deviation show that the time they take to solve the pocket cube changes exponentially depending on how long the solution is. This is, of course, expected not only for them but for most of the algorithms, as you can check in the *Time complexity* column. The difference is very noticeable as soon as the solution has at least 8 steps. One interesting thing worth mentioning is that they are very cheap memory-wise. Again, given enough time, they guarantee to find the optimal solution even for bigger Rubik's cubes. Their performance, of course, change dramatically depending on how long the solution is. For solutions shorter than 10 steps, **IDDFS** performs very well. Even better than **IDA\***, which explicetly shows that the chosen heuristic (number of misplaced stickers) is inconsistent. This situation inverts when the solutions are greater than 10 steps. One constant thing about their performances, though, is that **IDDFS** usually visits ~6 times more nodes than **IDA**. That is, in fact, what makes **IDA\*** faster than *IDDFS** in a longer optimal solution situation.
+**IDDFS** and **IDA** are, when it comes to *time to solve the cube* are the slowest ones. Their *average time* shows that the time they take to solve the pocket cube changes exponentially depending on how long the solution is. This is, of course, expected. Not only for them but for most of the algorithms, as you can check in the *Time complexity* column. The difference is very noticeable as soon as the solution has at least 8 steps. One interesting thing worth mentioning is that they are very cheap memory-wise. They're the only one that, given enough time (centuries, perharps), guarantee to find the optimal solution for any bigger Rubik's cubes. Their performance, of course, change dramatically depending on how long the solution is. For some reasons, **IDDFS** performs even better than **IDA\***, which explicetly shows that the chosen heuristic (number of misplaced stickers) is inconsistent and probably not the best one. One constant thing about their performances, though, is that **IDDFS** usually visits ~5 times more nodes than **IDA**.
 
 For more details, please consider reading the files in the [reports](./readme-data/reports/) folder.
 

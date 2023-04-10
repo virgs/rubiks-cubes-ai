@@ -90,16 +90,16 @@ export const Configuration = {
                     info: `Interative-deepening A star. Uses number of misplaced stickers as heuristic.`
                 },
                 {
-                    key: 'GA',
-                    instantiator: (configuration: string) => new GeneticAlgorithmSolver(new RubiksCube({ clone: configuration })),
-                    checked: true,
-                    info: `Random movements improved by genetic algorithm. Uses number of misplaced stickers as fitness function. Population: ${GeneticAlgorithmConfig.populationPerGeneration}. Elitism ${GeneticAlgorithmConfig.elitism}.  Mutation rate ${GeneticAlgorithmConfig.mutationRate}. `
-                },
-                {
                     key: 'SA',
                     instantiator: (configuration: string) => new SimulatedAnnealingSolver(new RubiksCube({ clone: configuration })),
                     checked: true,
                     info: `Random movements improved by simulated annealing algorithm. Uses number of misplaced stickers as a measure of a solution candidate result. Population: ${SimulatedAnnealingConfig.population}. Initial temperature: ${SimulatedAnnealingConfig.initialTemperature}. Temperature decrease rate: ${SimulatedAnnealingConfig.temperatureDecreaseRate}`
+                },
+                {
+                    key: 'GA',
+                    instantiator: (configuration: string) => new GeneticAlgorithmSolver(new RubiksCube({ clone: configuration })),
+                    checked: true,
+                    info: `Random movements improved by genetic algorithm. Uses number of misplaced stickers as fitness function. Population: ${GeneticAlgorithmConfig.populationPerGeneration}. Elitism ${GeneticAlgorithmConfig.elitism}.  Mutation rate ${GeneticAlgorithmConfig.mutationRate}. `
                 },
                 {
                     key: 'WA*',
