@@ -80,7 +80,7 @@ This is a manageably imaginable number. It's a little less than the square of th
 The Rubik's cube scrambling problem a fascinating unsolved challenge. However, it becomes quite manageable if we turn our attention to a smaller 2x2 version, the Pocket cube.  
 So how many moves should you use to fully scramble a pocket cube? The answer depends on how small you would like the distance to the solved state distribution to be d(t). However, it is certainly true that God's number, 14, of moves is insufficient. As a bare minimum, one should not use fewer than 19 moves.  
 After 11 moves, d(t) is still very large, at 0.695. The first value of t that yields a d(t) value below 0.25 (often called "the mixing time" in Markov chain theory) is 19. After 25 moves d(t) is 0.092; after 50 moves it is 0.0012; and after 100 moves it is 0.00000017.  
-All of this is needed to say that any shuffling with a random whole number of steps between 30 and 40 is good enough for the pocket cube.
+All of this is needed to say that any shuffling with a random whole number of steps between 30 and 40 (with consecutive opposite rotations or 4 identical rotations in a row) is good enough for the pocket cube.
 
 ## General solution approach
 The pocket cube (2x2) has an interesting property of being able to be solved only by rotating 3 predefined faces. Note, the *L* move basically consists of an *R'* move and a new cube orientation (which is not a move, technically), so you don't need to do the L move at all. The same applies to the other 2 axes.
@@ -113,7 +113,7 @@ Since it keeps a list of every visited state to avoid cycles, it can easily fill
 
 # Algorithms comparison report
 
-To generate the report, **50 executions** of a pocket cube scrambled with a random number between **30 and 40** were executed.
+To generate the report, **50 executions** of a pocket cube [scrambled](#scrambling) with a random number between **30 and 40** were executed.
 Worth noting that every algorithm runs simultaneously in the same machine, thus they compete for the same resources and once one algorithm finishes, the other ones have less resource competition.  
 Other than that, in order to gather these numbers, some flags, and procedures were added/enable to the code which, ironically, make them run a bit slower.
 
@@ -126,14 +126,16 @@ Other than that, in order to gather these numbers, some flags, and procedures we
 | WA* | 1.206 (2.709, 0.096, σ: 0.602) | 6.998 | 46,484.5 (105,749, 2,168, σ: 23,818.754) | 1.446 | O(branch ^ depth) | O(branch ^ depth) |
 | BiBFS | 0.172 (0.363, 0.04, σ: 0.084) | 1 | 2,973.18 (6,175, 366, σ: 1,769.28) | 1 | O(2 * branch ^ (depth / 2)) | O(2 * branch ^ (depth / 2)) |
 
-
-| Optimal solution moves | Appearances | Distribution |
-| ----- | ----- | ----- | 
-| 8 | 3 | 0.06 |
-| 9 | 5 | 0.10 |
-| 10 | 21 | 0.42 |
-| 11 | 11 | 0.22 |
-| 12 | 10 | 0.20 |
+### Report per solution length
+| Optimal solution moves | Appearances | Distribution | IDDFS average times - seconds (std. dev.)  | IDA* average times - seconds (std. dev.)  | GA average times - seconds (std. dev.)  | SA average times - seconds (std. dev.)  | WA* average times - seconds (std. dev.)  | BiBFS average times - seconds (std. dev.)  | 
+| ----- | ----- | ----- |  ----- | ----- | ----- | ----- | ----- | ----- |
+| 5 | 1 | 0.02 | 0.021 (σ: 0)  | 0.023 (σ: 0)  | 0.216 (σ: 0)  | 5.261 (σ: 0)  | 0.009 (σ: 0)  | 0.005 (σ: 0) 
+| 8 | 2 | 0.04 | 1.158 (σ: 0.098)  | 1.468 (σ: 0.184)  | 6.133 (σ: 2.194)  | 9.473 (σ: 7.705)  | 1.611 (σ: 0.959)  | 0.039 (σ: 0.013) 
+| 9 | 6 | 0.12 | 4.448 (σ: 2.202)  | 11.622 (σ: 6.983)  | 33.461 (σ: 26.621)  | 44.514 (σ: 37.462)  | 1.693 (σ: 0.662)  | 0.118 (σ: 0.032) 
+| 10 | 12 | 0.24 | 20.604 (σ: 11.007)  | 63.469 (σ: 37.609)  | 36.543 (σ: 27.493)  | 73.601 (σ: 54.294)  | 1.457 (σ: 1.262)  | 0.133 (σ: 0.056) 
+| 11 | 14 | 0.28 | 96.219 (σ: 35.988)  | 82.813 (σ: 40.862)  | 34.333 (σ: 25.316)  | 78.065 (σ: 46.757)  | 0.855 (σ: 0.391)  | 0.249 (σ: 0.081) 
+| 12 | 13 | 0.26 | 265.338 (σ: 103.511)  | 248.002 (σ: 102.344)  | 44.086 (σ: 40.394)  | 90.732 (σ: 66.789)  | 1.644 (σ: 0.707)  | 0.296 (σ: 0.098) 
+| 13 | 2 | 0.04 | 882.841 (σ: 39.418)  | 877.331 (σ: 86.383)  | 18.061 (σ: 6.755)  | 23.023 (σ: 3.734)  | 0.889 (σ: 0.279)  | 0.633 (σ: 0.012) 
 
 ## Analysis
 Overall, considering the *Time average* and the *Nodes visited* numbers, **BiBFS** is, by far, the best algorithm to solve this cube. It's easy to note that only one approach *average time* is better than the *BiBFS's* worst time: **WA's**. Since I brought it up, **WA** is a good approach too. Even though it is, in average, ~7 times slower than **BiBFS**, this difference is very subtle for most pocket cubes where the optimal solution is less than 12 rotations away.  

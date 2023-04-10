@@ -43,7 +43,6 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
     private readonly numberOfStickersMovedInOneTwist: number;
     private readonly iterations: IterationData[];
     private readonly minBoundGrow: number = 1.25; //Avoids new nodes visited per iteration non exponential grow
-    private currentPath: string[];
     private bound: number;
     private visitedNodes: number;
     private aborted: boolean;
@@ -51,7 +50,6 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
     public constructor(cube: RubiksCube) {
         this.iterations = [];
         this.measurer = new ProcedureMeasurer();
-        this.currentPath = [];
         this.visitedNodes = 0;
         this.aborted = false;
 
@@ -84,8 +82,6 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
         return new Promise((resolve, reject) => {
             this.measurer.start();
             while (!this.aborted) {
-                this.currentPath = [this.root.cube.getHash()];
-
                 const searchResult = this.search(this.root, 0)
                 if (searchResult.solution) {
                     return resolve(this.createSolution(searchResult.solution));
@@ -119,21 +115,16 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
             if (sum > this.bound) {
                 return { cost: sum };
             }
-            const childHash = child.cube.getHash();
-            if (this.measurer.add(Metrics[Metrics.CYCLE_AVOIDANCE_CHECK],
-                () => this.currentPath
-                    .every(hash => hash !== childHash))) {// avoid cycles
-                this.currentPath.push(childHash);
-                const searchResult = this.search(child, depth + 1);
-                if (searchResult.solution || searchResult.aborted) {
-                    return searchResult;
-                } else {
-                    // https://github.com/lukapopijac/pocket-cube-optimal-solver#about-the-search-algorithm
-                    estimatedCost = Math.min(estimatedCost, searchResult.cost! - 1);
-                    minGreaterValue = Math.min(searchResult.cost!, minGreaterValue);
-                }
-                this.currentPath.pop();
+
+            const searchResult = this.search(child, depth + 1);
+            if (searchResult.solution || searchResult.aborted) {
+                return searchResult;
+            } else {
+                // https://github.com/lukapopijac/pocket-cube-optimal-solver#about-the-search-algorithm
+                estimatedCost = Math.min(estimatedCost, searchResult.cost! - 1);
+                minGreaterValue = Math.min(searchResult.cost!, minGreaterValue);
             }
+
         }
 
         return { cost: minGreaterValue };

@@ -318,7 +318,14 @@ export default defineComponent({
           solutions: solutions
         }
         if (Configuration.metrics.generateReport) {
-          this.saveReport(report);
+          this.finishedSolving = true;
+          this.shuffled = false;
+          this.solving = false;
+          clearInterval(interval);
+          await this.saveReport(report);
+          await this.reset();
+          await this.shuffle();
+          return await this.mainActionButtonClick();
         }
       } catch (e) {
         console.log(e)
@@ -332,6 +339,7 @@ export default defineComponent({
       const a = document.createElement("a");
       const file = new Blob([JSON.stringify(report)], { type: 'text/json' });
       a.href = URL.createObjectURL(file);
+      report.url = window.location.href;
       a.download = `${report.timestamp}.json`;
       document.body.appendChild(a);
       a.click();

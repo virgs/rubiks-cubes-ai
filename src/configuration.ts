@@ -45,7 +45,7 @@ export const SimulatedAnnealingConfig = {
 export const Configuration = {
     metrics: {
         enabled: true || import.meta.env.DEV,
-        generateReport: false
+        generateReport: true
     },
     world: {
         debug: false,
