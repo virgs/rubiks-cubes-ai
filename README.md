@@ -113,8 +113,8 @@ Since it keeps a list of every visited state to avoid cycles, it can easily fill
 
 # Algorithms comparison report
 
-To generate the report, **150 executions** of a pocket cube [scrambled](#scrambling) with a random number between **30 and 40** were executed.
-Worth noting that every algorithm runs simultaneously in the same machine, thus they compete for the same resources and once one algorithm finishes, the other ones have less resource competition.  
+To generate the report, **150 executions** of a pocket cube [scrambled](#scrambling) with a random number between **30 and 40** of rotations were executed.
+Worth noting that every algorithm runs simultaneously in the same machine, thus they compete for the same resources and once an algorithm finishes, the other ones have less resource competition.  
 Other than that, in order to gather these numbers, some flags, and procedures were added/enable to the code which, ironically, make them run a bit slower.
 
 
