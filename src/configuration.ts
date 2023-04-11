@@ -26,20 +26,20 @@ export const WeightedAStarAlgorithmConfig = {
 }
 
 export const GeneticAlgorithmConfig = {
-    mutationRate: 0.1,
+    mutationRate: 0.25,
     populationPerGeneration: 100,
     maxNumOfRotations: 30,
     elitism: 15,
-    armageddonThreshold: 5000
+    armageddonThreshold: 4000
 }
 
 export const SimulatedAnnealingConfig = {
     population: 100,
-    initialTemperature: .2,
-    temperatureDecreaseRate: .85,
+    initialTemperature: .5,
+    temperatureDecreaseRate: .95,
     numOfRotations: 30,
     maxSuccessPerIteration: 10,
-    restartThreshold: 5000
+    restartThreshold: 4000
 }
 
 export const Configuration = {
