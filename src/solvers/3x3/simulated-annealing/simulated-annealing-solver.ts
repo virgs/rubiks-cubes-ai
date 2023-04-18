@@ -1,12 +1,11 @@
-import { SimulatedAnnealingConfig } from "@/configuration";
-import { getOppositeColor, type Colors } from "@/constants/colors";
-import { Sides, getOppositeSide, } from "@/constants/sides";
+import { Sides } from "@/constants/sides";
 import type { FaceRotation } from "@/engine/face-rotation";
-import { RubiksCube, type Cubelet } from "@/engine/rubiks-cube";
+import { RubiksCube } from "@/engine/rubiks-cube";
 import { RotationsTuner } from "@/printers/rotations-tuner";
 import type { CubeSolver, Solution } from "../../cube-solver";
 import { ProcedureMeasurer } from "../../procedure-measurer";
 import { SimulatedAnnealing, type Candidate } from "./simulated-annealing";
+import type { Colors } from "@/constants/colors";
 
 enum Metrics {
     NOT_MEASURED,
@@ -25,7 +24,7 @@ export class SimulatedAnnealingSolver implements CubeSolver {
     private readonly initialState: RubiksCube;
     private readonly goalStateHash: string;
     private simulatedAnnealing: SimulatedAnnealing;
-    private candidates: Candidate[];
+    private candidate: Candidate;
     private aborted: boolean;
     private actions: FaceRotation[];
     private restartCounter: number = 0;
@@ -36,10 +35,9 @@ export class SimulatedAnnealingSolver implements CubeSolver {
         this.initialState = cube.clone();
         this.aborted = false;
         this.actions = [];
-        const fixedCubelet = cube.getCubeletsBySides(Sides.BACK, Sides.LEFT, Sides.DOWN)[0];
-        const goalState = this.buildSolvedPocketCubeFromCornerCubelet(fixedCubelet);
+        const goalState = this.buildSolvedCubeFromCenterCubelets(cube);
         this.goalStateHash = goalState.getHash();
-        [Sides.FRONT, Sides.UP, Sides.RIGHT] //So the fixed cubelet doesn't move
+        [Sides.FRONT, Sides.UP, Sides.RIGHT, Sides.BACK, Sides.DOWN, Sides.LEFT]
             .map(side => [true, false] // So that cancelling rotations are adjacents to each other
                 .map(direction => {
                     this.actions.push({ side: side, counterClockwiseDirection: direction, layer: 0 });
@@ -47,7 +45,7 @@ export class SimulatedAnnealingSolver implements CubeSolver {
             );
 
         this.simulatedAnnealing = new SimulatedAnnealing(this.actions.length)
-        this.candidates = this.simulatedAnnealing.iterate();
+        this.candidate = this.simulatedAnnealing.iterate();
     }
 
     public async findSolution(): Promise<Solution> {
@@ -58,22 +56,18 @@ export class SimulatedAnnealingSolver implements CubeSolver {
                 if (this.aborted) {
                     return reject();
                 }
-                if (this.simulatedAnnealing.getIterationCounter() > SimulatedAnnealingConfig.restartThreshold) {
+                if (this.simulatedAnnealing.getIterationCounter() > 500000) {
                     ++this.restartCounter;
                     console.log('Restart: ' + this.restartCounter)
                     this.simulatedAnnealing = new SimulatedAnnealing(this.actions.length)
-                    this.candidates = this.simulatedAnnealing.iterate();
+                    this.candidate = this.simulatedAnnealing.iterate();
                 }
-                const result: Candidate[] = [];
-                for (let citizen of this.candidates) {
-                    const citizenResult = this.runCitizen(citizen);
-                    if (citizenResult.score === this.goalStateHash.length) {
-                        return resolve(this.createSolution(citizenResult));
-                    }
-                    this.measurer.add(Metrics[Metrics.AGGREGATE_CURRENT_GENERATION], () => result.push(citizenResult));
+                const candidateResult = this.runCitizen(this.candidate);
+                if (candidateResult.score === this.goalStateHash.length) {
+                    return resolve(this.createSolution(candidateResult));
                 }
 
-                this.candidates = this.measurer.add(Metrics[Metrics.CREATE_NEXT_GENERATION], () => this.simulatedAnnealing.iterate(result));
+                this.candidate = this.measurer.add(Metrics[Metrics.CREATE_NEXT_GENERATION], () => this.simulatedAnnealing.iterate(candidateResult));
             }
         });
     }
@@ -120,13 +114,11 @@ export class SimulatedAnnealingSolver implements CubeSolver {
         }
     }
 
-    public buildSolvedPocketCubeFromCornerCubelet(cubelet: Cubelet): RubiksCube {
+    public buildSolvedCubeFromCenterCubelets(cube: RubiksCube): RubiksCube {
         const colorMap: Map<Sides, Colors> = new Map();
-        cubelet.stickers
-            .forEach(sticker => {
-                colorMap.set(sticker.side, sticker.color);
-                colorMap.set(getOppositeSide(sticker.side), getOppositeColor(sticker.color));
-            });
+        cube.getAllCubelets()
+            .filter(cubelet => cubelet.stickers.length === 1)
+            .forEach(cubelet => colorMap.set(cubelet.stickers[0].side, cubelet.stickers[0].color));
         return new RubiksCube({ colorMap: colorMap, dimension: this.initialState.getDimension() });
     }
 

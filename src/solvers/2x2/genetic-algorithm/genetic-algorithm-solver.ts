@@ -3,11 +3,10 @@ import { getOppositeColor, type Colors } from "@/constants/colors";
 import { Sides, getOppositeSide, } from "@/constants/sides";
 import type { FaceRotation } from "@/engine/face-rotation";
 import { RubiksCube, type Cubelet } from "@/engine/rubiks-cube";
+import { RotationsTuner } from "@/printers/rotations-tuner";
 import type { CubeSolver, Solution } from "../../cube-solver";
 import { ProcedureMeasurer } from "../../procedure-measurer";
 import { GeneticAlgorithm, type Chromosome } from "./genetic-algorithm";
-import { HumanTranslator } from "@/printers/human-translator";
-import { RotationsTuner } from "@/printers/rotations-tuner";
 
 enum Metrics {
     NOT_MEASURED,
@@ -38,8 +37,8 @@ export class GeneticAlgorithmSolver implements CubeSolver {
         const fixedCubelet = cube.getCubeletsBySides(Sides.BACK, Sides.LEFT, Sides.DOWN)[0];
         const goalState = this.buildSolvedPocketCubeFromCornerCubelet(fixedCubelet);
         this.goalStateHash = goalState.getHash();
-        [Sides.FRONT, Sides.UP, Sides.RIGHT] //So the fixed cubelet doesn't move
-            .map(side => [true, false]
+        [Sides.FRONT, Sides.UP, Sides.RIGHT] // So the fixed cubelet doesn't move
+            .map(side => [true, false] // Cancelling rotations are adjacents to each other
                 .map(direction => {
                     this.actions.push({ side: side, counterClockwiseDirection: direction, layer: 0 });
                 })

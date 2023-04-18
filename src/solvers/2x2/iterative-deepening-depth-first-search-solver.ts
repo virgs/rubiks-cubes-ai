@@ -44,9 +44,7 @@ export class InterativeDeepeningDepthFirstSearchSolver implements CubeSolver {
         this.aborted = false;
 
         this.actions = this.createActions();
-        const fixedCubelet = cube.getCubeletsBySides(Sides.BACK, Sides.LEFT, Sides.DOWN)[0];
-        const goalState = this.buildSolvedPocketCubeFromCornerCubelet(fixedCubelet, cube.getDimension());
-        this.currentMaxDepth = this.calculateDistanceToFinalState(cube, goalState.getConfiguration());
+        this.currentMaxDepth = 0;
 
         this.root = {
             cube: cube,
@@ -81,6 +79,9 @@ export class InterativeDeepeningDepthFirstSearchSolver implements CubeSolver {
         if (this.aborted) {
             return undefined;
         }
+        if (candidate.cube.isSolved()) {
+            return candidate;
+        }
         if (depth < this.currentMaxDepth) {
             const children = this.applyRotations(candidate);
             for (let child of children) {
@@ -88,10 +89,6 @@ export class InterativeDeepeningDepthFirstSearchSolver implements CubeSolver {
                 if (solution) {
                     return solution;
                 }
-            }
-        } else if (depth === this.currentMaxDepth) {
-            if (candidate.cube.isSolved()) {
-                return candidate;
             }
         }
     }
@@ -152,27 +149,6 @@ export class InterativeDeepeningDepthFirstSearchSolver implements CubeSolver {
                 })
             });
         return result;
-    }
-
-
-    //Calcs how many stickers have the same color as they should
-    private calculateDistanceToFinalState(cube: RubiksCube, goalStateHash: string): number {
-        const numberOfStickersMovedInOneTwistInAverage = (cube.getDimension() * cube.getDimension()) + cube.getDimension() * 4;
-        const cubeConfiguration = cube.getConfiguration();
-        return Math.ceil(cubeConfiguration
-            .split('')
-            .filter((char, index) => char !== goalStateHash[index])
-            .length / numberOfStickersMovedInOneTwistInAverage);
-    }
-
-    private buildSolvedPocketCubeFromCornerCubelet(cubelet: Cubelet, dimension: number): RubiksCube {
-        const colorMap: Map<Sides, Colors> = new Map();
-        cubelet.stickers
-            .forEach(sticker => {
-                colorMap.set(sticker.side, sticker.color);
-                colorMap.set(getOppositeSide(sticker.side), getOppositeColor(sticker.color));
-            });
-        return new RubiksCube({ colorMap: colorMap, dimension: dimension });
     }
 
 }

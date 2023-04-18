@@ -40,9 +40,9 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
     private readonly actions: FaceRotation[];
     private readonly goalStateHash: string;
     private readonly root: Candidate;
-    private readonly numberOfStickersMovedInOneTwist: number;
+    private readonly numberOfStickersThatChangeFaceInOneTwist: number;
     private readonly iterations: IterationData[];
-    private readonly minBoundGrow: number = 1.25; //Avoids new nodes visited per iteration non exponential grow
+    private readonly minBoundGrow: number = 1.25 //Avoids new nodes visited per iteration non exponential grow
     private bound: number;
     private visitedNodes: number;
     private aborted: boolean;
@@ -64,8 +64,8 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
         const goalState = this.buildSolvedPocketCubeFromCornerCubelet(fixedCubelet, cube.getDimension());
         this.goalStateHash = goalState.getHash();
         const dimension = cube.getDimension();
-        this.numberOfStickersMovedInOneTwist = dimension * dimension + dimension * getAdjacentSides(Sides.UP).length; //any side would do
-        this.bound = Math.ceil(this.calculateDistanceToFinalState(cube));
+        this.numberOfStickersThatChangeFaceInOneTwist = dimension * 4; //stickers in the face that is moving don't actually change faces
+        this.bound = Math.max(this.calculateDistanceToFinalState(cube), 8); // More than 80% of the scrambled cubes are 8 steps away from the solution AND it's really cheap to go this deep if the cube is easier than this
 
         this.root = {
             cube: cube,
@@ -181,10 +181,10 @@ export class InterativeDeepeningAStarSolver implements CubeSolver {
     //Calcs how many stickers have the same color as they should
     private calculateDistanceToFinalState(cube: RubiksCube): number {
         const cubeConfiguration = cube.getConfiguration();
-        return cubeConfiguration
+        return Math.ceil(cubeConfiguration
             .split('')
             .filter((char, index) => char !== this.goalStateHash[index])
-            .length / this.numberOfStickersMovedInOneTwist;
+            .length / this.numberOfStickersThatChangeFaceInOneTwist);
     }
 
     public buildSolvedPocketCubeFromCornerCubelet(cubelet: Cubelet, dimension: number): RubiksCube {

@@ -162,12 +162,12 @@ export class WeightedAStarSolver implements CubeSolver {
 
     //Calcs how many stickers have the same color as they should
     private calculateDistanceToFinalState(cube: RubiksCube): number {
-        const numberOfStickersMovedInOneTwistInAverage = (this.dimension * this.dimension) + this.dimension * 4;
+        const numberOfStickersThatChangeFaceInOneTwist = this.dimension * 4; //stickers in the face that is moving don't actually change faces
         const cubeConfiguration = cube.getConfiguration();
         return cubeConfiguration
             .split('')
             .filter((char, index) => char !== this.goalStateHash[index])
-            .length / numberOfStickersMovedInOneTwistInAverage;
+            .length / numberOfStickersThatChangeFaceInOneTwist;
 
     }
 

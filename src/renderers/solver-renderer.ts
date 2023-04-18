@@ -41,7 +41,7 @@ export class SolverRenderer {
     private solutionsText?: Mesh;
     private rotatingFace: boolean;
     private terminated: boolean;
-    private result?: {key: string, label: string, solution: Solution};
+    private result?: { key: string, label: string, solution: Solution };
 
     public constructor(config: SolverRendererConfig) {
         this.config = config;
@@ -98,7 +98,7 @@ export class SolverRenderer {
             const onMessage = async (event: MessageEvent<SolverWorkerResponse>) => {
                 if (!this.terminated) {
                     if (event.data.solution) {
-                        this.result = {label: this.config.label, key: this.config.key, solution: JSON.parse(event.data.solution!) as Solution};
+                        this.result = { label: this.config.label, key: this.config.key, solution: JSON.parse(event.data.solution!) as Solution };
                         console.log(this.result);
                         if (!this.result.solution.data.human) {
                             this.movesAnimationsQueue.push(...this.result.solution.rotations);
@@ -108,12 +108,12 @@ export class SolverRenderer {
                         if (ms > 1000) {
                             time = (Math.trunc((ms * 1000) / 1000) / 1000) + 's';
                         }
-                        let text = '     Total time: ' + time + '\n';
+                        let text = '  Total time: ' + time + '\n';
                         text += new HumanTranslator().translateRotations(this.result.solution.rotations, { lineBreak: 5, showNumberOfMoves: true });
                         this.solutionsText = this.createText(text, .6);
                         this.solutionsText.position.set(this.title.position.x + Configuration.renderers.cubeSize * .5,
                             this.title.position.y - Configuration.renderers.cubeSize,
-                            this.title.position.z + Configuration.renderers.cubeSize * .5);
+                            this.title.position.z - Configuration.renderers.cubeSize * .5);
                         this.config.scene.add(this.solutionsText);
                         this.terminated = true;
                         this.solversMapWorker.terminate();
@@ -173,7 +173,7 @@ export class SolverRenderer {
 
                     this.cubeRenderer.getMesh().position.set(cubePosition.x, cubePosition.y, cubePosition.z);
                     this.title!.position.set(titlePosition.x - 2 * Configuration.renderers.cubeSize,
-                        titlePosition.y + 2.5,
+                        titlePosition.y + 4,
                         titlePosition.z + Configuration.renderers.cubeSize);
                 })
                 .onComplete((update: { value: number }) => {
@@ -182,7 +182,7 @@ export class SolverRenderer {
 
                     this.cubeRenderer.getMesh().position.set(cubePosition.x, cubePosition.y, cubePosition.z);
                     this.title!.position.set(titlePosition.x - 2 * Configuration.renderers.cubeSize,
-                        titlePosition.y + 2.5,
+                        titlePosition.y + 4,
                         titlePosition.z + Configuration.renderers.cubeSize);
                     resolve();
                 })

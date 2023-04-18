@@ -3,7 +3,8 @@ import { BidirectionalBreadthFirstSearchSolver } from "./solvers/2x2/bidirection
 import { GeneticAlgorithmSolver } from "./solvers/2x2/genetic-algorithm/genetic-algorithm-solver";
 import { InterativeDeepeningAStarSolver } from "./solvers/2x2/iterative-deepening-a-star-solver";
 import { InterativeDeepeningDepthFirstSearchSolver } from "./solvers/2x2/iterative-deepening-depth-first-search-solver";
-import { SimulatedAnnealingSolver } from "./solvers/2x2/simulated-annealing/simulated-annealing-solver";
+import { SimulatedAnnealingSolver as TwoDimensionsSimulatedAnnealingSolver} from "./solvers/2x2/simulated-annealing/simulated-annealing-solver";
+import { SimulatedAnnealingSolver as ThreeDimensionsSimulatedAnnealingSolver } from "./solvers/3x3/simulated-annealing/simulated-annealing-solver";
 import { WeightedAStarSolver } from "./solvers/2x2/weighted-a-star-solver";
 import type { CubeSolver } from "./solvers/cube-solver";
 import { HumanSolver } from "./solvers/human-solver";
@@ -51,10 +52,10 @@ export const Configuration = {
         debug: false,
         scrambleMoves: () => Math.floor(Math.random() * 10 + 30),
         scrambleRotationDuration: 80,
-        cubesCircleRay: 4.5,
+        cubesCircleRay: 5,
         camera: {
             closeDistance: 20,
-            farDistance: 55
+            farDistance: 60
         }
     },
     renderers: {
@@ -91,7 +92,7 @@ export const Configuration = {
                 },
                 {
                     key: 'SA',
-                    instantiator: (configuration: string) => new SimulatedAnnealingSolver(new RubiksCube({ clone: configuration })),
+                    instantiator: (configuration: string) => new TwoDimensionsSimulatedAnnealingSolver(new RubiksCube({ clone: configuration })),
                     checked: true,
                     info: `Random movements improved by simulated annealing algorithm. Uses number of misplaced stickers as a measure of a solution candidate result. Population: ${SimulatedAnnealingConfig.population}. Initial temperature: ${SimulatedAnnealingConfig.initialTemperature}. Temperature decrease rate: ${SimulatedAnnealingConfig.temperatureDecreaseRate}`
                 },
@@ -126,7 +127,13 @@ export const Configuration = {
                     checked: true,
                     human: true,
                     info: 'Use keys \'WASDFX\' combined with \'shift\' to rotate cube faces'
-                }
+                },
+                {
+                    key: 'SA',
+                    instantiator: (configuration: string) => new ThreeDimensionsSimulatedAnnealingSolver(new RubiksCube({ clone: configuration })),
+                    checked: true,
+                    info: `Random movements improved by simulated annealing algorithm. Uses number of misplaced stickers as a measure of a solution candidate result. Population: ${SimulatedAnnealingConfig.population}. Initial temperature: ${SimulatedAnnealingConfig.initialTemperature}. Temperature decrease rate: ${SimulatedAnnealingConfig.temperatureDecreaseRate}`
+                },
             ]
         },
         {

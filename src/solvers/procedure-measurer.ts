@@ -63,7 +63,7 @@ export class ProcedureMeasurer {
         return this.totalTime;
     }
 
-    public getData(extra?: { notMeasuredLabel?: string, measurementOverheadLabel?: string }): any {
+    public getData(extra?: { notMeasuredLabel?: string, measurementOverheadLabel?: string }): ReportItem[] {
         const result: ReportItem[] = [];
         if (this.totalTime) {
             let sumTimes: number = 0;
@@ -83,7 +83,7 @@ export class ProcedureMeasurer {
                 result.push(this.createSummary(this.totalTime - sumTimes, 0, extra.notMeasuredLabel))
             }
         }
-        return result;
+        return result.sort((a, b) => b.totalTime - a.totalTime);
     }
 
     private createSummary(time: number, calls: number, label: string): ReportItem {

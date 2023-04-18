@@ -15,14 +15,14 @@ export class SimulatedAnnealing {
     private temperature: number = SimulatedAnnealingConfig.initialTemperature;
     private lastResult?: Candidate;
     private successCounter: number = 0;
-    private generationCounter: number = 0;
+    private iterationCounter: number = 0;
 
     public constructor(numOfActions: number) {
         this.numOfActions = numOfActions;
     }
 
-    public createNextGeneration(results?: Candidate[]): Candidate[] {
-        ++this.generationCounter;
+    public iterate(results?: Candidate[]): Candidate[] {
+        ++this.iterationCounter;
         if (!results) {
             return this.createNewPopulationFromScratch();
         }
@@ -43,15 +43,15 @@ export class SimulatedAnnealing {
         return this.disturbCandidate(this.lastResult);
     }
 
-    public getGenerationCounter(): number {
-        return this.generationCounter;
+    public getIterationCounter(): number {
+        return this.iterationCounter;
     }
 
     private createNewPopulationFromScratch(): Candidate[] {
         return Array.from(new Array(this.population))
             .map(() => ({
                 actions: Array.from(new Array(this.numOfRotations))
-                    .map(() => this.createAction()),
+                    .map((_, index, array) => this.createAction(array[index - 1])),
                 score: NaN,
             }));
     }
@@ -61,9 +61,9 @@ export class SimulatedAnnealing {
         return Array.from(Array(this.population - 1))
             .map(() => {
                 const newAction = candidate.actions
-                    .map((action) => {
+                    .map((action, index, array) => {
                         if (Math.random() < this.temperature) {
-                            return this.createAction();
+                            return this.createAction(array[index - 1]);
                         }
                         return action;
                     });
@@ -75,8 +75,16 @@ export class SimulatedAnnealing {
             .concat(candidate);
     };
 
-    private createAction(): number {
-        return Math.floor(Math.random() * this.numOfActions);
+    private createAction(previousActionIndex: number): number {
+        let nextActionIndex;
+        let cancelsPreviousAction;
+        do {
+            nextActionIndex = Math.floor(Math.random() * this.numOfActions);
+            const indexesDifference = nextActionIndex - previousActionIndex;
+            
+            cancelsPreviousAction = nextActionIndex % 2 === 0 ? indexesDifference === 1 : indexesDifference === -1; // avoid cancelling consecutive actions such as FF' or R'R
+        } while (cancelsPreviousAction);
+        return nextActionIndex;
     }
 
     private adjustTemperature() {
