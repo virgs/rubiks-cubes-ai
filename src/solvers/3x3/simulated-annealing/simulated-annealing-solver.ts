@@ -1,11 +1,11 @@
-import { Sides } from "@/constants/sides";
-import type { FaceRotation } from "@/engine/face-rotation";
+import type { Colors } from "@/constants/colors";
+import { Sides, getAllSides } from "@/constants/sides";
 import { RubiksCube } from "@/engine/rubiks-cube";
 import { RotationsTuner } from "@/printers/rotations-tuner";
 import type { CubeSolver, Solution } from "../../cube-solver";
 import { ProcedureMeasurer } from "../../procedure-measurer";
 import { SimulatedAnnealing, type Candidate } from "./simulated-annealing";
-import type { Colors } from "@/constants/colors";
+import { HumanTranslator } from "@/printers/human-translator";
 
 enum Metrics {
     NOT_MEASURED,
@@ -19,6 +19,11 @@ enum Metrics {
     MEASUREMENT_OVERHEAD
 }
 
+type Action = {
+    rotate: (cube: RubiksCube) => RubiksCube,
+    char: string
+};
+
 export class SimulatedAnnealingSolver implements CubeSolver {
     private readonly measurer: ProcedureMeasurer;
     private readonly initialState: RubiksCube;
@@ -26,7 +31,7 @@ export class SimulatedAnnealingSolver implements CubeSolver {
     private simulatedAnnealing: SimulatedAnnealing;
     private candidate: Candidate;
     private aborted: boolean;
-    private actions: FaceRotation[];
+    private actions: Action[];
     private restartCounter: number = 0;
     private iterations: number = 0;
 
@@ -37,12 +42,19 @@ export class SimulatedAnnealingSolver implements CubeSolver {
         this.actions = [];
         const goalState = this.buildSolvedCubeFromCenterCubelets(cube);
         this.goalStateHash = goalState.getHash();
-        [Sides.FRONT, Sides.UP, Sides.RIGHT, Sides.BACK, Sides.DOWN, Sides.LEFT]
-            .map(side => [true, false] // So that cancelling rotations are adjacents to each other
-                .map(direction => {
-                    this.actions.push({ side: side, counterClockwiseDirection: direction, layer: 0 });
-                })
-            );
+        const humanTranslator = new HumanTranslator()
+        getAllSides()
+            .forEach(side => {
+                [true, false] // So that cancelling rotations are adjacents to each other
+                    .forEach(direction => {
+                        const rotation = { side: side, counterClockwiseDirection: direction, layer: 0 };
+                        this.actions.push({ rotate: (cube: RubiksCube) => cube.rotateFace(rotation), char: humanTranslator.translateRotations([rotation]) });
+                    });
+
+                //180 degrees
+                const rotation = { side: side, counterClockwiseDirection: false, layer: 0 };
+                this.actions.push({ rotate: (cube: RubiksCube) => cube.rotateFace(rotation).rotateFace(rotation), char: humanTranslator.translateRotations([rotation, rotation]) });
+            });
 
         this.simulatedAnnealing = new SimulatedAnnealing(this.actions.length)
         this.candidate = this.simulatedAnnealing.iterate();
@@ -83,9 +95,10 @@ export class SimulatedAnnealingSolver implements CubeSolver {
                 if (this.measurer.add(Metrics[Metrics.CHECK_SOLUTION], () => acc.score === this.goalStateHash.length)) {
                     return acc;
                 } else {
-                    cube = this.measurer.add(Metrics[Metrics.APPLY_ROTATIONS_TO_CUBE], () => cube.rotateFace(this.actions[actionIndex]));
+                    cube = this.measurer.add(Metrics[Metrics.APPLY_ROTATIONS_TO_CUBE], () => this.actions[actionIndex](cube));
+                    const score = this.measurer.add(Metrics[Metrics.CALCULATE_CANDIDATE_SCORE], () => this.calculateCandidateScore(cube));
                     this.measurer.add(Metrics[Metrics.ADD_ROTATION_TO_SOLUTION_CANDIDATE], () => acc.actions.push(actionIndex));
-                    acc.score = this.measurer.add(Metrics[Metrics.CALCULATE_CANDIDATE_SCORE], () => this.calculateCandidateScore(cube));
+                    acc.score = score;
                 }
                 return acc;
             }, { score: 0, actions: [] as number[] });
@@ -101,7 +114,7 @@ export class SimulatedAnnealingSolver implements CubeSolver {
 
     private createSolution(solution: Candidate): Solution {
         // console.log(new HumanTranslator().translateRotations(solution.actions.map(action => this.actions[action])))
-        const rotations = new RotationsTuner().tune(solution.actions.map(action => this.actions[action]));
+        const rotations = new RotationsTuner().tune(solution.actions.map(action => this.actions[action](c)));
         this.measurer.finish();
         return {
             rotations: rotations,

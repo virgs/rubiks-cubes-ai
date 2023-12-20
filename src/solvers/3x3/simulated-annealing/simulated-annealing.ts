@@ -1,4 +1,3 @@
-import { SimulatedAnnealingConfig } from "@/configuration";
 
 export type Candidate = {
     actions: number[];
@@ -6,10 +5,10 @@ export type Candidate = {
 }
 
 export class SimulatedAnnealing {
-    private readonly temperatureDecreaseRate: number = .5;
+    private readonly temperatureDecreaseRate: number = .85;
 
     private readonly numOfActions: number;
-    private temperature: number = 10000;
+    private temperature: number = .3450;
     private currentBest: Candidate;
     private iterationCounter: number = 0;
 
@@ -17,7 +16,7 @@ export class SimulatedAnnealing {
         this.numOfActions = numOfActions;
         this.currentBest = {
             actions: [],
-            score: NaN,
+            score: -Infinity,
         };
     }
 
@@ -34,11 +33,13 @@ export class SimulatedAnnealing {
         const deltaResult = previousIterationResult.score - this.currentBest!.score;
         if (deltaResult > 0) {
             this.updateTheBest(previousIterationResult)
+            // this.adjustTemperature();
         } else if (deltaResult < 0) {
-            const chance = Number(Math.exp(deltaResult / (this.temperature)).toPrecision(5));
-            if (Math.random() < chance) {
+            const dieRoll = Number(Math.random().toFixed(5)) * Math.abs((deltaResult * deltaResult * deltaResult));
+            if (dieRoll < this.temperature) {
+                console.log(this.iterationCounter, this.temperature, deltaResult, dieRoll);
                 this.updateTheBest(previousIterationResult)
-                // this.adjustTemperature();
+                this.adjustTemperature();
             }
         }
         return this.disturbCandidate();
@@ -54,7 +55,7 @@ export class SimulatedAnnealing {
 
     private disturbCandidate(): Candidate {
         return {
-            actions: [...this.currentBest.actions].concat(this.createAction(this.currentBest.actions[this.currentBest.actions.length - 1])),
+            actions: this.currentBest.actions.concat(this.createAction(this.currentBest.actions[this.currentBest.actions.length - 1])),
             score: NaN
         };
     };
@@ -64,15 +65,15 @@ export class SimulatedAnnealing {
         let cancelsPreviousAction;
         do {
             nextActionIndex = Math.floor(Math.random() * this.numOfActions);
-            const indexesDifference = nextActionIndex - previousActionIndex;
-            
-            cancelsPreviousAction = nextActionIndex % 2 === 0 ? indexesDifference === 1 : indexesDifference === -1; // avoid cancelling consecutive actions such as FF' or R'R
+            const indexesDifference = Math.abs(nextActionIndex - previousActionIndex);
+
+            cancelsPreviousAction = indexesDifference < 2; // avoid cancelling consecutive actions such as FF', R'R or 2R2R
         } while (cancelsPreviousAction);
         return nextActionIndex;
     }
 
     private adjustTemperature() {
-        this.temperature *= this.temperatureDecreaseRate;
-        console.log(this.currentBest, this.temperature.toFixed(3), Number(Math.exp(-1 / (this.temperature)).toPrecision(5)));
+        this.temperature = Number((this.temperature * this.temperatureDecreaseRate).toFixed(5));
+        // console.log(this.currentBest, this.temperature.toFixed(3), Number(Math.exp(-1 / (this.temperature)).toPrecision(5)));
     }
 }
