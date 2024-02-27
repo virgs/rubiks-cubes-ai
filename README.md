@@ -1,9 +1,22 @@
 # Project
 
-This project intends to make available, both for entertainment and for studies, several Rubik's cubes of different dimensions rendered in a three-dimensional canvas. Using the keyboard and mouse, you can rotate the cube's faces and change the camera.  
-To run an algorithm, shuffle the cube, select a method and click 'solve'.
-
 ![screenshot](./readme-data/screenshot.png)
+
+Yeap. As you might think, this is yet another game development project of mine.
+If you haven't done it yet, I highly recommend checking the other ones I have on GitHub:
+
+- [Pacman](https://github.com/virgs/pacman)
+- [Sudoku](https://github.com/virgs/sudoku)
+- [Minesweeper AI](https://github.com/virgs/minesweeper-ai)
+- [Flappy Bird AI](https://github.com/virgs/flappy-bird-ai)
+- [2048 AI](https://github.com/virgs/2048-ai)
+- [Mancala](https://github.com/virgs/mancala)
+- [Tetris](https://github.com/virgs/tetris)
+
+----
+
+This project intends to make available, both for entertainment and for studies, several Rubik's cubes of different dimensions rendered in a three-dimensional canvas. Using the keyboard and mouse, you can rotate the cube's faces and change the camera.  
+To run an algorithm, shuffle the cube, select a method, and click 'solve'.
 
 ### Keys
 Rotate the cube faces using the following keys: **W**, **A**, **S**, **D**, **F** and **X**: up, left, front, right, back, and down twists, respectively. Hold **Shift** for prime moves (counterclockwise). Use any numeric key to change the layer on which the rotation will be performed. The layer rotation is limited by the cube dimension (there is no way to rotate a middle layer in a 2x2 cube as it has no middle layer, for example).  
