@@ -12,6 +12,7 @@ If you haven't done it yet, I highly recommend checking the other ones I have on
 - [2048 AI](https://github.com/virgs/2048-ai)
 - [Mancala](https://github.com/virgs/mancala)
 - [Tetris](https://github.com/virgs/tetris)
+- [Navigator's Gamble](https://github.com/virgs/navigators-gamble)
 
 ----
 
